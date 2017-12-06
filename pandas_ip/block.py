@@ -177,7 +177,6 @@ class IPAccessor(PandasDelegate):
         return pd.Series(self._data.is_ipv6, self._index, name=self._name)
 
 
-
 def patch():
     pd.Series.ip = AccessorProperty(IPAccessor)
     pd.DataFrame.ip = AccessorProperty(IPAccessor)
