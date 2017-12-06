@@ -1,3 +1,4 @@
+import struct
 import ipaddress
 
 import numpy as np
@@ -6,9 +7,12 @@ from pandas.core.internals import NonConsolidatableMixIn, Block
 from pandas.core.dtypes.dtypes import ExtensionDtype
 from pandas.core.accessor import PandasDelegate, AccessorProperty
 
+import typing as T
 
-IPv4_MAX = 2 ** 32 - 1
-IPv6_MAX = 2 ** 128 - 1
+
+_IPv4_MAX = 2 ** 32 - 1
+_IPv6_MAX = 2 ** 128 - 1
+_U8_MAX = 2 ** 64 - 1
 
 # -----------------------------------------------------------------------------
 # Extension Type
@@ -24,7 +28,7 @@ class IPType(ExtensionDtype):
     type = IPTypeType
     kind = 'O'
     str = '|O08'
-    base = np.dtype('O')
+    base = np.dtype([('lo', '>u8'), ('hi', '>u8')])
 
 
 # -----------------------------------------------------------------------------
@@ -40,11 +44,9 @@ class IP:
     ndim = 1
 
     def __init__(self, values, meta=None):
-        self.ips = np.asarray(values)
-        if meta is None:
-            self._meta = infer_meta(self.ips)
-        else:
-            self._meta = meta
+        # TODO: raise if they pass values like [1, 2, 3]?
+        # That's currently interpreted as [(1, 1), (2, 2), (3, 3)].
+        self.ips = np.asarray(values, dtype=self.dtype.base)
 
     def __array__(self, values):
         return self.ips
@@ -57,14 +59,16 @@ class IP:
         formatted = []
         # TODO: perf
         for i in range(len(self)):
-            if self._meta[i] == 0:
+            lo, hi = self.ips[i]
+            if lo == -1:
                 formatted.append("NA")
-            elif self._meta[i] == 1:
+            elif lo == 0:
                 formatted.append(ipaddress.IPv4Address._string_from_ip_int(
-                    int(self.ips[i])))
+                    int(hi)))
             else:
+                # TODO:
                 formatted.append(ipaddress.IPv6Address._string_from_ip_int(
-                    int(self.ips[i])))
+                    (int(hi) << 64) + int(lo)))
         return formatted
 
     def __len__(self):
@@ -76,24 +80,48 @@ class IP:
     def view(self):
         return self.ips.view()
 
+    @classmethod
+    def from_pyints(cls, values: T.Sequence[int]) -> 'IP':
+        values2 = (unpack(pack(x)) for x in values)
+        return cls(list(values2))
+
     @property
     def dtype(self):
         return self._dtype
 
+    @property
+    def is_na(self):
+        # Assuming we use 0.0.0.0 for N/A
+        ips = self.ips
+        # XXX: this could overflow uint64...
+        return ips['lo'] + ips['hi'] == 0
 
-def infer_meta(values):
-    """Infer metadata about an array of IP addresses.
+    @property
+    def is_ipv4(self):
+        # TODO: NA should be NA
+        ips = self.ips
+        return (ips['lo'] == 0) & (ips['hi'] < _U8_MAX)
 
-    Metadata is stored as a uint8 where
+    @property
+    def is_ipv6(self):
+        ips = self.ips
+        return (ips['lo'] == 1) | (ips['hi'] > _U8_MAX)
 
-    - 0 indicates null
-    - 1 indicates IPv4
-    - 2 indicates IPv6
-    """
-    meta = np.ones(len(values), dtype=np.uint8)
-    meta[values > IPv4_MAX] = 2
 
-    return meta
+# -----------------------------------------------------------------------------
+# Utilities
+# -----------------------------------------------------------------------------
+
+
+def pack(ip: int) -> bytes:
+    return ip.to_bytes(16, 'big')
+
+
+def unpack(ip: bytes) -> T.Tuple[int, int]:
+    # Recipe 3.5 from Python Cookbook 3rd ed. (p. 90)
+    # int.from_bytes(data, 'big') for Py3+
+    hi, lo = struct.unpack(">QQ", ip)
+    return hi, lo
 
 
 # -----------------------------------------------------------------------------
@@ -136,16 +164,18 @@ class IPAccessor(PandasDelegate):
 
     @property
     def is_na(self):
-        return pd.Series(self._data._meta == 0, self._index, name=self._name)
+        # Assuming we use 0.0.0.0 for N/A
+        return pd.Series(self._data.is_na, self._index, name=self._name)
 
     @property
     def is_ipv4(self):
         # TODO: NA should be NA
-        return pd.Series(self._data._meta == 1, self._index, name=self._name)
+        return pd.Series(self._data.is_ipv4, self._index, name=self._name)
 
     @property
     def is_ipv6(self):
-        return pd.Series(self._data._meta == 2, self._index, name=self._name)
+        return pd.Series(self._data.is_ipv6, self._index, name=self._name)
+
 
 
 def patch():

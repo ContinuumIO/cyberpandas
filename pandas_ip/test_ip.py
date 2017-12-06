@@ -5,20 +5,17 @@ import pandas_ip as ip
 
 
 def test_make_container():
-    values = ip.IP([1, 2, 3])
+    values = ip.IP.from_pyints([1, 2, 3])
     npt.assert_array_equal(
         values.ips,
-        np.array([1, 2, 3])
-    )
-
-    npt.assert_array_equal(
-        values._meta,
-        np.array([1, 1, 1], dtype=np.uint8)
+        np.array([(0, 1),
+                  (0, 2),
+                  (0, 3)], dtype=values.dtype.base)
     )
 
 
 def test_make_block():
-    values = ip.IP([1, 2, 3])
+    values = ip.IP.from_pyints([1, 2, 3])
     block = ip.IPBlock(values, slice(0, 3))
     assert isinstance(block, ip.IPBlock)
     assert block.dtype is ip.IPType
@@ -26,13 +23,13 @@ def test_make_block():
 
 
 def test_repr_works():
-    values = ip.IP([1, 2, 3])
+    values = ip.IP.from_pyints([1, 2, 3])
     block = ip.IPBlock(values, slice(0, 3))
     block.formatting_values()
 
 
 def test_series_from_block():
-    values = ip.IP([1, 2, 3])
+    values = ip.IP.from_pyints([1, 2, 3])
     block = ip.IPBlock(values, slice(0, 3))
 
     result = pd.Series(block, index=pd.RangeIndex(3), fastpath=True)
@@ -40,7 +37,7 @@ def test_series_from_block():
 
 
 def test_dataframe_from_blocks():
-    values = ip.IP([1, 2, 3])
+    values = ip.IP.from_pyints([1, 2, 3])
     blocks = (ip.IPBlock(values, slice(0, 1)),)
     axes = [pd.Index(['a']), pd.RangeIndex(3)]
     bm = pd.core.internals.BlockManager(blocks, axes)
