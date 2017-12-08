@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 from pandas.core.internals import NonConsolidatableMixIn, Block
 from pandas.core.dtypes.dtypes import ExtensionDtype
-from pandas.core.accessor import PandasDelegate, AccessorProperty
 
 import typing as T
 
@@ -151,12 +150,12 @@ class IPBlock(NonConsolidatableMixIn, Block):
 # -----------------------------------------------------------------------------
 
 
-class IPAccessor(PandasDelegate):
+class IPAccessor:
 
-    def __init__(self, values, index, name):
-        self._data = values
-        self._index = index
-        self._name = name
+    def __init__(self, obj):
+        self._data = obj.values
+        self._index = obj.index
+        self._name = obj.name
 
     @classmethod
     def _make_accessor(cls, data):
@@ -177,6 +176,7 @@ class IPAccessor(PandasDelegate):
         return pd.Series(self._data.is_ipv6, self._index, name=self._name)
 
 
-def patch():
-    pd.Series.ip = AccessorProperty(IPAccessor)
-    pd.DataFrame.ip = AccessorProperty(IPAccessor)
+try:
+    pd.register_series_accessor("ip")(IPAccessor)  # decorate
+except AttributeError:
+    pd.Series.ip = IPAccessor
