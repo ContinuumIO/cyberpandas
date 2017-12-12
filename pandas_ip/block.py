@@ -175,7 +175,6 @@ class IPAccessor:
     def is_ipv6(self):
         return pd.Series(self._data.is_ipv6, self._index, name=self._name)
 
-
 try:
     pd.register_series_accessor("ip")(IPAccessor)  # decorate
 except AttributeError:
