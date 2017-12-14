@@ -1,3 +1,5 @@
+Discussion at https://github.com/pandas-dev/pandas/issues/18767
+
 ## Abstract
 
 Proposal to add support for storing and operating on IP Address data.
