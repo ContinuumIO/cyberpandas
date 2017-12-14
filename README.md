@@ -139,6 +139,33 @@ Some alternatives to this that exist outside of pandas:
     `IPSeries`, `IPDataFrame`, etc., which increases friction when working
     with other libraries that may expect / coerce to pandas objects.
 
+To expand a bit on the (current) downside of alternative 2,  when the pandas constructors
+see an "unknown" object, they falls back to `object` dtype and stuffs the actual Python object
+into whatever container is being created:
+
+```python
+In [1]: import pandas as pd
+
+In [2]: import pandas_ip as ip
+
+In [3]: arr = ip.IPAddress.from_pyints([1, 2])
+
+In [4]: arr
+Out[4]: <IPAddress(['0.0.0.1', '0.0.0.2'])>
+
+In [5]: pd.Series(arr)
+Out[5]:
+0    <IPAddress(['0.0.0.1', '0.0.0.2'])>
+dtype: object
+```
+
+I'd rather not have to make a subclass of Series, just to stick an array-like thing into a Series.
+
+If pandas could provide an interface such that objects satisfying that interface
+are treated as array-like, and not a simple python object, then I'll gladly close
+this issue and develop the IP-address specific functionality in another package.
+That might be the best possible outcome to all this.
+
 ### References
 
 -   [pandas-ip](https://github.com/ContinuumIO/pandas-ip/)
@@ -146,7 +173,3 @@ Some alternatives to this that exist outside of pandas:
 -   [RFC 2373](https://tools.ietf.org/html/rfc2373.html#section-2.5.2)
 -   [ipaddress howto](https://docs.python.org/3/howto/ipaddress.html)
 -   [ipaddress](https://docs.python.org/3/library/ipaddress.html)
-
-## TODO
-
-Do we want to handle networks? https://docs.python.org/3/howto/ipaddress.html#defining-networks
