@@ -35,7 +35,7 @@ class IPType(ExtensionDtype):
 # -----------------------------------------------------------------------------
 
 
-class IP:
+class IPAddress:
     """Holder for things"""
     __array_priority__ = 1000
     _dtype = IPType
@@ -80,13 +80,16 @@ class IP:
         return self.ips.view()
 
     @classmethod
-    def from_pyints(cls, values: T.Sequence[int]) -> 'IP':
-        values2 = (unpack(pack(x)) for x in values)
-        return cls(list(values2))
+    def from_pyints(cls, values: T.Sequence[int]) -> 'IPAddress':
+        return _to_ipaddress_pyint(values)
 
     @property
     def dtype(self):
         return self._dtype
+
+    @property
+    def shape(self):
+        return (len(self.ips),)
 
     @property
     def is_na(self):
@@ -123,6 +126,28 @@ def unpack(ip: bytes) -> T.Tuple[int, int]:
     return hi, lo
 
 
+def combine(hi: int, lo: int) -> int:
+    """Combine the hi and lo bytes into the final ip address."""
+    return (hi << 64) + lo
+
+
+def to_ipaddress(values):
+    pass
+
+
+def _to_ipaddress_str(values):
+    pass
+
+
+def _to_ipaddress_pyint(values):
+    values2 = (unpack(pack(x)) for x in values)
+    return IPAddress(list(values2))
+
+
+def _to_ipaddress_bytes(values):
+    pass
+
+
 # -----------------------------------------------------------------------------
 # Extension Block
 # -----------------------------------------------------------------------------
@@ -136,13 +161,21 @@ class IPBlock(NonConsolidatableMixIn, Block):
     This can hold either IPv4 or IPv6 addresses.
 
     """
-    _holder = IP
+    _holder = IPAddress
+
+    def __init__(self, values, placement, ndim=None, fastpath=False):
+        if not isinstance(values, self._holder):
+            values = IPAddress(values)
+        super().__init__(values, placement, ndim=ndim, fastpath=fastpath)
 
     def formatting_values(self):
         return np.array(self.values._format_values(), dtype='object')
 
     def concat_same_type(self, to_concat, placement=None):
-        pass
+        values = np.concatenate([blk.values.ips for blk in to_concat])
+        return self.make_block_same_class(
+            values, placement=placement or slice(0, len(values), 1)
+        )
 
 
 # -----------------------------------------------------------------------------
@@ -159,7 +192,7 @@ class IPAccessor:
 
     @classmethod
     def _make_accessor(cls, data):
-        return IPAccessor(data.values, data.index, getattr(data, 'name', None))
+        return cls(data.values, data.index, getattr(data, 'name', None))
 
     @property
     def is_na(self):
@@ -175,7 +208,5 @@ class IPAccessor:
     def is_ipv6(self):
         return pd.Series(self._data.is_ipv6, self._index, name=self._name)
 
-try:
-    pd.register_series_accessor("ip")(IPAccessor)  # decorate
-except AttributeError:
-    pd.Series.ip = IPAccessor
+
+pd.register_series_accessor("ip")(IPAccessor)  # decorate
