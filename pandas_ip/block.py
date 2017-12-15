@@ -1,10 +1,12 @@
 import struct
 import ipaddress
+import operator
 
 import numpy as np
 import pandas as pd
 from pandas.core.internals import NonConsolidatableMixIn, Block
 from pandas.core.dtypes.dtypes import ExtensionDtype
+from pandas.core.external import PandasExternal
 
 import typing as T
 
@@ -35,7 +37,7 @@ class IPType(ExtensionDtype):
 # -----------------------------------------------------------------------------
 
 
-class IPAddress:
+class IPAddress(PandasExternal):
     """Holder for things"""
     __array_priority__ = 1000
     _dtype = IPType
@@ -45,10 +47,30 @@ class IPAddress:
     def __init__(self, values, meta=None):
         # TODO: raise if they pass values like [1, 2, 3]?
         # That's currently interpreted as [(1, 1), (2, 2), (3, 3)].
-        self.ips = np.asarray(values, dtype=self.dtype.base)
 
+        self.ips = np.atleast_1d(np.asarray(values, dtype=self.dtype.base))
+
+    # Pandas Interface
     def __array__(self, values):
         return self.ips
+
+    @property
+    def dtype(self):
+        return self._dtype
+
+    @property
+    def shape(self):
+        return (len(self.ips),)
+
+    @property
+    def block_type(self):
+        return IPBlock
+
+    def to_series(self, name=None):
+        n = len(self)
+        placement = slice(n)
+        block = self.block_type(self, placement=placement)
+        return pd.Series(block, index=pd.RangeIndex(n), name=name, fastpath=True)
 
     def __repr__(self):
         formatted = self._format_values()
@@ -73,6 +95,16 @@ class IPAddress:
     def __len__(self):
         return len(self.ips)
 
+    def __getitem__(self, *args):
+        result = operator.getitem(self.ips, *args)
+        if isinstance(result, tuple):
+            return result
+        else:
+            return type(self)(result)
+
+    def __iter__(self):
+        return iter(self.ips)
+
     def tolist(self):
         return self.ips.tolist()
 
@@ -83,13 +115,6 @@ class IPAddress:
     def from_pyints(cls, values: T.Sequence[int]) -> 'IPAddress':
         return _to_ipaddress_pyint(values)
 
-    @property
-    def dtype(self):
-        return self._dtype
-
-    @property
-    def shape(self):
-        return (len(self.ips),)
 
     @property
     def is_na(self):

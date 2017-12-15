@@ -37,6 +37,19 @@ def test_series_from_block():
     assert result.dtype is ip.IPType
 
 
+def test_to_series_from_block():
+    values = ip.IPAddress.from_pyints([1, 2, 3])
+    block = ip.IPBlock(values, slice(0, 3))
+    expected = pd.Series(block, index=pd.RangeIndex(3), fastpath=True)
+    result = values.to_series()
+    tm.assert_series_equal(result, expected)
+    assert result.dtype is ip.IPType
+    assert result.name is None
+
+    result = values.to_series(name='foo')
+    assert result.name == 'foo'
+
+
 def test_dataframe_from_blocks():
     values = ip.IPAddress.from_pyints([1, 2, 3])
     blocks = (ip.IPBlock(values, slice(0, 1)),)
