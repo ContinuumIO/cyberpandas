@@ -66,11 +66,13 @@ class IPAddress(PandasExternal):
     def block_type(self):
         return IPBlock
 
-    def to_series(self, name=None):
+    def to_series(self, index=None, name=None):
         n = len(self)
         placement = slice(n)
         block = self.block_type(self, placement=placement)
-        return pd.Series(block, index=pd.RangeIndex(n), name=name, fastpath=True)
+        if index is None:
+            index = pd.RangeIndex(n)
+        return pd.Series(block, index=index, name=name, fastpath=True)
 
     def __repr__(self):
         formatted = self._format_values()
