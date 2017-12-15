@@ -33,7 +33,7 @@ class IPType(ExtensionDtype):
 
 
 # -----------------------------------------------------------------------------
-# Extnesion Container
+# Extension Container
 # -----------------------------------------------------------------------------
 
 
@@ -66,6 +66,23 @@ class IPAddress(PandasExternal):
     def block_type(self):
         return IPBlock
 
+    def view(self):
+        return self.data.view()
+
+    # Iterator / Sequence interfae
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, *args):
+        result = operator.getitem(self.data, *args)
+        if isinstance(result, tuple):
+            return result
+        else:
+            return type(self)(result)
+
+    def __iter__(self):
+        return iter(self.data)
+
     def to_series(self, index=None, name=None):
         n = len(self)
         placement = slice(n)
@@ -94,24 +111,8 @@ class IPAddress(PandasExternal):
                     (int(hi) << 64) + int(lo)))
         return formatted
 
-    def __len__(self):
-        return len(self.data)
-
-    def __getitem__(self, *args):
-        result = operator.getitem(self.data, *args)
-        if isinstance(result, tuple):
-            return result
-        else:
-            return type(self)(result)
-
-    def __iter__(self):
-        return iter(self.data)
-
     def tolist(self):
         return self.data.tolist()
-
-    def view(self):
-        return self.data.view()
 
     @classmethod
     def from_pyints(cls, values: T.Sequence[int]) -> 'IPAddress':
@@ -157,7 +158,8 @@ def combine(hi: int, lo: int) -> int:
     return (hi << 64) + lo
 
 
-def to_ipaddress(values):
+def to_ipaddress(values: T.Iterable) -> IPAddress:
+    """Parse an array of things into an IPAddress"""
     pass
 
 
