@@ -8,7 +8,7 @@ import pandas.util.testing as tm
 def test_make_container():
     values = ip.IPAddress.from_pyints([1, 2, 3])
     npt.assert_array_equal(
-        values.ips,
+        values.data,
         np.array([(0, 1),
                   (0, 2),
                   (0, 3)], dtype=values.dtype.base)

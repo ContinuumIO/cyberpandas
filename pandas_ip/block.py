@@ -48,11 +48,11 @@ class IPAddress(PandasExternal):
         # TODO: raise if they pass values like [1, 2, 3]?
         # That's currently interpreted as [(1, 1), (2, 2), (3, 3)].
 
-        self.ips = np.atleast_1d(np.asarray(values, dtype=self.dtype.base))
+        self.data = np.atleast_1d(np.asarray(values, dtype=self.dtype.base))
 
     # Pandas Interface
     def __array__(self, values):
-        return self.ips
+        return self.data
 
     @property
     def dtype(self):
@@ -60,7 +60,7 @@ class IPAddress(PandasExternal):
 
     @property
     def shape(self):
-        return (len(self.ips),)
+        return (len(self.data),)
 
     @property
     def block_type(self):
@@ -82,7 +82,7 @@ class IPAddress(PandasExternal):
         formatted = []
         # TODO: perf
         for i in range(len(self)):
-            lo, hi = self.ips[i]
+            lo, hi = self.data[i]
             if lo == -1:
                 formatted.append("NA")
             elif lo == 0:
@@ -95,45 +95,44 @@ class IPAddress(PandasExternal):
         return formatted
 
     def __len__(self):
-        return len(self.ips)
+        return len(self.data)
 
     def __getitem__(self, *args):
-        result = operator.getitem(self.ips, *args)
+        result = operator.getitem(self.data, *args)
         if isinstance(result, tuple):
             return result
         else:
             return type(self)(result)
 
     def __iter__(self):
-        return iter(self.ips)
+        return iter(self.data)
 
     def tolist(self):
-        return self.ips.tolist()
+        return self.data.tolist()
 
     def view(self):
-        return self.ips.view()
+        return self.data.view()
 
     @classmethod
     def from_pyints(cls, values: T.Sequence[int]) -> 'IPAddress':
         return _to_ipaddress_pyint(values)
 
-
     @property
-    def is_na(self):
+    def isna(self):
         # Assuming we use 0.0.0.0 for N/A
-        ips = self.ips
+        ips = self.data
         # XXX: this could overflow uint64...
         return ips['lo'] + ips['hi'] == 0
 
     @property
     def is_ipv4(self):
         # TODO: NA should be NA
-        ips = self.ips
+        ips = self.data
         return (ips['lo'] == 0) & (ips['hi'] < _U8_MAX)
 
     @property
     def is_ipv6(self):
-        ips = self.ips
+        ips = self.data
         return (ips['lo'] == 1) | (ips['hi'] > _U8_MAX)
 
 
@@ -199,7 +198,7 @@ class IPBlock(NonConsolidatableMixIn, Block):
         return np.array(self.values._format_values(), dtype='object')
 
     def concat_same_type(self, to_concat, placement=None):
-        values = np.concatenate([blk.values.ips for blk in to_concat])
+        values = np.concatenate([blk.values.data for blk in to_concat])
         return self.make_block_same_class(
             values, placement=placement or slice(0, len(values), 1)
         )
@@ -222,9 +221,9 @@ class IPAccessor:
         return cls(data.values, data.index, getattr(data, 'name', None))
 
     @property
-    def is_na(self):
+    def isna(self):
         # Assuming we use 0.0.0.0 for N/A
-        return pd.Series(self._data.is_na, self._index, name=self._name)
+        return pd.Series(self._data.isna, self._index, name=self._name)
 
     @property
     def is_ipv4(self):
