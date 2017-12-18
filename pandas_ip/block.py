@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from pandas.core.internals import NonConsolidatableMixIn, Block
 from pandas.core.dtypes.dtypes import ExtensionDtype
-from pandas.core.external import PandasExternal
+from pandas.core.externals import ExternalArray
 
 import typing as T
 
@@ -37,7 +37,7 @@ class IPType(ExtensionDtype):
 # -----------------------------------------------------------------------------
 
 
-class IPAddress(PandasExternal):
+class IPAddress(ExternalArray):
     """Holder for things"""
     __array_priority__ = 1000
     _dtype = IPType
@@ -118,7 +118,6 @@ class IPAddress(PandasExternal):
     def from_pyints(cls, values: T.Sequence[int]) -> 'IPAddress':
         return _to_ipaddress_pyint(values)
 
-    @property
     def isna(self):
         # Assuming we use 0.0.0.0 for N/A
         ips = self.data

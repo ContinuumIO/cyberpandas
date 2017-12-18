@@ -72,3 +72,18 @@ def test_concatenate_blocks():
         index=pd.RangeIndex(6),
         fastpath=True)
     tm.assert_series_equal(result, expected)
+
+
+def test_series_constructor():
+    v = ip.IPAddress.from_pyints([1, 2, 3])
+    result = pd.Series(v)
+    expected = v.to_series()
+    tm.assert_series_equal(result, expected)
+    assert isinstance(result._data.blocks[0], ip.IPBlock)
+
+
+def test_isna():
+    v = pd.Series(ip.IPAddress.from_pyints([0, 2, 3]))
+    result = v.isna()
+    expected = pd.Series([True, False, False])
+    tm.assert_series_equal(result, expected)
