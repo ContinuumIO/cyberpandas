@@ -82,6 +82,14 @@ def test_series_constructor():
     assert isinstance(result._data.blocks[0], ip.IPBlock)
 
 
+def test_dataframe_constructor():
+    v = ip.IPAddress.from_pyints([1, 2, 3])
+    df = pd.DataFrame({"A": v})
+    tm.assert_series_equal(df.dtypes, pd.Series([ip.IPType], ['A']))
+    assert df.shape == (3, 1)
+    str(df)
+
+
 def test_isna():
     v = pd.Series(ip.IPAddress.from_pyints([0, 2, 3]))
     result = v.isna()
