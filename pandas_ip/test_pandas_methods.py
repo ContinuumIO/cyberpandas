@@ -38,6 +38,7 @@ def test_works(obj, method, args, kwargs):
 def test__take(frame):
     return frame._take([0], axis=0)
 
+
 def test_iloc_series(series):
     series.iloc[slice(None)]
     series.iloc[0]
