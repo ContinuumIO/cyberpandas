@@ -7,6 +7,7 @@ import pandas as pd
 from pandas.core.internals import NonConsolidatableMixIn, Block
 from pandas.core.dtypes.dtypes import ExtensionDtype
 from pandas.core.externals import ExternalArray
+from pandas.core.common import is_null_slice
 
 import typing as T
 
@@ -68,6 +69,16 @@ class IPAddress(ExternalArray):
 
     def view(self):
         return self.data.view()
+
+    def take(self, indexer, allow_fill=True, fill_value=None):
+        # XXX: NA-fill
+        return type(self)(self.data.take(indexer))
+
+    def take_nd(self, indexer, allow_fill=True, fill_value=None):
+        return self.take(indexer, allow_fill=allow_fill, fill_value=fill_value)
+
+    def copy(self, deep=False):
+        return type(self)(self.data.copy())
 
     # Iterator / Sequence interfae
     def __len__(self):
@@ -204,6 +215,26 @@ class IPBlock(NonConsolidatableMixIn, Block):
             values, placement=placement or slice(0, len(values), 1)
         )
 
+    def _slice(self, slicer):
+        """ Return a slice of myself.
+
+        For internal compatibility with numpy arrays.
+        """
+        # XXX: Would like to handle this better...
+        # We're forced to handle 2-d slicing by the BlockMananger,
+        # even though we're only ever 1-d
+        # only allow 1 dimensional slicing, but can
+        # in a 2-d case be passd (slice(None),....)
+        if isinstance(slicer, tuple) and len(slicer) == 2:
+            if not is_null_slice(slicer[0]):
+                raise AssertionError("invalid slicing for a 1-ndim "
+                                     "categorical")
+            slicer = slicer[1]
+
+        return self.values[slicer]
+
+    def get_values(self, dtype=None):
+        return self.values
 
 # -----------------------------------------------------------------------------
 # Accessor
