@@ -72,7 +72,10 @@ class IPAddress(ExternalArray):
 
     def take(self, indexer, allow_fill=True, fill_value=None):
         # XXX: NA-fill
-        return type(self)(self.data.take(indexer))
+        mask = indexer == -1
+        result = self.data.take(indexer)
+        result[mask] = self._fill_value
+        return type(self)(result)
 
     def take_nd(self, indexer, allow_fill=True, fill_value=None):
         return self.take(indexer, allow_fill=allow_fill, fill_value=fill_value)
@@ -94,6 +97,11 @@ class IPAddress(ExternalArray):
     def __iter__(self):
         return iter(self.data)
 
+    @property
+    def _fill_value(self):
+        return np.array((0, 0), dtype=self.dtype.base)
+
+    # Utility methods
     def to_series(self, index=None, name=None):
         n = len(self)
         placement = slice(n)

@@ -1,8 +1,11 @@
 import operator
 
+import numpy as np
 import pandas as pd
-import pandas_ip as ip
+import pandas.util.testing as tm
 import pytest
+
+import pandas_ip as ip
 
 
 @pytest.fixture
@@ -28,11 +31,12 @@ def obj(request, series, frame):
 # -----
 # Tests
 # -----
-@pytest.mark.parametrize('method, args, kwargs', [
-    (operator.methodcaller('head'), (), {}),
+@pytest.mark.parametrize('method', [
+    operator.methodcaller('head'),
+    operator.methodcaller('rename', str),
 ])
-def test_works(obj, method, args, kwargs):
-    method(obj, *args, **kwargs)
+def test_works(obj, method):
+    method(obj)
 
 
 def test__take(frame):
@@ -85,3 +89,12 @@ def test_loc_frame(frame):
     frame.loc[[0], ['A']]
     frame.loc[[0], ['A', 'B']]
     frame.loc[[0], ['A', 'C']]
+
+
+def test_reindex(frame):
+    result = frame.reindex([0, 10])
+    expected = pd.DataFrame({"A": ip.IPAddress.from_pyints([0, 0]),
+                             "B": [0, np.nan],
+                             "C": ip.IPAddress.from_pyints([0, 0])},
+                            index=[0, 10])
+    tm.assert_frame_equal(result, expected)
