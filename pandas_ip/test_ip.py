@@ -91,7 +91,10 @@ def test_dataframe_constructor():
 
 
 def test_isna():
-    v = pd.Series(ip.IPAddress.from_pyints([0, 2, 3]))
-    result = v.isna()
-    expected = pd.Series([True, False, False])
-    tm.assert_series_equal(result, expected)
+    v = ip.IPAddress.from_pyints([0, 2, 3])
+    r1 = v.isna()
+    r2 = pd.isna(v)
+    expected = np.array([True, False, False])
+
+    np.testing.assert_array_equal(r1, expected)
+    np.testing.assert_array_equal(r2, expected)

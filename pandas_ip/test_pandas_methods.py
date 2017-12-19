@@ -35,8 +35,15 @@ def obj(request, series, frame):
     operator.methodcaller('head'),
     operator.methodcaller('rename', str),
 ])
-def test_works(obj, method):
+def test_works_generic(obj, method):
     method(obj)
+
+
+@pytest.mark.parametrize('method', [
+    operator.methodcaller('info'),
+])
+def test_works_frame(frame, method):
+    method(frame)
 
 
 def test__take(frame):
@@ -97,4 +104,22 @@ def test_reindex(frame):
                              "B": [0, np.nan],
                              "C": ip.IPAddress.from_pyints([0, 0])},
                             index=[0, 10])
+    tm.assert_frame_equal(result, expected)
+
+
+def test_isna(series):
+    expected = pd.Series([True, False, False], index=series.index,
+                         name=series.name)
+    result = pd.isna(series)
+    tm.assert_series_equal(result, expected)
+
+    result = series.isna()
+    tm.assert_series_equal(result, expected)
+
+
+def test_isin_frame(frame):
+    result = frame.isna()
+    expected = pd.DataFrame({"A": [True, False, False],
+                             "B": [False, False, False],
+                             "C": [True, False, False]})
     tm.assert_frame_equal(result, expected)

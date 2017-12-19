@@ -52,8 +52,8 @@ class IPAddress(ExternalArray):
         self.data = np.atleast_1d(np.asarray(values, dtype=self.dtype.base))
 
     # Pandas Interface
-    def __array__(self, values):
-        return self.data
+    def __array__(self, dtype=None):
+        return np.array(self.data, dtype=dtype)
 
     @property
     def dtype(self):
@@ -66,6 +66,10 @@ class IPAddress(ExternalArray):
     @property
     def block_type(self):
         return IPBlock
+
+    @property
+    def nbytes(self):
+        return 2 * 64 * len(self)
 
     def view(self):
         return self.data.view()
@@ -242,7 +246,7 @@ class IPBlock(NonConsolidatableMixIn, Block):
         return self.values[slicer]
 
     def get_values(self, dtype=None):
-        return self.values
+        return self.values.data.astype(object)
 
 # -----------------------------------------------------------------------------
 # Accessor
