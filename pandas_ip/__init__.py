@@ -1,4 +1,10 @@
 """Custom IP address dtype / block for pandas"""
-__version__ = '0.21.0'
 
 from .block import IPBlock, IPType, IPAddress, IPAccessor, to_ipaddress  # noqa
+
+from pkg_resources import get_distribution, DistributionNotFound
+try:
+    __version__ = get_distribution(__name__).version
+except DistributionNotFound:
+    # package is not installed
+    pass
