@@ -1,4 +1,3 @@
-import struct
 import ipaddress
 import operator
 
@@ -10,6 +9,8 @@ from pandas.core.externals import ExternalArray
 from pandas.core.common import is_null_slice
 
 import typing as T
+
+from .parser import _to_ipaddress_pyint
 
 
 _IPv4_MAX = 2 ** 32 - 1
@@ -159,43 +160,10 @@ class IPAddress(ExternalArray):
         return (ips['lo'] == 1) | (ips['hi'] > _U8_MAX)
 
 
-# -----------------------------------------------------------------------------
-# Utilities
-# -----------------------------------------------------------------------------
+def to_ipaddress(values):
+    from .parser import _to_int_pairs
 
-
-def pack(ip: int) -> bytes:
-    return ip.to_bytes(16, 'big')
-
-
-def unpack(ip: bytes) -> T.Tuple[int, int]:
-    # Recipe 3.5 from Python Cookbook 3rd ed. (p. 90)
-    # int.from_bytes(data, 'big') for Py3+
-    hi, lo = struct.unpack(">QQ", ip)
-    return hi, lo
-
-
-def combine(hi: int, lo: int) -> int:
-    """Combine the hi and lo bytes into the final ip address."""
-    return (hi << 64) + lo
-
-
-def to_ipaddress(values: T.Iterable) -> IPAddress:
-    """Parse an array of things into an IPAddress"""
-    pass
-
-
-def _to_ipaddress_str(values):
-    pass
-
-
-def _to_ipaddress_pyint(values):
-    values2 = (unpack(pack(x)) for x in values)
-    return IPAddress(list(values2))
-
-
-def _to_ipaddress_bytes(values):
-    pass
+    return IPAddress(_to_int_pairs(values))
 
 
 # -----------------------------------------------------------------------------
@@ -265,11 +233,6 @@ class IPAccessor:
         return cls(data.values, data.index, getattr(data, 'name', None))
 
     @property
-    def isna(self):
-        # Assuming we use 0.0.0.0 for N/A
-        return pd.Series(self._data.isna, self._index, name=self._name)
-
-    @property
     def is_ipv4(self):
         # TODO: NA should be NA
         return pd.Series(self._data.is_ipv4, self._index, name=self._name)
@@ -277,6 +240,10 @@ class IPAccessor:
     @property
     def is_ipv6(self):
         return pd.Series(self._data.is_ipv6, self._index, name=self._name)
+
+    def isna(self):
+        # Assuming we use 0.0.0.0 for N/A
+        return pd.Series(self._data.isna(), self._index, name=self._name)
 
 
 pd.register_series_accessor("ip")(IPAccessor)  # decorate
