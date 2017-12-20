@@ -1,0 +1,26 @@
+package:
+    name: pandas_ip
+    version: 0.21.0
+
+build:
+    number: 0
+
+source:
+    git_url: ../
+
+requirements:
+  build:
+    - python
+    - setuptools >=3.3
+
+  run:
+    - python
+    - pandas
+
+test:
+  imports:
+    - pandas_ip
+
+about:
+  home: https://github.com/continuumio/pandas-ip
+  license: BSD
