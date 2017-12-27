@@ -1,26 +1,20 @@
 import pytest
 
-from pandas_ip import parser
+from pandas_ip import parser, IPAddress
 
 
-@pytest.mark.parametrize('value', [
-    "192.168.0.1",
-    3232235521,
+@pytest.mark.parametrize('values', [
+    ['192.168.1.1',
+     '2001:0db8:85a3:0000:0000:8a2e:0370:7334'],
+    [3232235777,
+     42540766452641154071740215577757643572],
+    [b'\xc0\xa8\x01\x01',
+     b' \x01\r\xb8\x85\xa3\x00\x00\x00\x00\x8a.\x03ps4'],
 ])
-def test_is_ipv4(value):
-    assert parser.is_ipv4(value)
-
-
-@pytest.mark.parametrize('value', [
-    '123.123.1',
-    2 ** 32,
-])
-def test_is_not_ipv4(value):
-    assert not parser.is_ipv4(value)
-
-
-@pytest.mark.parametrize('s', [
-    "2001:0db8:85a3:0000:0000:8a2e:0370:7334"
-])
-def test_parse_str(s):
-    parser._parse_ipv4_str(s)
+def test_to_ipaddress(values):
+    result = parser.to_ipaddress(values)
+    expected = IPAddress.from_pyints([
+        3232235777,
+        42540766452641154071740215577757643572
+    ])
+    assert result.equals(expected)

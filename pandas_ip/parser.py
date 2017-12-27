@@ -1,12 +1,44 @@
 import ipaddress
-
 import struct
 import typing as T
-from typing import Tuple
 
-_IPv4_MAX = 2 ** 32 - 1
-_IPv6_MAX = 2 ** 128 - 1
-_U8_MAX = 2 ** 64 - 1
+from pandas.api.types import is_list_like
+
+
+def to_ipaddress(values):
+    """Convert values to IPAddress
+
+    Parameters
+    ----------
+    values : int, str, bytes, or sequence of those
+
+    Returns
+    -------
+    addresses : IPAddress
+
+    Examples
+    --------
+    Parse strings
+    >>> to_ipaddress(['192.168.1.1',
+    ...               '2001:0db8:85a3:0000:0000:8a2e:0370:7334'])
+    <IPAddress(['192.168.1.1', '0:8a2e:370:7334:2001:db8:85a3:0'])>
+
+    Or integers
+    >>> to_ipaddress([3232235777,
+                      42540766452641154071740215577757643572])
+    <IPAddress(['192.168.1.1', '0:8a2e:370:7334:2001:db8:85a3:0'])>
+
+    Or packed binary representations
+    >>> to_ipaddress([b'\xc0\xa8\x01\x01',
+                      b' \x01\r\xb8\x85\xa3\x00\x00\x00\x00\x8a.\x03ps4'])
+    <IPAddress(['192.168.1.1', '0:8a2e:370:7334:2001:db8:85a3:0'])>
+    """
+    from .block import IPAddress
+
+    if not is_list_like(values):
+        values = [values]
+
+    return IPAddress(_to_int_pairs(values))
 
 
 def _to_int_pairs(values):
@@ -19,53 +51,11 @@ def _to_int_pairs(values):
     return values
 
 
-def is_ipv4(value) -> bool:
-    if isinstance(value, str):
-        return value.count(".") == 3
-    elif isinstance(value, bytes):
-        pass
-    elif isinstance(value, int):
-        return value < _IPv4_MAX
-    else:
-        return False
-
-
-def is_ipv6(value) -> bool:
-    if isinstance(value, str):
-        return value.count(":") == 7
-
-
-# Item parsers
-
-def _parse_ipv4_str(value: str) -> Tuple[int, int]:
-    pass
-
-
-def _parse_ipv6_str(value: str) -> Tuple[int, int]:
-    pass
-
-
-# Array parsers
-
-def _to_ipaddress_str(value):
-    pass
-
-
-def to_ipaddress(values: T.Iterable):
-    """Parse an array of things into an IPAddress"""
-    if isinstance(str):
-        return _to_ipaddress_str(values)
-
-
 def _to_ipaddress_pyint(values):
     from .block import IPAddress
 
     values2 = (unpack(pack(x)) for x in values)
     return IPAddress(list(values2))
-
-
-def _to_ipaddress_bytes(values):
-    pass
 
 
 def pack(ip: int) -> bytes:

@@ -11,11 +11,7 @@ from pandas.core.common import is_null_slice
 import typing as T
 
 from .parser import _to_ipaddress_pyint
-
-
-_IPv4_MAX = 2 ** 32 - 1
-_IPv6_MAX = 2 ** 128 - 1
-_U8_MAX = 2 ** 64 - 1
+from .common import _U8_MAX
 
 # -----------------------------------------------------------------------------
 # Extension Type
@@ -115,6 +111,10 @@ class IPAddress(ExternalArray):
             index = pd.RangeIndex(n)
         return pd.Series(block, index=index, name=name, fastpath=True)
 
+    def to_pyipaddress(self):
+        import ipaddress
+        return [ipaddress.ip_address(x) for x in self._format_values()]
+
     def __repr__(self):
         formatted = self._format_values()
         return "<IPAddress({!r})>".format(formatted)
@@ -142,6 +142,16 @@ class IPAddress(ExternalArray):
     def from_pyints(cls, values: T.Sequence[int]) -> 'IPAddress':
         return _to_ipaddress_pyint(values)
 
+    def __eq__(self, other):
+        if not isinstance(other, IPAddress):
+            return NotImplemented
+        return self.data == other.data
+
+    def equals(self, other):
+        if not isinstance(other, IPAddress):
+            raise TypeError
+        return (self.data == other.data).all()
+
     def isna(self):
         # Assuming we use 0.0.0.0 for N/A
         ips = self.data
@@ -158,12 +168,6 @@ class IPAddress(ExternalArray):
     def is_ipv6(self):
         ips = self.data
         return (ips['lo'] == 1) | (ips['hi'] > _U8_MAX)
-
-
-def to_ipaddress(values):
-    from .parser import _to_int_pairs
-
-    return IPAddress(_to_int_pairs(values))
 
 
 # -----------------------------------------------------------------------------

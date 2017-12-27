@@ -1,6 +1,7 @@
 """Custom IP address dtype / block for pandas"""
 
-from .block import IPBlock, IPType, IPAddress, IPAccessor, to_ipaddress  # noqa
+from .block import IPBlock, IPType, IPAddress, IPAccessor  # noqa
+from .parser import to_ipaddress  # noqa
 
 from pkg_resources import get_distribution, DistributionNotFound
 try:
