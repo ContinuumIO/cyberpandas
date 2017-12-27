@@ -17,4 +17,3 @@ def test_is_ipv4(value):
 ])
 def test_is_not_ipv4(value):
     assert not dtypes.is_ipv4(value)
-
