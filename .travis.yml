@@ -8,10 +8,10 @@ env:
   # anaconda auth -n pandas-ip-upload-key -o TomAugspurger --create
   # travis encrypt UPLOAD_KEY=<key>
   global:
-    secure: "pmvjwtBUZoP4e5o7c+AyFptLJCfY+8qrSf764CL1X4RIO16F2RrDRB/MiQQ6KumMo0s61zwmgHZpUxvHZMecS1eslUoSX+x3D4gpos89tluyxusEwjQpPsvhPkHg2eGwgqzozjFeK54tPimArJAGIsV8Yo4kcjVsqxiaQQCid5JjDp787wyd7P0KmrRaC5z36mzmdUTPZwqRgqbqyCS/Zbx3PEJAltYCSWJ8+p4TRZp+zGd+Mjp3WrXIfZNs2v9yV1rzcQz+/w9mBje9AamQ4+cDZM9pxCGL6JVpDkKIOBPHbPPZfjPC9pYTIxXPKZMK0IS2i1MaQtsAyLSAiAqOcLtVYTRdlfdu2WmrTe78aLpNNlxMmLjlpSvJDJMDKnD7xZ39hwMFAJKCJNzip42o9GH0fO1TvqYwNKcA4WWQFbGNbjP2quSB96CmSYou9q3Pqm2xQbTfVHlNaXV4Fm27L8dpHR8nXiC0UMjPBe6WE4N7LmKzntG1QWBhmV6nhpBFJKV14oEMjG+nCm2KCHF4bSheTqg17zE0UqlS5s+L4Ahg9FyjFGmhzNfDyRcsYTGuzpRVDCoNKRaBT3assukZKnDPnnYO7OFP+PPckqGJxFMUj1qO90eK8imyS6i1qyP2WKf2V9PQ7HLmTkXKW76CKTxs3d009ZqLsY+otCcO2Bk="
-    PANDAS_ROOT: "${TRAVIS_BUILD_DIR}/pandas"
+    - secure: "pmvjwtBUZoP4e5o7c+AyFptLJCfY+8qrSf764CL1X4RIO16F2RrDRB/MiQQ6KumMo0s61zwmgHZpUxvHZMecS1eslUoSX+x3D4gpos89tluyxusEwjQpPsvhPkHg2eGwgqzozjFeK54tPimArJAGIsV8Yo4kcjVsqxiaQQCid5JjDp787wyd7P0KmrRaC5z36mzmdUTPZwqRgqbqyCS/Zbx3PEJAltYCSWJ8+p4TRZp+zGd+Mjp3WrXIfZNs2v9yV1rzcQz+/w9mBje9AamQ4+cDZM9pxCGL6JVpDkKIOBPHbPPZfjPC9pYTIxXPKZMK0IS2i1MaQtsAyLSAiAqOcLtVYTRdlfdu2WmrTe78aLpNNlxMmLjlpSvJDJMDKnD7xZ39hwMFAJKCJNzip42o9GH0fO1TvqYwNKcA4WWQFbGNbjP2quSB96CmSYou9q3Pqm2xQbTfVHlNaXV4Fm27L8dpHR8nXiC0UMjPBe6WE4N7LmKzntG1QWBhmV6nhpBFJKV14oEMjG+nCm2KCHF4bSheTqg17zE0UqlS5s+L4Ahg9FyjFGmhzNfDyRcsYTGuzpRVDCoNKRaBT3assukZKnDPnnYO7OFP+PPckqGJxFMUj1qO90eK8imyS6i1qyP2WKf2V9PQ7HLmTkXKW76CKTxs3d009ZqLsY+otCcO2Bk="
   matrix:
     - PYTHON=3.6
+    - PANDAS_ROOT="${TRAVIS_BUILD_DIR}/pandas"
 before_install:
   - export PATH="$HOME/miniconda3/bin:$PATH"
   - git clone https://github.com/TomAugspurger/pandas.git
