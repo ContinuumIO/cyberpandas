@@ -14,7 +14,7 @@ if [ ${TRAVIS_PULL_REQUEST} != false -o ${TRAVIS_BRANCH} != ${SOURCE_BRANCH} ]; 
     return 0
 fi
 
-if [ -z "$MY_UPLOAD_KEY" ]; then
+if [ -z "$UPLOAD_KEY" ]; then
     echo "No upload key"
     return 0
 fi
@@ -24,7 +24,7 @@ echo "UPLOADFILE = ${UPLOADFILE}"
 
 echo "Upload"
 echo ${UPLOADFILE}
-anaconda -t ${MY_UPLOAD_KEY} upload -u TomAugspurger --force ${UPLOADFILE}
+anaconda -t ${UPLOAD_KEY} upload -u TomAugspurger --force ${UPLOADFILE}
 
 
 
@@ -33,4 +33,4 @@ echo "UPLOADFILE = ${UPLOADFILE}"
 
 echo "Upload"
 echo ${UPLOADFILE}
-anaconda -t ${MY_UPLOAD_KEY} upload -u TomAugspurger --force ${UPLOADFILE}
+anaconda -t ${UPLOAD_KEY} upload -u TomAugspurger --force ${UPLOADFILE}
