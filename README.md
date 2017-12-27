@@ -1,5 +1,14 @@
 Discussion at https://github.com/pandas-dev/pandas/issues/18767
 
+## Install
+
+This requires some modifications to pandas. These modifications are being
+merged upstream in pandas, but for now you can install from my channel with
+
+```
+conda install -c TomAugspurger pandas pandas_ip
+```
+
 ## Abstract
 
 Proposal to add support for storing and operating on IP Address data.
