@@ -14,7 +14,7 @@ env:
     - PYTHON=3.6
 before_install:
   - export PATH="$HOME/miniconda3/bin:$PATH"
-  - git clone https://github.com/TomAugspurger/pandas.git
+  - git clone -b pandas-array https://github.com/TomAugspurger/pandas.git
 install:
   - ci/install-travis.sh
 script:
