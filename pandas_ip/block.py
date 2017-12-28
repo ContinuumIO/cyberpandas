@@ -43,10 +43,10 @@ class IPAddress(ExternalArray):
     ndim = 1
 
     def __init__(self, values, meta=None):
-        # TODO: raise if they pass values like [1, 2, 3]?
-        # That's currently interpreted as [(1, 1), (2, 2), (3, 3)].
+        from .parser import _to_ip_array
 
-        self.data = np.atleast_1d(np.asarray(values, dtype=self.dtype.base))
+        values = _to_ip_array(values)  # TODO: avoid potential copy
+        self.data = values
 
     # Pandas Interface
     def __array__(self, dtype=None):
@@ -89,9 +89,14 @@ class IPAddress(ExternalArray):
         return len(self.data)
 
     def __getitem__(self, *args):
+        from .parser import combine
+
         result = operator.getitem(self.data, *args)
         if isinstance(result, tuple):
-            return result
+            return ipaddress.ip_address(combine(*result))
+        elif isinstance(result, np.void):
+            result = result.item()
+            return ipaddress.ip_address(combine(*result))
         else:
             return type(self)(result)
 
@@ -140,7 +145,7 @@ class IPAddress(ExternalArray):
 
     @classmethod
     def from_pyints(cls, values: T.Sequence[int]) -> 'IPAddress':
-        return _to_ipaddress_pyint(values)
+        return cls(_to_ipaddress_pyint(values))
 
     def __eq__(self, other):
         if not isinstance(other, IPAddress):

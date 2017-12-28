@@ -2,6 +2,7 @@ import ipaddress
 import struct
 import typing as T
 
+import numpy as np
 from pandas.api.types import is_list_like
 
 
@@ -33,18 +34,38 @@ def to_ipaddress(values):
                       b' \x01\r\xb8\x85\xa3\x00\x00\x00\x00\x8a.\x03ps4'])
     <IPAddress(['192.168.1.1', '0:8a2e:370:7334:2001:db8:85a3:0'])>
     """
-    from .block import IPAddress
+    from . import IPAddress
 
     if not is_list_like(values):
         values = [values]
 
-    return IPAddress(_to_int_pairs(values))
+    return IPAddress(_to_ip_array(values))
+
+
+def _to_ip_array(values):
+    from .block import IPType
+
+    if not (isinstance(values, np.ndarray) and values.dtype == IPType.base):
+        values = _to_int_pairs(values)
+    return np.atleast_1d(np.asarray(values, dtype=IPType.base))
 
 
 def _to_int_pairs(values):
     if isinstance(values, (str, bytes, int)):
         values = ipaddress.ip_address(values)._ip
         return unpack(pack(values))
+    elif isinstance(values, np.ndarray):
+        if values.ndim != 2:
+            raise ValueError("'values' should be a 2-D when passing a NumPy array.")
+        if values.dtype != int:
+            raise ValueError("'values' should be integer dtype when passing a NumPy array.")
+    elif isinstance(values, tuple) and len(values) == 2:
+        # like IPAddress((0, 0))
+        # which isn't IPAddress([0, 0])
+        pass
+    elif all(isinstance(x, tuple) for x in values):
+        # TODO: not great
+        pass
     else:
         values = [ipaddress.ip_address(v)._ip for v in values]
         values = [unpack(pack(v)) for v in values]
@@ -52,10 +73,10 @@ def _to_int_pairs(values):
 
 
 def _to_ipaddress_pyint(values):
-    from .block import IPAddress
+    from .block import IPType
 
-    values2 = (unpack(pack(x)) for x in values)
-    return IPAddress(list(values2))
+    values2 = [unpack(pack(x)) for x in values]
+    return np.atleast_1d(np.asarray(values2, dtype=IPType.base))
 
 
 def pack(ip: int) -> bytes:
