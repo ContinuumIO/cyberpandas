@@ -42,11 +42,11 @@ conda list test-environment
 
 
 echo
-echo "[install pandas]"
-pushd "${PANDAS_ROOT}" && \
-    python setup.py build_ext -i -j 2 && \
-    pip install -e . && \
-    popd
+echo "[building pandas]"
+conda build conda-recipes/pandas --python=${PYTHON}
+
+echo "[installing pandas]"
+conda install $(conda build conda-recipes/pandas --python=${PYTHON} --output)
 
 echo
 echo "[install pandas-ip]"

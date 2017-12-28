@@ -3,9 +3,6 @@
 
 set -e
 
-export UPLOADFILE=`conda build conda-recipes/pandas --python=${PYTHON} --output`
-echo "UPLOADFILE = ${UPLOADFILE}"
-
 SOURCE_BRANCH=master
 
 # Pull requests or commits to other branches shouldn't upload
@@ -22,15 +19,14 @@ fi
 export UPLOADFILE=`conda build conda-recipes/pandas --python=${PYTHON} --output`
 echo "UPLOADFILE = ${UPLOADFILE}"
 
-echo "Upload"
+echo "[Upload pandas]"
 echo ${UPLOADFILE}
 anaconda -t ${UPLOAD_KEY} upload -u TomAugspurger --force ${UPLOADFILE}
-
 
 
 export UPLOADFILE=`conda build conda-recipes/pandas_ip --python=${PYTHON} --output`
 echo "UPLOADFILE = ${UPLOADFILE}"
 
-echo "Upload"
+echo "[Upload pandas-ip]"
 echo ${UPLOADFILE}
 anaconda -t ${UPLOAD_KEY} upload -u TomAugspurger --force ${UPLOADFILE}
