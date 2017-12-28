@@ -1,5 +1,5 @@
 #!/bin/bash
-
+set -e
 echo "[install-travis]"
 
 # install iniconda
@@ -18,7 +18,7 @@ conda update -q conda
 
 echo
 echo "[conda build]"
-conda install conda-build anaconda-client --yes
+conda install -q conda-build anaconda-client --yes
 
 # echo
 # echo "[add channels]"
@@ -43,10 +43,10 @@ conda list test-environment
 
 echo
 echo "[building pandas]"
-conda build conda-recipes/pandas --python=${PYTHON}
+conda build -q conda-recipes/pandas --python=${PYTHON}
 
 echo "[installing pandas]"
-conda install $(conda build conda-recipes/pandas --python=${PYTHON} --output)
+conda install -q $(conda build conda-recipes/pandas --python=${PYTHON} --output)
 
 echo
 echo "[install pandas-ip]"
