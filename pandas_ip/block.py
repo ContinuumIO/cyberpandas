@@ -167,7 +167,7 @@ class IPAddress(ExternalArray):
     @property
     def is_ipv6(self):
         ips = self.data
-        return (ips['lo'] == 1) | (ips['hi'] > _U8_MAX)
+        return (ips['lo'] > 0) | (ips['hi'] > _U8_MAX)
 
 
 # -----------------------------------------------------------------------------
