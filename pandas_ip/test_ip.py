@@ -169,3 +169,20 @@ def test_equality():
 
     result = bool(v1.equals(v2))
     assert result is False
+
+
+def test_index_constructor():
+    result = ip.IPAddressIndex([0, 1, 2])
+    assert isinstance(result, ip.IPAddressIndex)
+    assert result._data.equals(ip.IPAddress([0, 1, 2]))
+    assert repr(result) == "IPAddressIndex(['0.0.0.0', '0.0.0.1', '0.0.0.2'])"
+
+
+def test_series_with_index():
+    s = pd.Series([1, 2, 3], index=ip.IPAddressIndex([0, 1, 2]))
+
+
+def test_value_counts():
+    x = ip.IPAddress([0, 0, 1])
+    result = x.value_counts()
+    assert len(result)

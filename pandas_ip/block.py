@@ -68,7 +68,7 @@ class IPAddress(ExternalArray):
     def nbytes(self):
         return 2 * 64 * len(self)
 
-    def view(self):
+    def view(self, dtype=None):
         return self.data.view()
 
     def take(self, indexer, allow_fill=True, fill_value=None):
@@ -173,6 +173,55 @@ class IPAddress(ExternalArray):
     def is_ipv6(self):
         ips = self.data
         return (ips['lo'] > 0) | (ips['hi'] > _U8_MAX)
+
+    def value_counts(self, normalize=False, sort=True, ascending=False,
+                     bins=None, dropna=True):
+        from pandas.core.algorithms import value_counts
+        counts = value_counts(self.data, sort=sort, normalize=normalize,
+                              ascending=ascending, bins=bins, dropna=dropna)
+        counts.index = IPAddressIndex(counts.index)
+        return counts
+
+
+# -----
+# Index
+# -----
+
+class IPAddressIndex(pd.Index):
+    _typ = 'ipaddressindex'
+    _attributes = ['name']
+    _holder = IPAddress
+
+    def __new__(cls, data=None, name=None):
+        from .parser import _to_ip_array
+
+        if data is None:
+            data = []
+
+        data = _to_ip_array(data)
+        return cls._simple_new(data, name=name)
+
+    @classmethod
+    def _simple_new(cls, data, name=None):
+        result = object.__new__(cls)
+        values = cls._holder(data)
+        result._data = values
+        result._name = name
+        result._reset_identity()
+        return result
+
+    def __repr__(self):
+        tpl = 'IPAddressIndex({})'
+        return tpl.format(self._data._format_values())
+
+    @property
+    def inferred_type(self):
+        return self._typ
+
+    @property
+    def values(self):
+        return self._data
+
 
 
 # -----------------------------------------------------------------------------
