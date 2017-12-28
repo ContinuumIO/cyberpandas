@@ -41,6 +41,19 @@ conda install -q \
 conda list test-environment
 
 
+# Seeing some failures during conda build like
+# error: [Errno 11] write could not complete without blocking
+# Apparently, this should fix the problem
+# See
+# https://github.com/travis-ci/travis-ci/issues/4704
+# https://github.com/travis-ci/travis-ci/issues/4704#issuecomment-3484359
+# https://github.com/travis-ci/travis-ci/issues/8902
+# https://github.com/conda/conda/issues/6473
+# https://github.com/conda/conda/issues/6481
+# https://github.com/conda/conda/issues/6487
+
+python -c 'import os,sys,fcntl; flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL); fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK);'
+
 echo
 echo "[building pandas]"
 conda build -q conda-recipes/pandas --python=${PYTHON}
