@@ -56,9 +56,11 @@ def _to_int_pairs(values):
         return unpack(pack(values))
     elif isinstance(values, np.ndarray):
         if values.ndim != 2:
-            raise ValueError("'values' should be a 2-D when passing a NumPy array.")
+            raise ValueError("'values' should be a 2-D when passing a "
+                             "NumPy array.")
         if values.dtype != int:
-            raise ValueError("'values' should be integer dtype when passing a NumPy array.")
+            raise ValueError("'values' should be integer dtype when "
+                             "passing a NumPy array.")
     elif isinstance(values, tuple) and len(values) == 2:
         # like IPAddress((0, 0))
         # which isn't IPAddress([0, 0])

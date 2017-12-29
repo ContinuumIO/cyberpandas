@@ -117,7 +117,7 @@ def test_isna(series):
     tm.assert_series_equal(result, expected)
 
 
-def test_isin_frame(frame):
+def test_isna_frame(frame):
     result = frame.isna()
     expected = pd.DataFrame({"A": [True, False, False],
                              "B": [False, False, False],
