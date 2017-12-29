@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 from pandas.core.internals import NonConsolidatableMixIn, Block
 from pandas.core.dtypes.dtypes import ExtensionDtype
-from pandas.core.externals import ExternalArray
+from pandas.core.extension import ExtensionArray
 from pandas.core.common import is_null_slice
 
 import typing as T
@@ -35,7 +35,7 @@ class IPType(ExtensionDtype):
 # -----------------------------------------------------------------------------
 
 
-class IPAddress(ExternalArray):
+class IPAddress(ExtensionArray):
     """Holder for things"""
     __array_priority__ = 1000
     _dtype = IPType
