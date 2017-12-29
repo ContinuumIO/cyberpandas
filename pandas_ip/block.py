@@ -61,7 +61,7 @@ class IPAddress(ExtensionArray):
         return (len(self.data),)
 
     @property
-    def block_type(self):
+    def _block_type(self):
         return IPBlock
 
     @property
@@ -111,7 +111,7 @@ class IPAddress(ExtensionArray):
     def to_series(self, index=None, name=None):
         n = len(self)
         placement = slice(n)
-        block = self.block_type(self, placement=placement)
+        block = self._block_type(self, placement=placement)
         if index is None:
             index = pd.RangeIndex(n)
         return pd.Series(block, index=index, name=name, fastpath=True)
