@@ -174,6 +174,16 @@ class IPAddress(ExtensionArray):
         ips = self.data
         return (ips['lo'] > 0) | (ips['hi'] > _U8_MAX)
 
+    @property
+    def packed(self):
+        """Bytestring of the IP addresses
+
+        Each address takes 16 bytes. IPv4 addresses are prefixed
+        by zeros.
+        """
+        # TODO: I wonder if that should be post-fixed by 0s.
+        return self.data.tobytes()
+
     def value_counts(self, normalize=False, sort=True, ascending=False,
                      bins=None, dropna=True):
         from pandas.core.algorithms import value_counts
@@ -301,5 +311,13 @@ class IPAccessor:
         # Assuming we use 0.0.0.0 for N/A
         return pd.Series(self._data.isna(), self._index, name=self._name)
 
+    @property
+    def packed(self):
+        return pd.Series(self._data.packed, self._index, name=self._name)
 
-pd.register_series_accessor("ip")(IPAccessor)  # decorate
+    @property
+    def is_multicast(self):
+        pass
+
+
+pd.api.extensions.register_series_accessor("ip")(IPAccessor)  # decorate
