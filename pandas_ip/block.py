@@ -35,6 +35,11 @@ class IPType(ExtensionDtype):
 
 class IPAddress(ExtensionArray):
     """Holder for things"""
+    # A note on the internal data layout. IPv6 addresses require 128 bits,
+    # which is more than a uint64 can store. So we use a NumPy structured array
+    # with two fields, 'hi', 'lo' to store the data. Each field is a uint64.
+    # The 'hi' field contains upper 64 bits. The think this is correct since
+    # all IP traffic is big-endian.
     __array_priority__ = 1000
     _dtype = IPType
     _typ = 'ip'
