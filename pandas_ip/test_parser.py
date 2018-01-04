@@ -18,3 +18,9 @@ def test_to_ipaddress(values):
         42540766452641154071740215577757643572
     ])
     assert result.equals(expected)
+
+
+def test_to_ipaddress_edge():
+    ip_int = 2 ** 64
+    result = parser.to_ipaddress([ip_int]).to_pyipaddress()[0]
+    assert int(result) == ip_int

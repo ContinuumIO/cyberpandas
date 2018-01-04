@@ -1,5 +1,8 @@
 import ipaddress
 
+from hypothesis.strategies import integers, lists, tuples
+from hypothesis import given, example
+
 import numpy as np
 import numpy.testing as npt
 import pandas as pd
@@ -64,7 +67,7 @@ def test_repr():
         '192.168.1.1',
         '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
     ])
-    e = "<IPAddress(['192.168.1.1', '0:8a2e:370:7334:2001:db8:85a3:0'])>"
+    e = "<IPAddress(['192.168.1.1', '2001:db8:85a3::8a2e:370:7334'])>"
     assert repr(v) == e
 
 
@@ -100,6 +103,28 @@ def test_equality():
 
     result = bool(v1.equals(v2))
     assert result is False
+
+
+@given(
+    tuples(
+        lists(integers(min_value=0, max_value=2**128 - 1)),
+        lists(integers(min_value=0, max_value=2**128 - 1))
+    ).filter(lambda x: len(x[0]) == len(x[1]))
+)
+@example((1, 1))
+@example((0, 0))
+@example((0, 1))
+@example((1, 0))
+@example((1, 2))
+@example((2, 1))
+def test_ops(tup):
+    a, b = tup
+    v1 = ip.IPAddress(a)
+    v2 = ip.IPAddress(b)
+
+    r1 = v1 <= v2
+    r2 = v2 >= v1
+    tm.assert_numpy_array_equal(r1, r2)
 
 
 def test_value_counts():

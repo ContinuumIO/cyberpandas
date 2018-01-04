@@ -25,7 +25,7 @@ class IPType(ExtensionDtype):
     name = 'ip'
     type = IPTypeType
     kind = 'O'
-    base = np.dtype([('lo', '>u8'), ('hi', '>u8')])
+    base = np.dtype([('hi', '>u8'), ('lo', '>u8')])
 
 
 # -----------------------------------------------------------------------------
@@ -118,6 +118,10 @@ class IPAddress(ExtensionArray):
         import ipaddress
         return [ipaddress.ip_address(x) for x in self._format_values()]
 
+    def to_pyints(self):
+        from .parser import combine
+        return [combine(*map(int, x)) for x in self.data]
+
     def __repr__(self):
         formatted = self._format_values()
         return "<IPAddress({!r})>".format(formatted)
@@ -126,12 +130,12 @@ class IPAddress(ExtensionArray):
         formatted = []
         # TODO: perf
         for i in range(len(self)):
-            lo, hi = self.data[i]
+            hi, lo = self.data[i]
             if lo == -1:
                 formatted.append("NA")
-            elif lo == 0:
+            elif hi == 0:
                 formatted.append(ipaddress.IPv4Address._string_from_ip_int(
-                    int(hi)))
+                    int(lo)))
             else:
                 # TODO:
                 formatted.append(ipaddress.IPv6Address._string_from_ip_int(
@@ -146,13 +150,43 @@ class IPAddress(ExtensionArray):
         return cls(_to_ipaddress_pyint(values))
 
     def __eq__(self, other):
+        # TDOO: scalar ipaddress
         if not isinstance(other, IPAddress):
             return NotImplemented
-        return self.data == other.data
+        mask = self.isna() | other.isna()
+        result = self.data == other.data
+        result[mask] = False
+        return result
+
+    def __lt__(self, other):
+        # TDOO: scalar ipaddress
+        if not isinstance(other, IPAddress):
+            return NotImplemented
+        mask = self.isna() | other.isna()
+        result = ((self.data['hi'] <= other.data['hi']) &
+                  (self.data['lo'] < other.data['lo']))
+        result[mask] = False
+        return result
+
+    def __le__(self, other):
+        if not isinstance(other, IPAddress):
+            return NotImplemented
+        mask = self.isna() | other.isna()
+        result = ((self.data['hi'] <= other.data['hi']) &
+                  (self.data['lo'] <= other.data['lo']))
+        result[mask] = False
+        return result
+
+    def __gt__(self, other):
+        return other < self
+
+    def __ge__(self, other):
+        return other <= self
 
     def equals(self, other):
         if not isinstance(other, IPAddress):
             raise TypeError
+        # TODO: missing
         return (self.data == other.data).all()
 
     def isna(self):
@@ -165,12 +199,12 @@ class IPAddress(ExtensionArray):
     def is_ipv4(self):
         # TODO: NA should be NA
         ips = self.data
-        return (ips['lo'] == 0) & (ips['hi'] < _U8_MAX)
+        return (ips['hi'] == 0) & (ips['lo'] < _U8_MAX)
 
     @property
     def is_ipv6(self):
         ips = self.data
-        return (ips['lo'] > 0) | (ips['hi'] > _U8_MAX)
+        return (ips['hi'] > 0) | (ips['lo'] > _U8_MAX)
 
     @property
     def packed(self):
