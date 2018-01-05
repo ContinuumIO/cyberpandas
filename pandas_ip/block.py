@@ -1,16 +1,17 @@
 import ipaddress
 import operator
+import typing as T
 
 import numpy as np
 import pandas as pd
-from pandas.core.internals import NonConsolidatableMixIn, Block
-from pandas.core.extension import ExtensionArray, ExtensionDtype
 from pandas.core.common import is_null_slice
+from pandas.core.extension import (ExtensionArray, ExtensionBlock,
+                                   ExtensionDtype)
+from pandas.core.internals import Block, NonConsolidatableMixIn
 
-import typing as T
-
-from .parser import _to_ipaddress_pyint
 from .common import _U8_MAX
+from .parser import _to_ipaddress_pyint
+
 
 # -----------------------------------------------------------------------------
 # Extension Type
@@ -212,6 +213,45 @@ class IPAddress(ExtensionArray):
         return (ips['hi'] > 0) | (ips['lo'] > _U8_MAX)
 
     @property
+    def version(self):
+        return np.where(self.is_ipv4, 4, 6)
+
+    @property
+    def is_multicast(self):
+        pyips = self.to_pyipaddress()
+        return np.array([ip.is_multicast for ip in pyips])
+
+    @property
+    def is_private(self):
+        pyips = self.to_pyipaddress()
+        return np.array([ip.is_private for ip in pyips])
+
+    @property
+    def is_global(self):
+        pyips = self.to_pyipaddress()
+        return np.array([ip.is_global for ip in pyips])
+
+    @property
+    def is_unspecified(self):
+        pyips = self.to_pyipaddress()
+        return np.array([ip.is_unspecified for ip in pyips])
+
+    @property
+    def is_reserved(self):
+        pyips = self.to_pyipaddress()
+        return np.array([ip.is_reserved for ip in pyips])
+
+    @property
+    def is_loopback(self):
+        pyips = self.to_pyipaddress()
+        return np.array([ip.is_loopback for ip in pyips])
+
+    @property
+    def is_link_local(self):
+        pyips = self.to_pyipaddress()
+        return np.array([ip.is_link_local for ip in pyips])
+
+    @property
     def packed(self):
         """Bytestring of the IP addresses
 
@@ -274,7 +314,7 @@ class IPAddressIndex(pd.Index):
 # -----------------------------------------------------------------------------
 
 
-class IPBlock(NonConsolidatableMixIn, Block):
+class IPBlock(NonConsolidatableMixIn, Block, ExtensionBlock):
     """Block type for IP Address dtype
 
     Notes
@@ -324,37 +364,45 @@ class IPBlock(NonConsolidatableMixIn, Block):
 # -----------------------------------------------------------------------------
 
 
+class _Delegated:
+
+    def __init__(self, name):
+        self.name = name
+
+    def __get__(self, obj, type=None):
+        return pd.Series(
+            getattr(object.__getattribute__(obj, '_data'), self.name),
+            index=object.__getattribute__(obj, '_index'),
+            name=object.__getattribute__(obj, '_name')
+        )
+
+
+@pd.api.extensions.register_series_accessor("ip")
 class IPAccessor:
 
+    is_ipv4 = _Delegated("is_ipv4")
+    is_ipv6 = _Delegated("is_ipv6")
+    version = _Delegated("version")
+    is_multicast = _Delegated("is_multicast")
+    is_private = _Delegated("is_private")
+    is_global = _Delegated("is_global")
+    is_unspecified = _Delegated("is_unspecified")
+    is_reserved = _Delegated("is_reserved")
+    is_loopback = _Delegated("is_loopback")
+    is_link_local = _Delegated("is_link_local")
+
     def __init__(self, obj):
+        self._validate(obj)
         self._data = obj.values
         self._index = obj.index
         self._name = obj.name
 
-    @classmethod
-    def _make_accessor(cls, data):
-        return cls(data.values, data.index, getattr(data, 'name', None))
-
-    @property
-    def is_ipv4(self):
-        # TODO: NA should be NA
-        return pd.Series(self._data.is_ipv4, self._index, name=self._name)
-
-    @property
-    def is_ipv6(self):
-        return pd.Series(self._data.is_ipv6, self._index, name=self._name)
-
-    def isna(self):
-        # Assuming we use 0.0.0.0 for N/A
-        return pd.Series(self._data.isna(), self._index, name=self._name)
-
-    @property
-    def packed(self):
-        return pd.Series(self._data.packed, self._index, name=self._name)
-
-    @property
-    def is_multicast(self):
-        pass
+    @staticmethod
+    def _validate(obj):
+        if not is_ipaddress_type(obj):
+            raise AttributeError("Cannot use 'ip' accessor on objects of "
+                                 "dtype '{}'.".format(obj.dtype))
 
 
-pd.api.extensions.register_series_accessor("ip")(IPAccessor)  # decorate
+def is_ipaddress_type(obj):
+    return getattr(obj, 'dtype') == IPType
