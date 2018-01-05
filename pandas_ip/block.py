@@ -9,7 +9,7 @@ from pandas.core.extension import (ExtensionArray, ExtensionBlock,
                                    ExtensionDtype)
 from pandas.core.internals import NonConsolidatableMixIn
 
-from .common import _U8_MAX
+from .common import _U8_MAX, _IPv4_MAX
 from .parser import _to_ipaddress_pyint
 
 
@@ -140,8 +140,11 @@ class IPAddress(ExtensionArray):
             hi, lo = self.data[i]
             if lo == -1:
                 formatted.append("NA")
-            elif hi == 0:
+            elif hi == 0 and lo <= _IPv4_MAX:
                 formatted.append(ipaddress.IPv4Address._string_from_ip_int(
+                    int(lo)))
+            elif hi == 0:
+                formatted.append(ipaddress.IPv6Address._string_from_ip_int(
                     int(lo)))
             else:
                 # TODO:
