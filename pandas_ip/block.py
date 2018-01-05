@@ -184,14 +184,19 @@ class IPAddress(ExtensionArray):
         return result
 
     def __gt__(self, other):
+        if not isinstance(other, IPAddress):
+            return NotImplemented
         return other < self
 
     def __ge__(self, other):
+        if not isinstance(other, IPAddress):
+            return NotImplemented
         return other <= self
 
     def equals(self, other):
         if not isinstance(other, IPAddress):
-            raise TypeError
+            raise TypeError("Cannot compare 'IPAddress' "
+                            "to type '{}'".format(type(other)))
         # TODO: missing
         return (self.data == other.data).all()
 

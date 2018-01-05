@@ -1,5 +1,7 @@
 import ipaddress
+import operator
 
+import pytest
 from hypothesis.strategies import integers, lists, tuples
 from hypothesis import given, example
 
@@ -104,6 +106,24 @@ def test_equality():
     result = bool(v1.equals(v2))
     assert result is False
 
+    with pytest.raises(TypeError):
+        v1.equals("a")
+
+
+@pytest.mark.parametrize('op', [
+    operator.lt,
+    operator.le,
+    operator.ge,
+    operator.gt,
+])
+def test_comparison_raises(op):
+    arr = ip.IPAddress([0, 1, 2])
+    with pytest.raises(TypeError):
+        op(arr, 'a')
+
+    with pytest.raises(TypeError):
+        op('a', arr)
+
 
 @given(
     tuples(
@@ -131,3 +151,37 @@ def test_value_counts():
     x = ip.IPAddress([0, 0, 1])
     result = x.value_counts()
     assert len(result)
+
+
+def test_iter_works():
+    x = ip.IPAddress([0, 1, 2])
+    result = [tuple(map(int, a)) for a in x]
+    expected = [(0, 0), (0, 1), (0, 2)]
+    assert result == expected
+
+
+def test_topyints():
+    values = [0, 1, 2**32]
+    arr = ip.IPAddress(values)
+    result = arr.to_pyints()
+    assert result == values
+
+
+@pytest.mark.parametrize('prop', [
+    'version',
+    'is_multicast',
+    'is_private',
+    'is_global',
+    'is_unspecified',
+    'is_reserved',
+    'is_loopback',
+    'is_link_local',
+])
+def test_attributes(prop):
+    addrs = [ipaddress.ip_address(0),
+             ipaddress.ip_address(1)]
+    arr = ip.IPAddress(addrs)
+    result = getattr(arr, prop)
+    expected = np.array([getattr(addr, prop)
+                         for addr in addrs])
+    tm.assert_numpy_array_equal(result, expected)

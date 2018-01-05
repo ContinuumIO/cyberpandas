@@ -24,3 +24,10 @@ def test_to_ipaddress_edge():
     ip_int = 2 ** 64
     result = parser.to_ipaddress([ip_int]).to_pyipaddress()[0]
     assert int(result) == ip_int
+
+
+def test_to_ipaddress_scalar():
+    result = parser.to_ipaddress(1)
+    expected = parser.to_ipaddress([1])
+    assert len(result) == 1
+    assert all(result == expected)
