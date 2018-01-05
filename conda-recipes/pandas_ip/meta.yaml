@@ -9,7 +9,7 @@ build:
     noarch: python
 
 source:
-    git_url: {{ environ.get("TRAVIS_BUILD_DIR", "../../") }}
+    path: {{ environ.get("TRAVIS_BUILD_DIR", "../../") }}
 
 requirements:
   build:
