@@ -31,6 +31,7 @@ def test_to_series_from_block():
     block = ip.IPBlock(values, slice(0, 3))
     expected = pd.Series(block, index=pd.RangeIndex(3), fastpath=True)
     result = values.to_series()
+    assert isinstance(result._data.blocks[0], ip.IPBlock)
     tm.assert_series_equal(result, expected)
     assert result.dtype is ip.IPType
     assert result.name is None

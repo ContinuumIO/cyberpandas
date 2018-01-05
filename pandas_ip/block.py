@@ -7,7 +7,7 @@ import pandas as pd
 from pandas.core.common import is_null_slice
 from pandas.core.extension import (ExtensionArray, ExtensionBlock,
                                    ExtensionDtype)
-from pandas.core.internals import Block, NonConsolidatableMixIn
+from pandas.core.internals import NonConsolidatableMixIn
 
 from .common import _U8_MAX
 from .parser import _to_ipaddress_pyint
@@ -27,7 +27,7 @@ class IPType(ExtensionDtype):
     type = IPTypeType
     kind = 'O'
     base = np.dtype([('hi', '>u8'), ('lo', '>u8')])
-
+    fill_value = np.array([(0, 0)], dtype=base)
 
 # -----------------------------------------------------------------------------
 # Extension Container
@@ -45,6 +45,7 @@ class IPAddress(ExtensionArray):
     _dtype = IPType
     _typ = 'ip'
     ndim = 1
+    fill_value = _dtype.fill_value
 
     def __init__(self, values, meta=None):
         from .parser import _to_ip_array
@@ -319,7 +320,7 @@ class IPAddressIndex(pd.Index):
 # -----------------------------------------------------------------------------
 
 
-class IPBlock(NonConsolidatableMixIn, Block, ExtensionBlock):
+class IPBlock(NonConsolidatableMixIn, ExtensionBlock):
     """Block type for IP Address dtype
 
     Notes
@@ -360,6 +361,13 @@ class IPBlock(NonConsolidatableMixIn, Block, ExtensionBlock):
             slicer = slicer[1]
 
         return self.values[slicer]
+
+    @property
+    def dtype(self):
+        return IPType
+
+    def to_dense(self):
+        return self.values.view()
 
     def get_values(self, dtype=None):
         return self.values.data.astype(object)
