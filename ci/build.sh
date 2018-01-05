@@ -8,4 +8,3 @@ ls -lha
 ls conda-recipes/pandas_ip
 
 conda build conda-recipes/pandas_ip --python ${PYTHON}
-conda build conda-recipes/pandas --python ${PYTHON}
