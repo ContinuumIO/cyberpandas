@@ -123,3 +123,20 @@ def test_isna_frame(frame):
                              "B": [False, False, False],
                              "C": [True, False, False]})
     tm.assert_frame_equal(result, expected)
+
+
+def test_fillna():
+    result = pd.Series(ip.IPAddress([1, 0])).fillna(method='ffill')
+    expected = pd.Series(ip.IPAddress([1, 1]))
+    tm.assert_series_equal(result, expected)
+
+
+def test_dropna():
+    missing = pd.Series(ip.IPAddress([1, 0]))
+    result = missing.dropna()
+    expected = pd.Series(ip.IPAddress([1]))
+    tm.assert_series_equal(result, expected)
+
+    result = missing.to_frame().dropna()
+    expected = expected.to_frame()
+    tm.assert_frame_equal(result, expected)

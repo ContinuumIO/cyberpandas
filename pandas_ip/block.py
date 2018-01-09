@@ -1,3 +1,4 @@
+import collections
 import ipaddress
 import operator
 import typing as T
@@ -5,13 +6,12 @@ import typing as T
 import numpy as np
 import pandas as pd
 from pandas.core.common import is_null_slice
-from pandas.core.extension import (ExtensionArray, ExtensionBlock,
-                                   ExtensionDtype)
+from pandas.core.extensions import (ExtensionArray, ExtensionBlock,
+                                    ExtensionDtype)
 from pandas.core.internals import NonConsolidatableMixIn
 
 from .common import _U8_MAX, _IPv4_MAX
 from .parser import _to_ipaddress_pyint
-
 
 # -----------------------------------------------------------------------------
 # Extension Type
@@ -42,7 +42,7 @@ class IPAddress(ExtensionArray):
     # The 'hi' field contains upper 64 bits. The think this is correct since
     # all IP traffic is big-endian.
     __array_priority__ = 1000
-    _dtype = IPType
+    _dtype = IPType()  # should be an *instance*
     _typ = 'ip'
     ndim = 1
     fill_value = _dtype.fill_value
@@ -278,6 +278,35 @@ class IPAddress(ExtensionArray):
         counts.index = IPAddressIndex(counts.index)
         return counts
 
+    def isin(self, other):
+        """
+
+        Examples
+        --------
+        >>> s = IPAddress(['192.168.1.1', '255.255.255.255'])
+        >>> s.isin('192.168.1.0/24')
+        array([ True, False])
+        """
+        if isinstance(other, str) or not isinstance(other,
+                                                    collections.Sequence):
+            other = [other]
+
+        networks = []
+        for net in other:
+            try:
+                networks.append(ipaddress.IPv4Network(net))
+            except ValueError:
+                networks.append(ipaddress.IPv6Network(net))
+
+        # TODO: perf
+        pyips = self.to_pyipaddress()
+        mask = np.zeros(len(self), dtype='bool')
+        for network in networks:
+            for i, ip in enumerate(pyips):
+                if ip in network:
+                    mask[i] = True
+        return mask
+
 
 # -----
 # Index
@@ -332,6 +361,8 @@ class IPBlock(NonConsolidatableMixIn, ExtensionBlock):
 
     """
     _holder = IPAddress
+    _dtype = IPType()
+    _can_hold_na = True
 
     def __init__(self, values, placement, ndim=None, fastpath=False):
         if not isinstance(values, self._holder):
@@ -340,12 +371,6 @@ class IPBlock(NonConsolidatableMixIn, ExtensionBlock):
 
     def formatting_values(self):
         return np.array(self.values._format_values(), dtype='object')
-
-    def concat_same_type(self, to_concat, placement=None):
-        values = np.concatenate([blk.values.data for blk in to_concat])
-        return self.make_block_same_class(
-            values, placement=placement or slice(0, len(values), 1)
-        )
 
     def _slice(self, slicer):
         """ Return a slice of myself.
@@ -367,7 +392,7 @@ class IPBlock(NonConsolidatableMixIn, ExtensionBlock):
 
     @property
     def dtype(self):
-        return IPType
+        return self._dtype
 
     def to_dense(self):
         return self.values.view()
@@ -397,8 +422,8 @@ class _DelegatedProperty(_Delegated):
         return getattr(object.__getattribute__(obj, '_data'), self.name)
 
 
-def _delegated_method(method, index, name):
-    return pd.Series(method(), index, name)
+def _delegated_method(method, index, name, *args, **kwargs):
+    return pd.Series(method(*args, **kwargs), index, name)
 
 
 class _DelegatedMethod(_Delegated):
@@ -424,6 +449,7 @@ class IPAccessor:
     is_link_local = _DelegatedProperty("is_link_local")
 
     isna = _DelegatedMethod("isna")
+    to_pyints = _DelegatedMethod("to_pyints")
 
     def __init__(self, obj):
         self._validate(obj)
@@ -437,6 +463,11 @@ class IPAccessor:
             raise AttributeError("Cannot use 'ip' accessor on objects of "
                                  "dtype '{}'.".format(obj.dtype))
 
+    def isin(self, other):
+        return _delegated_method(self._data.isin, self._index,
+                                 self._name, other)
+
 
 def is_ipaddress_type(obj):
-    return getattr(obj, 'dtype') == IPType
+    t = getattr(obj, 'dtype', obj)
+    return isinstance(t, IPType) or issubclass(t, IPType)

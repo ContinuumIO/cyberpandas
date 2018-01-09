@@ -23,7 +23,7 @@ def test_make_container():
 
 
 def test_repr_works():
-    values = ip.IPAddress.from_pyints([0, 1, 2, 3, 2**32])
+    values = ip.IPAddress.from_pyints([0, 1, 2, 3, 2**32, 2**64 + 1])
     block = ip.IPBlock(values, slice(0, len(values)))
     block.formatting_values()
 
@@ -184,4 +184,11 @@ def test_attributes(prop):
     result = getattr(arr, prop)
     expected = np.array([getattr(addr, prop)
                          for addr in addrs])
+    tm.assert_numpy_array_equal(result, expected)
+
+
+def test_isin():
+    s = ip.IPAddress(['192.168.1.1', '255.255.255.255'])
+    result = s.isin(['192.168.1.0/24'])
+    expected = np.array([True, False])
     tm.assert_numpy_array_equal(result, expected)
