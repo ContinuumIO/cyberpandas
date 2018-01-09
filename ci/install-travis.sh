@@ -65,4 +65,7 @@ echo
 echo "[install pandas-ip]"
 pip install -e .
 
+echo "[finished install]"
+conda list
+
 exit 0
