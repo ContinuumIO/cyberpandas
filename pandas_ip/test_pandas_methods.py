@@ -125,12 +125,14 @@ def test_isna_frame(frame):
     tm.assert_frame_equal(result, expected)
 
 
+@pytest.mark.xfail(reason="Not implemented")
 def test_fillna():
     result = pd.Series(ip.IPAddress([1, 0])).fillna(method='ffill')
     expected = pd.Series(ip.IPAddress([1, 1]))
     tm.assert_series_equal(result, expected)
 
 
+@pytest.mark.xfail(reason="Not implemented")
 def test_dropna():
     missing = pd.Series(ip.IPAddress([1, 0]))
     result = missing.dropna()
