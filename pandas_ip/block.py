@@ -5,10 +5,7 @@ import typing as T
 
 import numpy as np
 import pandas as pd
-from pandas.core.common import is_null_slice
-from pandas.core.extensions import (ExtensionArray, ExtensionBlock,
-                                    ExtensionDtype)
-from pandas.core.internals import NonConsolidatableMixIn
+from pandas.core.extensions import ExtensionArray, ExtensionDtype
 
 from .common import _U8_MAX, _IPv4_MAX
 from .parser import _to_ipaddress_pyint
@@ -43,9 +40,11 @@ class IPAddress(ExtensionArray):
     # all IP traffic is big-endian.
     __array_priority__ = 1000
     _dtype = IPType()  # should be an *instance*
+    dtype = _dtype
     _typ = 'ip'
     ndim = 1
     fill_value = _dtype.fill_value
+    can_hold_na = True
 
     def __init__(self, values, meta=None):
         from .parser import _to_ip_array
@@ -53,7 +52,9 @@ class IPAddress(ExtensionArray):
         values = _to_ip_array(values)  # TODO: avoid potential copy
         self.data = values
 
+    # -------------------------------------------------------------------------
     # Pandas Interface
+    # -------------------------------------------------------------------------
     def __array__(self, dtype=None):
         return np.array(self.data, dtype=dtype)
 
@@ -64,10 +65,6 @@ class IPAddress(ExtensionArray):
     @property
     def shape(self):
         return (len(self.data),)
-
-    @property
-    def _block_type(self):
-        return IPBlock
 
     @property
     def nbytes(self):
@@ -83,13 +80,28 @@ class IPAddress(ExtensionArray):
         result[mask] = self._fill_value
         return type(self)(result)
 
+    def formatting_values(self):
+        return np.array(self._format_values(), dtype='object')
+
+    @classmethod
+    def concat_same_type(cls, to_concat):
+        return cls(np.concatenate([array.data for array in to_concat]))
+
+    def get_values(self):
+        return self.data
+
+    def to_dense(self):
+        return self.data
+
     def take_nd(self, indexer, allow_fill=True, fill_value=None):
         return self.take(indexer, allow_fill=allow_fill, fill_value=fill_value)
 
     def copy(self, deep=False):
         return type(self)(self.data.copy())
 
+    # -------------------------------------------------------------------------
     # Iterator / Sequence interfae
+    # -------------------------------------------------------------------------
     def __len__(self):
         return len(self.data)
 
@@ -111,15 +123,6 @@ class IPAddress(ExtensionArray):
     @property
     def _fill_value(self):
         return np.array((0, 0), dtype=self.dtype.base)
-
-    # Utility methods
-    def to_series(self, index=None, name=None):
-        n = len(self)
-        placement = slice(n)
-        block = self._block_type(self, placement=placement)
-        if index is None:
-            index = pd.RangeIndex(n)
-        return pd.Series(block, index=index, name=name, fastpath=True)
 
     def to_pyipaddress(self):
         import ipaddress
@@ -307,6 +310,25 @@ class IPAddress(ExtensionArray):
                     mask[i] = True
         return mask
 
+    def slice(self, slicer):
+        """ Return a slice of myself.
+
+        For internal compatibility with numpy arrays.
+        """
+        # XXX: Would like to handle this better...
+        # We're forced to handle 2-d slicing by the BlockMananger,
+        # even though we're only ever 1-d
+        # only allow 1 dimensional slicing, but can
+        # in a 2-d case be passd (slice(None),....)
+        # TODO: Figure out a nicer impl for subclasses
+        if isinstance(slicer, tuple) and len(slicer) == 2:
+            # if not is_null_slice(slicer[0]):
+            #     raise AssertionError("invalid slicing for a 1-ndim "
+            #                          "categorical")
+            slicer = slicer[1]
+
+        return self[slicer]
+
 
 # -----
 # Index
@@ -352,53 +374,53 @@ class IPAddressIndex(pd.Index):
 # -----------------------------------------------------------------------------
 
 
-class IPBlock(NonConsolidatableMixIn, ExtensionBlock):
-    """Block type for IP Address dtype
+# class IPBlock(NonConsolidatableMixIn, ExtensionBlock):
+#     """Block type for IP Address dtype
 
-    Notes
-    -----
-    This can hold either IPv4 or IPv6 addresses.
+#     Notes
+#     -----
+#     This can hold either IPv4 or IPv6 addresses.
 
-    """
-    _holder = IPAddress
-    _dtype = IPType()
-    _can_hold_na = True
+#     """
+#     _holder = IPAddress
+#     _dtype = IPType()
+#     _can_hold_na = True
 
-    def __init__(self, values, placement, ndim=None, fastpath=False):
-        if not isinstance(values, self._holder):
-            values = IPAddress(values)
-        super().__init__(values, placement, ndim=ndim, fastpath=fastpath)
+#     def __init__(self, values, placement, ndim=None, fastpath=False):
+#         if not isinstance(values, self._holder):
+#             values = IPAddress(values)
+#         super().__init__(values, placement, ndim=ndim, fastpath=fastpath)
 
-    def formatting_values(self):
-        return np.array(self.values._format_values(), dtype='object')
+#     def formatting_values(self):
+#         return np.array(self.values._format_values(), dtype='object')
 
-    def _slice(self, slicer):
-        """ Return a slice of myself.
+#     def _slice(self, slicer):
+#         """ Return a slice of myself.
 
-        For internal compatibility with numpy arrays.
-        """
-        # XXX: Would like to handle this better...
-        # We're forced to handle 2-d slicing by the BlockMananger,
-        # even though we're only ever 1-d
-        # only allow 1 dimensional slicing, but can
-        # in a 2-d case be passd (slice(None),....)
-        if isinstance(slicer, tuple) and len(slicer) == 2:
-            if not is_null_slice(slicer[0]):
-                raise AssertionError("invalid slicing for a 1-ndim "
-                                     "categorical")
-            slicer = slicer[1]
+#         For internal compatibility with numpy arrays.
+#         """
+#         # XXX: Would like to handle this better...
+#         # We're forced to handle 2-d slicing by the BlockMananger,
+#         # even though we're only ever 1-d
+#         # only allow 1 dimensional slicing, but can
+#         # in a 2-d case be passd (slice(None),....)
+#         if isinstance(slicer, tuple) and len(slicer) == 2:
+#             if not is_null_slice(slicer[0]):
+#                 raise AssertionError("invalid slicing for a 1-ndim "
+#                                      "categorical")
+#             slicer = slicer[1]
 
-        return self.values[slicer]
+#         return self.values[slicer]
 
-    @property
-    def dtype(self):
-        return self._dtype
+#     @property
+#     def dtype(self):
+#         return self._dtype
 
-    def to_dense(self):
-        return self.values.view()
+#     def to_dense(self):
+#         return self.values.view()
 
-    def get_values(self, dtype=None):
-        return self.values.data.astype(object)
+#     def get_values(self, dtype=None):
+#         return self.values.data.astype(object)
 
 # -----------------------------------------------------------------------------
 # Accessor
@@ -434,7 +456,7 @@ class _DelegatedMethod(_Delegated):
         return _delegated_method(method, index, name)
 
 
-@pd.api.extensions.register_series_accessor("ip")
+# @pd.api.extensions.register_series_accessor("ip")
 class IPAccessor:
 
     is_ipv4 = _DelegatedProperty("is_ipv4")

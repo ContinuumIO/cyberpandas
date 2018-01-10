@@ -24,8 +24,7 @@ def test_make_container():
 
 def test_repr_works():
     values = ip.IPAddress.from_pyints([0, 1, 2, 3, 2**32, 2**64 + 1])
-    block = ip.IPBlock(values, slice(0, len(values)))
-    block.formatting_values()
+    values.formatting_values()
 
 
 def test_isna():
