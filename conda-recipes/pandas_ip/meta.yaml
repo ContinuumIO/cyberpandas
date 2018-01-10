@@ -4,7 +4,6 @@ package:
 
 build:
     number: {{ environ.get('GIT_DESCRIBE_NUMBER', 0) }}
-    noarch: python
 
 source:
     path: {{ environ.get("TRAVIS_BUILD_DIR", "../../") }}
