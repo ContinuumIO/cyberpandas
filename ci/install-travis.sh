@@ -14,7 +14,7 @@ which conda
 echo
 echo "[update conda]"
 conda config --set always_yes true --set changeps1 false || exit 1
-conda update -q conda
+conda update -q conda conda-build
 
 echo
 echo "[conda build]"
