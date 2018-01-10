@@ -456,7 +456,7 @@ class _DelegatedMethod(_Delegated):
         return _delegated_method(method, index, name)
 
 
-# @pd.api.extensions.register_series_accessor("ip")
+@pd.api.extensions.register_series_accessor("ip")
 class IPAccessor:
 
     is_ipv4 = _DelegatedProperty("is_ipv4")
