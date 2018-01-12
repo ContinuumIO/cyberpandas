@@ -23,8 +23,8 @@ class IPType(ExtensionDtype):
     name = 'ip'
     type = IPTypeType
     kind = 'O'
-    base = np.dtype([('hi', '>u8'), ('lo', '>u8')])
-    fill_value = np.array([(0, 0)], dtype=base)
+    mybase = np.dtype([('hi', '>u8'), ('lo', '>u8')])
+    fill_value = np.array([(0, 0)], dtype=mybase)
 
 # -----------------------------------------------------------------------------
 # Extension Container
@@ -90,9 +90,6 @@ class IPAddress(ExtensionArray):
     def get_values(self):
         return self.data
 
-    def to_dense(self):
-        return self.data
-
     def take_nd(self, indexer, allow_fill=True, fill_value=None):
         return self.take(indexer, allow_fill=allow_fill, fill_value=fill_value)
 
@@ -122,7 +119,7 @@ class IPAddress(ExtensionArray):
 
     @property
     def _fill_value(self):
-        return np.array((0, 0), dtype=self.dtype.base)
+        return np.array((0, 0), dtype=self.dtype.mybase)
 
     def to_pyipaddress(self):
         import ipaddress
@@ -329,6 +326,10 @@ class IPAddress(ExtensionArray):
 
         return self[slicer]
 
+    @property
+    def index_type(self):
+        return IPAddressIndex
+
 
 # -----
 # Index
@@ -369,58 +370,6 @@ class IPAddressIndex(pd.Index):
     def values(self):
         return self._data
 
-# -----------------------------------------------------------------------------
-# Extension Block
-# -----------------------------------------------------------------------------
-
-
-# class IPBlock(NonConsolidatableMixIn, ExtensionBlock):
-#     """Block type for IP Address dtype
-
-#     Notes
-#     -----
-#     This can hold either IPv4 or IPv6 addresses.
-
-#     """
-#     _holder = IPAddress
-#     _dtype = IPType()
-#     _can_hold_na = True
-
-#     def __init__(self, values, placement, ndim=None, fastpath=False):
-#         if not isinstance(values, self._holder):
-#             values = IPAddress(values)
-#         super().__init__(values, placement, ndim=ndim, fastpath=fastpath)
-
-#     def formatting_values(self):
-#         return np.array(self.values._format_values(), dtype='object')
-
-#     def _slice(self, slicer):
-#         """ Return a slice of myself.
-
-#         For internal compatibility with numpy arrays.
-#         """
-#         # XXX: Would like to handle this better...
-#         # We're forced to handle 2-d slicing by the BlockMananger,
-#         # even though we're only ever 1-d
-#         # only allow 1 dimensional slicing, but can
-#         # in a 2-d case be passd (slice(None),....)
-#         if isinstance(slicer, tuple) and len(slicer) == 2:
-#             if not is_null_slice(slicer[0]):
-#                 raise AssertionError("invalid slicing for a 1-ndim "
-#                                      "categorical")
-#             slicer = slicer[1]
-
-#         return self.values[slicer]
-
-#     @property
-#     def dtype(self):
-#         return self._dtype
-
-#     def to_dense(self):
-#         return self.values.view()
-
-#     def get_values(self, dtype=None):
-#         return self.values.data.astype(object)
 
 # -----------------------------------------------------------------------------
 # Accessor
@@ -444,10 +393,6 @@ class _DelegatedProperty(_Delegated):
         return getattr(object.__getattribute__(obj, '_data'), self.name)
 
 
-def _delegated_method(method, index, name, *args, **kwargs):
-    return pd.Series(method(*args, **kwargs), index, name)
-
-
 class _DelegatedMethod(_Delegated):
     def __get__(self, obj, type=None):
         index = object.__getattribute__(obj, '_index')
@@ -456,7 +401,12 @@ class _DelegatedMethod(_Delegated):
         return _delegated_method(method, index, name)
 
 
-@pd.api.extensions.register_series_accessor("ip")
+def _delegated_method(method, index, name, *args, **kwargs):
+    return pd.Series(method(*args, **kwargs), index, name)
+
+
+
+# @pd.api.extensions.register_series_accessor("ip")
 class IPAccessor:
 
     is_ipv4 = _DelegatedProperty("is_ipv4")

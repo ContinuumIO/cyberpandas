@@ -18,7 +18,7 @@ def test_make_container():
         values.data,
         np.array([(0, 1),
                   (0, 2),
-                  (0, 3)], dtype=values.dtype.base)
+                  (0, 3)], dtype=values.dtype.mybase)
     )
 
 
@@ -41,7 +41,7 @@ def test_array():
     v = ip.IPAddress.from_pyints([1, 2, 3])
     result = np.array(v)
     expected = np.array([(0, 1), (0, 2), (0, 3)],
-                        dtype=ip.IPType.base)
+                        dtype=ip.IPType.mybase)
     tm.assert_numpy_array_equal(result, expected)
 
 
