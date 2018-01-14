@@ -191,3 +191,35 @@ def test_isin():
     result = s.isin(['192.168.1.0/24'])
     expected = np.array([True, False])
     tm.assert_numpy_array_equal(result, expected)
+
+
+def test_getitem_scalar():
+    ser = ip.IPAddress([0, 1, 2])
+    result = ser[1]
+    assert result == ipaddress.ip_address(1)
+
+
+def test_getitem_slice():
+    ser = ip.IPAddress([0, 1, 2])
+    result = ser[1:]
+    expected = ip.IPAddress([1, 2])
+    assert result.equals(expected)
+
+
+@pytest.mark.parametrize('value', [
+    '0.0.0.10',
+    10,
+    ipaddress.ip_address(10),
+])
+def test_setitem_scalar(value):
+    ser = ip.IPAddress([0, 1, 2])
+    ser[1] = ipaddress.ip_address(value)
+    expected = ip.IPAddress([0, 10, 2])
+    assert ser.equals(expected)
+
+
+def test_setitem_array():
+    ser = ip.IPAddress([0, 1, 2])
+    ser[[1, 2]] = [10, 20]
+    expected = ip.IPAddress([0, 10, 20])
+    assert ser.equals(expected)

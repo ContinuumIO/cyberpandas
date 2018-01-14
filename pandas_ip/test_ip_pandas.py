@@ -1,5 +1,7 @@
 """Tests involving pandas, not just the new array.
 """
+import ipaddress
+
 import pytest
 from hypothesis.strategies import integers, lists
 from hypothesis import given
@@ -70,8 +72,28 @@ def test_index_constructor():
 
 
 def test_series_with_index():
-    s = pd.Series([1, 2, 3], index=ip.IPAddressIndex([0, 1, 2]))
-    repr(s)
+    ser = pd.Series([1, 2, 3], index=ip.IPAddressIndex([0, 1, 2]))
+    repr(ser)
+
+
+def test_getitem_scalar():
+    ser = pd.Series(ip.IPAddress([0, 1, 2]))
+    result = ser[1]
+    assert result == ipaddress.ip_address(1)
+
+
+def test_getitem_slice():
+    ser = pd.Series(ip.IPAddress([0, 1, 2]))
+    result = ser[1:]
+    expected = pd.Series(ip.IPAddress([1, 2]), index=range(1, 3))
+    tm.assert_series_equal(result, expected)
+
+
+def test_setitem_scalar():
+    ser = pd.Series(ip.IPAddress([0, 1, 2]))
+    ser[1] = ipaddress.ip_address(10)
+    expected = pd.Series(ip.IPAddress([0, 10, 2]))
+    tm.assert_series_equal(ser, expected)
 
 
 # --------------

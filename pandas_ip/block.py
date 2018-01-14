@@ -114,6 +114,12 @@ class IPAddress(ExtensionArray):
         else:
             return type(self)(result)
 
+    def __setitem__(self, key, value):
+        from .parser import to_ipaddress
+
+        value = to_ipaddress(value).data
+        self.data[key] = value
+
     def __iter__(self):
         return iter(self.data)
 
@@ -318,6 +324,7 @@ class IPAddress(ExtensionArray):
         # only allow 1 dimensional slicing, but can
         # in a 2-d case be passd (slice(None),....)
         # TODO: Figure out a nicer impl for subclasses
+        return self[slicer]
         if isinstance(slicer, tuple) and len(slicer) == 2:
             # if not is_null_slice(slicer[0]):
             #     raise AssertionError("invalid slicing for a 1-ndim "
