@@ -333,6 +333,14 @@ class IPAddress(ExtensionArray):
 
         return self[slicer]
 
+    def setitem(self, indexer, value):
+        """Set the 'value' inplace.
+        """
+        # I think having a separate than __setitem__ is good
+        # since we have to return here, but __setitem__ doesn't.
+        self[indexer] = value
+        return self
+
     @property
     def index_type(self):
         return IPAddressIndex
