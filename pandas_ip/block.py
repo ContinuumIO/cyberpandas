@@ -5,7 +5,9 @@ import typing as T
 
 import numpy as np
 import pandas as pd
-from pandas.core.extensions import ExtensionArray, ExtensionDtype
+# TODO: public API
+from pandas.core.arrays import ExtensionArray
+from pandas.core.dtypes.dtypes import ExtensionDtype
 
 from .common import _U8_MAX, _IPv4_MAX
 from .parser import _to_ipaddress_pyint
@@ -80,11 +82,11 @@ class IPAddress(ExtensionArray):
         result[mask] = self._fill_value
         return type(self)(result)
 
-    def formatting_values(self):
+    def _formatting_values(self):
         return np.array(self._format_values(), dtype='object')
 
     @classmethod
-    def concat_same_type(cls, to_concat):
+    def _concat_same_type(cls, to_concat):
         return cls(np.concatenate([array.data for array in to_concat]))
 
     def get_values(self):
@@ -137,7 +139,7 @@ class IPAddress(ExtensionArray):
 
     def __repr__(self):
         formatted = self._format_values()
-        return "<IPAddress({!r})>".format(formatted)
+        return "IPAddress({!r})".format(formatted)
 
     def _format_values(self):
         formatted = []
@@ -312,26 +314,6 @@ class IPAddress(ExtensionArray):
                 if ip in network:
                     mask[i] = True
         return mask
-
-    def slice(self, slicer):
-        """ Return a slice of myself.
-
-        For internal compatibility with numpy arrays.
-        """
-        # XXX: Would like to handle this better...
-        # We're forced to handle 2-d slicing by the BlockMananger,
-        # even though we're only ever 1-d
-        # only allow 1 dimensional slicing, but can
-        # in a 2-d case be passd (slice(None),....)
-        # TODO: Figure out a nicer impl for subclasses
-        return self[slicer]
-        if isinstance(slicer, tuple) and len(slicer) == 2:
-            # if not is_null_slice(slicer[0]):
-            #     raise AssertionError("invalid slicing for a 1-ndim "
-            #                          "categorical")
-            slicer = slicer[1]
-
-        return self[slicer]
 
     def setitem(self, indexer, value):
         """Set the 'value' inplace.

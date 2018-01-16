@@ -24,7 +24,10 @@ def test_make_container():
 
 def test_repr_works():
     values = ip.IPAddress.from_pyints([0, 1, 2, 3, 2**32, 2**64 + 1])
-    values.formatting_values()
+    result = repr(values)
+    expected = ("IPAddress(['0.0.0.0', '0.0.0.1', '0.0.0.2', '0.0.0.3', "
+                "'::1:0:0', '::1:0:0:0:1'])")
+    assert result == expected
 
 
 def test_isna():
@@ -61,15 +64,6 @@ def test_to_pyipaddress():
         ipaddress.ip_address(3),
     ]
     assert result == expected
-
-
-def test_repr():
-    v = ip.to_ipaddress([
-        '192.168.1.1',
-        '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
-    ])
-    e = "<IPAddress(['192.168.1.1', '2001:db8:85a3::8a2e:370:7334'])>"
-    assert repr(v) == e
 
 
 def test_isip():
