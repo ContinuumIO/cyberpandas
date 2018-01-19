@@ -1,3 +1,4 @@
+import abc
 import collections
 import ipaddress
 import operator
@@ -17,8 +18,12 @@ from .parser import _to_ipaddress_pyint
 # -----------------------------------------------------------------------------
 
 
-class IPTypeType(type):
+class IPTypeType(metaclass=abc.ABCMeta):
     pass
+
+
+IPTypeType.register(ipaddress.IPv4Address)
+IPTypeType.register(ipaddress.IPv6Address)
 
 
 class IPType(ExtensionDtype):
@@ -57,9 +62,6 @@ class IPAddress(ExtensionArray):
     # -------------------------------------------------------------------------
     # Pandas Interface
     # -------------------------------------------------------------------------
-    def __array__(self, dtype=None):
-        return np.array(self.data, dtype=dtype)
-
     @property
     def dtype(self):
         return self._dtype
@@ -123,7 +125,7 @@ class IPAddress(ExtensionArray):
         self.data[key] = value
 
     def __iter__(self):
-        return iter(self.data)
+        return iter(self.to_pyipaddress())
 
     @property
     def _fill_value(self):

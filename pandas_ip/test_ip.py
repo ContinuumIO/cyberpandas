@@ -148,8 +148,12 @@ def test_value_counts():
 
 def test_iter_works():
     x = ip.IPAddress([0, 1, 2])
-    result = [tuple(map(int, a)) for a in x]
-    expected = [(0, 0), (0, 1), (0, 2)]
+    result = list(x)
+    expected = [
+        ipaddress.IPv4Address(0),
+        ipaddress.IPv4Address(1),
+        ipaddress.IPv4Address(2),
+    ]
     assert result == expected
 
 
