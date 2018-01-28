@@ -43,8 +43,11 @@ def test_isna():
 def test_array():
     v = ip.IPAddress.from_pyints([1, 2, 3])
     result = np.array(v)
-    expected = np.array([(0, 1), (0, 2), (0, 3)],
-                        dtype=ip.IPType.mybase)
+    expected = np.array([
+        ipaddress.IPv4Address(1),
+        ipaddress.IPv4Address(2),
+        ipaddress.IPv4Address(3),
+    ])
     tm.assert_numpy_array_equal(result, expected)
 
 

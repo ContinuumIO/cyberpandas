@@ -31,7 +31,15 @@ class IPType(ExtensionDtype):
     type = IPTypeType
     kind = 'O'
     mybase = np.dtype([('hi', '>u8'), ('lo', '>u8')])
-    fill_value = np.array([(0, 0)], dtype=mybase)
+    fill_value = ipaddress.IPv4Address(0)
+
+    @classmethod
+    def construct_from_string(cls, string):
+        if string == cls.name:
+            return cls()
+        else:
+            raise TypeError("Cannot construct a '{}' from "
+                            "'{}'".format(cls, string))
 
 # -----------------------------------------------------------------------------
 # Extension Container
@@ -50,7 +58,7 @@ class IPAddress(ExtensionArray):
     dtype = _dtype
     _typ = 'ip'
     ndim = 1
-    fill_value = _dtype.fill_value
+    # fill_value = _dtype.fill_value
     can_hold_na = True
 
     def __init__(self, values, meta=None):
@@ -91,9 +99,6 @@ class IPAddress(ExtensionArray):
     def _concat_same_type(cls, to_concat):
         return cls(np.concatenate([array.data for array in to_concat]))
 
-    def get_values(self):
-        return self.data
-
     def take_nd(self, indexer, allow_fill=True, fill_value=None):
         return self.take(indexer, allow_fill=allow_fill, fill_value=fill_value)
 
@@ -129,7 +134,7 @@ class IPAddress(ExtensionArray):
 
     @property
     def _fill_value(self):
-        return np.array((0, 0), dtype=self.dtype.mybase)
+        return self.dtype.fill_value
 
     def to_pyipaddress(self):
         import ipaddress
