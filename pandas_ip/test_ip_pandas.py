@@ -115,3 +115,21 @@ def test_argsort(ints):
     # result = pd.Series(ip.IPAddress(ints)).argsort()
     # expected = pd.Series(ints).argsort()
     # tm.assert_series_equal(result.ip.to_pyints(), expected)
+
+
+# --------
+# Accessor
+# --------
+
+def test_non_ip_raises():
+    s = pd.Series([1, 2])
+
+    with pytest.raises(AttributeError) as m:
+        s.ip.is_ipv4
+
+    assert m.match("Cannot use 'ip' accessor on objects of dtype 'int.*")
+
+
+def test_accessor_works():
+    s = pd.Series(ip.IPAddress([0, 1, 2, 3]))
+    s.ip.is_ipv4

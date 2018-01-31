@@ -409,8 +409,7 @@ def _delegated_method(method, index, name, *args, **kwargs):
     return pd.Series(method(*args, **kwargs), index, name)
 
 
-
-# @pd.api.extensions.register_series_accessor("ip")
+@pd.api.extensions.register_series_accessor("ip")
 class IPAccessor:
 
     is_ipv4 = _DelegatedProperty("is_ipv4")
@@ -446,4 +445,7 @@ class IPAccessor:
 
 def is_ipaddress_type(obj):
     t = getattr(obj, 'dtype', obj)
-    return isinstance(t, IPType) or issubclass(t, IPType)
+    try:
+        return isinstance(t, IPType) or issubclass(t, IPType)
+    except Exception:
+        return False
