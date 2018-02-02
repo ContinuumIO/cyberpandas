@@ -3,6 +3,7 @@
 import ipaddress
 
 import pytest
+import numpy as np
 from hypothesis.strategies import integers, lists
 from hypothesis import given
 import pandas as pd
@@ -133,3 +134,40 @@ def test_non_ip_raises():
 def test_accessor_works():
     s = pd.Series(ip.IPAddress([0, 1, 2, 3]))
     s.ip.is_ipv4
+
+
+# ---------
+# Factorize
+# ---------
+
+
+@pytest.mark.xfail(reason="TODO")
+def test_factorize():
+    arr = ip.IPAddress([1, 1, 10, 10])
+    labels, uniques = pd.factorize(arr)
+
+    expected_labels = np.array([0, 0, 1, 1])
+    tm.assert_numpy_array_equal(labels, expected_labels)
+
+    expected_uniques = ip.IPAddress([1, 10])
+    assert uniques.equals(expected_uniques)
+
+
+def test_groupby_make_grouper():
+    df = pd.DataFrame({"A": [1, 1, 2, 2],
+                       "B": ip.IPAddress([1, 1, 2, 2])})
+    gr = df.groupby("B")
+    result = gr.grouper.groupings[0].grouper
+    assert result.equals(df.B.values)
+
+
+def test_groupby_make_grouper_groupings():
+    df = pd.DataFrame({"A": [1, 1, 2, 2],
+                       "B": ip.IPAddress([1, 1, 2, 2])})
+    p1 = df.groupby("A").grouper.groupings[0]
+    p2 = df.groupby("B").grouper.groupings[0]
+
+    result = {int(k): v for k, v in p2.groups.items()}
+    assert result.keys() == p1.groups.keys()
+    for k in result.keys():
+        assert result[k].equals(p1.groups[k])

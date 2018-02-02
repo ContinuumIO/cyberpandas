@@ -18,17 +18,17 @@ from .parser import _to_ipaddress_pyint
 # -----------------------------------------------------------------------------
 
 
-class IPTypeType(metaclass=abc.ABCMeta):
+class IPv4v6Base(metaclass=abc.ABCMeta):
     pass
 
 
-IPTypeType.register(ipaddress.IPv4Address)
-IPTypeType.register(ipaddress.IPv6Address)
+IPv4v6Base.register(ipaddress.IPv4Address)
+IPv4v6Base.register(ipaddress.IPv6Address)
 
 
 class IPType(ExtensionDtype):
     name = 'ip'
-    type = IPTypeType
+    type = IPv4v6Base
     kind = 'O'
     mybase = np.dtype([('hi', '>u8'), ('lo', '>u8')])
     fill_value = ipaddress.IPv4Address(0)
@@ -54,14 +54,12 @@ class IPAddress(ExtensionArray):
     # The 'hi' field contains upper 64 bits. The think this is correct since
     # all IP traffic is big-endian.
     __array_priority__ = 1000
-    _dtype = IPType()  # should be an *instance*
-    dtype = _dtype
+    _dtype = IPType()
     _typ = 'ip'
     ndim = 1
-    # fill_value = _dtype.fill_value
     can_hold_na = True
 
-    def __init__(self, values, meta=None):
+    def __init__(self, values):
         from .parser import _to_ip_array
 
         values = _to_ip_array(values)  # TODO: avoid potential copy
@@ -86,7 +84,6 @@ class IPAddress(ExtensionArray):
         return self.data.view()
 
     def take(self, indexer, allow_fill=True, fill_value=None):
-        # XXX: NA-fill
         mask = indexer == -1
         result = self.data.take(indexer)
         result[mask] = self._fill_value
@@ -106,7 +103,7 @@ class IPAddress(ExtensionArray):
         return type(self)(self.data.copy())
 
     # -------------------------------------------------------------------------
-    # Iterator / Sequence interfae
+    # Iterator / Sequence interface
     # -------------------------------------------------------------------------
     def __len__(self):
         return len(self.data)
@@ -220,10 +217,8 @@ class IPAddress(ExtensionArray):
         return (self.data == other.data).all()
 
     def isna(self):
-        # Assuming we use 0.0.0.0 for N/A
         ips = self.data
-        # XXX: this could overflow uint64...
-        return ips['lo'] + ips['hi'] == 0
+        return ips['lo'] - ips['hi'] == 0
 
     @property
     def is_ipv4(self):
@@ -333,6 +328,32 @@ class IPAddress(ExtensionArray):
     @property
     def index_type(self):
         return IPAddressIndex
+
+    def unique(self):
+        # type: () -> ExtensionArray
+        pass
+
+    def factorize(self):
+        # XXX: Verify this, check for better algo
+        # astype to avoid endianness issues in pd.factorize
+        a, _ = pd.factorize(self.data['lo'].astype('u8'))
+        b, _ = pd.factorize(self.data['hi'].astype('u8'))
+
+        labels = np.bitwise_xor.reduce(
+            np.concatenate([a.reshape(-1, 1),
+                            b.reshape(-1, 1)], axis=1),
+            axis=1
+        )
+
+        # TODO: refactor into a .unique
+        # TODO: Handle empty, scalar, etc.
+        mask = np.zeros(len(labels), dtype=bool)
+        mask[0] = True
+        inner_mask = (labels[1:] - labels[:-1]) != 0
+        mask[1:] = inner_mask
+
+        uniques = self[mask]
+        return labels, uniques
 
 
 # -----
