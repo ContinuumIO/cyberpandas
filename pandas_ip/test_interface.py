@@ -6,12 +6,11 @@ import pandas_ip as ip
 
 class TestIP(BaseArrayTests):
     @pytest.fixture
-    def test_data(self):
+    def data(self):
         return ip.IPAddress(list(range(100)))
 
-
     @pytest.fixture
-    def test_data_missing(self):
+    def data_missing(self):
         return ip.IPAddress([0, 1])
 
     @pytest.fixture

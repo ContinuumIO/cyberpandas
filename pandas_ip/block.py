@@ -280,14 +280,6 @@ class IPAddress(ExtensionArray):
         # TODO: I wonder if that should be post-fixed by 0s.
         return self.data.tobytes()
 
-    def value_counts(self, normalize=False, sort=True, ascending=False,
-                     bins=None, dropna=True):
-        from pandas.core.algorithms import value_counts
-        counts = value_counts(self.data, sort=sort, normalize=normalize,
-                              ascending=ascending, bins=bins, dropna=dropna)
-        counts.index = IPAddressIndex(counts.index)
-        return counts
-
     def isin(self, other):
         """
 
