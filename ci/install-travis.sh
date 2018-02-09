@@ -59,7 +59,7 @@ echo "[building pandas]"
 conda build -q conda-recipes/pandas --python=${PYTHON}
 
 echo "[installing pandas]"
-conda install -q $(conda build conda-recipes/pandas --python=${PYTHON} --output)
+conda install -q $(conda build conda-recipes/pandas --python=${PYTHON} --output | tail -n 1)
 
 echo
 echo "[install cyberpandas]"
