@@ -1,4 +1,4 @@
-From 924f847e58392ea19f3aceff8f56549957e7b906 Mon Sep 17 00:00:00 2001
+From 6470fff1a552424d30752b9ca438e4382ef693db Mon Sep 17 00:00:00 2001
 From: Tom Augspurger <tom.w.augspurger@gmail.com>
 Date: Fri, 2 Feb 2018 15:29:55 -0600
 Subject: [PATCH] ENH: non-interval changes
@@ -6,7 +6,7 @@ Subject: [PATCH] ENH: non-interval changes
 ---
  doc/source/internals.rst                         |  19 +
  pandas/core/algorithms.py                        |   3 +-
- pandas/core/arrays/base.py                       |  96 ++++-
+ pandas/core/arrays/base.py                       |  66 +++-
  pandas/core/arrays/categorical.py                |   4 +
  pandas/core/base.py                              |  34 +-
  pandas/core/dtypes/base.py                       |  12 +-
@@ -28,8 +28,6 @@ Subject: [PATCH] ENH: non-interval changes
  pandas/io/formats/format.py                      |   2 +-
  pandas/io/pytables.py                            |   2 +-
  pandas/plotting/_converter.py                    |   6 +-
- pandas/tests/dtypes/test_dtypes.py               |  32 +-
- pandas/tests/extension/__init__.py               |   0
  pandas/tests/extension/base.py                   | 460 +++++++++++++++++++++++
  pandas/tests/extension/test_categorical.py       |  63 ++++
  pandas/tests/extension/test_decimal.py           | 143 +++++++
@@ -41,8 +39,7 @@ Subject: [PATCH] ENH: non-interval changes
  pandas/tests/indexes/test_category.py            |   8 +
  pandas/tests/internals/test_external_block.py    |   4 +-
  pandas/tests/test_base.py                        | 140 ++++++-
- 37 files changed, 1415 insertions(+), 178 deletions(-)
- create mode 100644 pandas/tests/extension/__init__.py
+ 35 files changed, 1384 insertions(+), 147 deletions(-)
  create mode 100644 pandas/tests/extension/base.py
  create mode 100644 pandas/tests/extension/test_categorical.py
  create mode 100644 pandas/tests/extension/test_decimal.py
@@ -100,17 +97,10 @@ index c754c063f..427ec5af2 100644
              # handle Categorical and sparse,
              result = Series(values).values.value_counts(dropna=dropna)
 diff --git a/pandas/core/arrays/base.py b/pandas/core/arrays/base.py
-index 1556b6538..20a12b6a4 100644
+index 553e1e0ac..13f781a6a 100644
 --- a/pandas/core/arrays/base.py
 +++ b/pandas/core/arrays/base.py
-@@ -1,4 +1,6 @@
- """An interface for extending pandas with custom arrays."""
-+import numpy as np
-+
- from pandas.errors import AbstractMethodError
- 
- _not_implemented_message = "{} does not implement {}."
-@@ -23,14 +25,14 @@ class ExtensionArray(object):
+@@ -25,14 +25,14 @@ class ExtensionArray(object):
      * isna
      * take
      * copy
@@ -127,7 +117,7 @@ index 1556b6538..20a12b6a4 100644
  
      This class does not inherit from 'abc.ABCMeta' for performance reasons.
      Methods and properties required by the interface raise
-@@ -51,9 +53,6 @@ class ExtensionArray(object):
+@@ -53,9 +53,6 @@ class ExtensionArray(object):
      Extension arrays should be able to be constructed with instances of
      the class, i.e. ``ExtensionArray(extension_array)`` should return
      an instance, not error.
@@ -137,7 +127,7 @@ index 1556b6538..20a12b6a4 100644
      """
      # ------------------------------------------------------------------------
      # Must be a Sequence
-@@ -90,7 +89,37 @@ class ExtensionArray(object):
+@@ -92,7 +89,37 @@ class ExtensionArray(object):
          raise AbstractMethodError(self)
  
      def __setitem__(self, key, value):
@@ -176,7 +166,7 @@ index 1556b6538..20a12b6a4 100644
          raise NotImplementedError(_not_implemented_message.format(
              type(self), '__setitem__')
          )
-@@ -105,6 +134,16 @@ class ExtensionArray(object):
+@@ -107,6 +134,16 @@ class ExtensionArray(object):
          # type: () -> int
          raise AbstractMethodError(self)
  
@@ -193,42 +183,7 @@ index 1556b6538..20a12b6a4 100644
      # ------------------------------------------------------------------------
      # Required attributes
      # ------------------------------------------------------------------------
-@@ -138,6 +177,34 @@ class ExtensionArray(object):
-     # ------------------------------------------------------------------------
-     # Additional Methods
-     # ------------------------------------------------------------------------
-+    def astype(self, dtype, copy=True):
-+        """Cast to a NumPy array with 'dtype'.
-+
-+        The default implementation only allows casting to 'object' dtype.
-+
-+        Parameters
-+        ----------
-+        dtype : str or dtype
-+            Typecode or data-type to which the array is cast.
-+        copy : bool, default True
-+            Whether to copy the data, even if not necessary. If False,
-+            a copy is made only if the old dtype does not match the
-+            new dtype.
-+
-+        Returns
-+        -------
-+        array : ndarray
-+            NumPy ndarray with 'dtype' for its dtype.
-+        """
-+        np_dtype = np.dtype(dtype)
-+
-+        if np_dtype != 'object':
-+            msg = ("{} can only be coerced to 'object' dtype, "
-+                   "not '{}'.").format(type(self).__name__, dtype)
-+            raise ValueError(msg)
-+
-+        return np.array(self, dtype=np_dtype, copy=copy)
-+
-     def isna(self):
-         # type: () -> np.ndarray
-         """Boolean NumPy array indicating if each value is missing.
-@@ -177,9 +244,9 @@ class ExtensionArray(object):
+@@ -198,9 +235,9 @@ class ExtensionArray(object):
  
          Examples
          --------
@@ -241,7 +196,7 @@ index 1556b6538..20a12b6a4 100644
  
          .. code-block:: python
  
-@@ -219,7 +286,7 @@ class ExtensionArray(object):
+@@ -240,7 +277,7 @@ class ExtensionArray(object):
          # type: () -> np.ndarray
          # At the moment, this has to be an array since we use result.dtype
          """An array of values to be printed in, e.g. the Series repr"""
@@ -250,7 +205,7 @@ index 1556b6538..20a12b6a4 100644
  
      @classmethod
      def _concat_same_type(cls, to_concat):
-@@ -236,6 +303,7 @@ class ExtensionArray(object):
+@@ -257,6 +294,7 @@ class ExtensionArray(object):
          """
          raise AbstractMethodError(cls)
  
@@ -258,7 +213,7 @@ index 1556b6538..20a12b6a4 100644
      def _can_hold_na(self):
          # type: () -> bool
          """Whether your array can hold missing values. True by default.
-@@ -245,3 +313,11 @@ class ExtensionArray(object):
+@@ -266,3 +304,11 @@ class ExtensionArray(object):
          Setting this to false will optimize some operations like fillna.
          """
          return True
@@ -1532,61 +1487,6 @@ index 07163615c..9ca064752 100644
      info['fmt'][:] = ''
      info['maj'][[0, -1]] = True
      # .. and set some shortcuts
-diff --git a/pandas/tests/dtypes/test_dtypes.py b/pandas/tests/dtypes/test_dtypes.py
-index eca4dd4cf..d800a7b92 100644
---- a/pandas/tests/dtypes/test_dtypes.py
-+++ b/pandas/tests/dtypes/test_dtypes.py
-@@ -10,14 +10,12 @@ from pandas import (
-     Series, Categorical, CategoricalIndex, IntervalIndex, date_range)
- 
- from pandas.compat import string_types
--from pandas.core.arrays import ExtensionArray
- from pandas.core.dtypes.dtypes import (
-     DatetimeTZDtype, PeriodDtype,
--    IntervalDtype, CategoricalDtype, ExtensionDtype)
-+    IntervalDtype, CategoricalDtype)
- from pandas.core.dtypes.common import (
-     is_categorical_dtype, is_categorical,
-     is_datetime64tz_dtype, is_datetimetz,
--    is_extension_array_dtype,
-     is_period_dtype, is_period,
-     is_dtype_equal, is_datetime64_ns_dtype,
-     is_datetime64_dtype, is_interval_dtype,
-@@ -744,31 +742,3 @@ class TestCategoricalDtypeParametrized(object):
-         tm.assert_index_equal(c1.categories, pd.Index(['a', 'b']))
-         c1 = CategoricalDtype(CategoricalIndex(['a', 'b']))
-         tm.assert_index_equal(c1.categories, pd.Index(['a', 'b']))
--
--
--class DummyArray(ExtensionArray):
--    pass
--
--
--class DummyDtype(ExtensionDtype):
--    pass
--
--
--class TestExtensionArrayDtype(object):
--
--    @pytest.mark.parametrize('values', [
--        pd.Categorical([]),
--        pd.Categorical([]).dtype,
--        pd.Series(pd.Categorical([])),
--        DummyDtype(),
--        DummyArray(),
--    ])
--    def test_is_extension_array_dtype(self, values):
--        assert is_extension_array_dtype(values)
--
--    @pytest.mark.parametrize('values', [
--        np.array([]),
--        pd.Series(np.array([])),
--    ])
--    def test_is_not_extension_array_dtype(self, values):
--        assert not is_extension_array_dtype(values)
-diff --git a/pandas/tests/extension/__init__.py b/pandas/tests/extension/__init__.py
-new file mode 100644
-index 000000000..e69de29bb
 diff --git a/pandas/tests/extension/base.py b/pandas/tests/extension/base.py
 new file mode 100644
 index 000000000..dc9bca653
