@@ -1,5 +1,5 @@
 import pytest
-from pandas.tests.extension_arrays.base import BaseArrayTests
+from pandas.tests.extension.base import BaseArrayTests
 
 import pandas_ip as ip
 
