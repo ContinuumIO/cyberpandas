@@ -3,12 +3,12 @@ package:
     version: {{ environ.get('GIT_DESCRIBE_TAG','').replace('v', '', 1) }}
 
 build:
-    number: {{ environ.get('GIT_DESCRIBE_NUMBER', 0) }}
-    {% if GIT_DESCRIBE_NUMBER|int == 0 %}string: np{{ CONDA_NPY }}py{{ CONDA_PY }}_0
-    {% else %}string: np{{ CONDA_NPY }}py{{ CONDA_PY }}_{{ GIT_BUILD_STR }}{% endif %}
+    number: 0
 
 source:
-    git_url: {{ environ.get('PANDAS_ROOT') }}
+    git_url: https://github.com/pandas-dev/pandas
+    patches:
+        - 0001-ENH-non-interval-changes.patch
 
 requirements:
   build:
@@ -27,7 +27,7 @@ requirements:
 
 test:
   imports:
-    - pandas
+    - pandas.core.arrays.base
 
 about:
   home: http://pandas.pydata.org

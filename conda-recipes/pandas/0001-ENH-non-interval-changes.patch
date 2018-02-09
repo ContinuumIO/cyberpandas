@@ -1,0 +1,2740 @@
+From 924f847e58392ea19f3aceff8f56549957e7b906 Mon Sep 17 00:00:00 2001
+From: Tom Augspurger <tom.w.augspurger@gmail.com>
+Date: Fri, 2 Feb 2018 15:29:55 -0600
+Subject: [PATCH] ENH: non-interval changes
+
+---
+ doc/source/internals.rst                         |  19 +
+ pandas/core/algorithms.py                        |   3 +-
+ pandas/core/arrays/base.py                       |  96 ++++-
+ pandas/core/arrays/categorical.py                |   4 +
+ pandas/core/base.py                              |  34 +-
+ pandas/core/dtypes/base.py                       |  12 +-
+ pandas/core/dtypes/cast.py                       |   2 +-
+ pandas/core/dtypes/common.py                     |   4 +-
+ pandas/core/dtypes/concat.py                     |   8 +-
+ pandas/core/dtypes/missing.py                    |  30 +-
+ pandas/core/frame.py                             |  21 +-
+ pandas/core/indexes/base.py                      | 118 ++++--
+ pandas/core/indexes/category.py                  |  17 +-
+ pandas/core/indexes/datetimelike.py              |   2 +-
+ pandas/core/indexes/datetimes.py                 |  22 ++
+ pandas/core/indexes/multi.py                     |  36 +-
+ pandas/core/indexes/numeric.py                   |   2 +-
+ pandas/core/indexes/period.py                    |  39 +-
+ pandas/core/indexing.py                          |   3 +
+ pandas/core/internals.py                         |  40 +-
+ pandas/core/series.py                            |  28 +-
+ pandas/io/formats/format.py                      |   2 +-
+ pandas/io/pytables.py                            |   2 +-
+ pandas/plotting/_converter.py                    |   6 +-
+ pandas/tests/dtypes/test_dtypes.py               |  32 +-
+ pandas/tests/extension/__init__.py               |   0
+ pandas/tests/extension/base.py                   | 460 +++++++++++++++++++++++
+ pandas/tests/extension/test_categorical.py       |  63 ++++
+ pandas/tests/extension/test_decimal.py           | 143 +++++++
+ pandas/tests/extension/test_json.py              | 175 +++++++++
+ pandas/tests/indexes/common.py                   |   6 +-
+ pandas/tests/indexes/period/test_construction.py |   4 +-
+ pandas/tests/indexes/period/test_period.py       |   6 +-
+ pandas/tests/indexes/period/test_tools.py        |   2 +-
+ pandas/tests/indexes/test_category.py            |   8 +
+ pandas/tests/internals/test_external_block.py    |   4 +-
+ pandas/tests/test_base.py                        | 140 ++++++-
+ 37 files changed, 1415 insertions(+), 178 deletions(-)
+ create mode 100644 pandas/tests/extension/__init__.py
+ create mode 100644 pandas/tests/extension/base.py
+ create mode 100644 pandas/tests/extension/test_categorical.py
+ create mode 100644 pandas/tests/extension/test_decimal.py
+ create mode 100644 pandas/tests/extension/test_json.py
+
+diff --git a/doc/source/internals.rst b/doc/source/internals.rst
+index ee4df879d..957f82fd9 100644
+--- a/doc/source/internals.rst
++++ b/doc/source/internals.rst
+@@ -89,6 +89,25 @@ not check (or care) whether the levels themselves are sorted. Fortunately, the
+ constructors ``from_tuples`` and ``from_arrays`` ensure that this is true, but
+ if you compute the levels and labels yourself, please be careful.
+ 
++Values
++~~~~~~
++
++Pandas extends NumPy's type system with custom types, like ``Categorical`` or
++datetimes with a timezone, so we have multiple notions of "values". For 1-D
++containers (``Index`` classes and ``Series``) we have the following convention:
++
++* ``cls._ndarray_values`` is *always* a NumPy ``ndarray``. Ideally,
++  ``_ndarray_values`` is cheap to compute. For example, for a ``Categorical``,
++  this returns the codes, not the array of objects.
++* ``cls._values`` refers is the "best possible" array. This could be an
++  ``ndarray``, ``ExtensionArray``, or in ``Index`` subclass (note: we're in the
++  process of removing the index subclasses here so that it's always an
++  ``ndarray`` or ``ExtensionArray``).
++
++So, for example, ``Series[category]._values`` is a ``Categorical``, while
++``Series[category]._ndarray_values`` is the underlying codes.
++
++
+ .. _ref-subclassing-pandas:
+ 
+ Subclassing pandas Data Structures
+diff --git a/pandas/core/algorithms.py b/pandas/core/algorithms.py
+index c754c063f..427ec5af2 100644
+--- a/pandas/core/algorithms.py
++++ b/pandas/core/algorithms.py
+@@ -15,6 +15,7 @@ from pandas.core.dtypes.common import (
+     is_unsigned_integer_dtype, is_signed_integer_dtype,
+     is_integer_dtype, is_complex_dtype,
+     is_object_dtype,
++    is_extension_array_dtype,
+     is_categorical_dtype, is_sparse,
+     is_period_dtype,
+     is_numeric_dtype, is_float_dtype,
+@@ -542,7 +543,7 @@ def value_counts(values, sort=True, ascending=False, normalize=False,
+ 
+     else:
+ 
+-        if is_categorical_dtype(values) or is_sparse(values):
++        if is_extension_array_dtype(values) or is_sparse(values):
+ 
+             # handle Categorical and sparse,
+             result = Series(values).values.value_counts(dropna=dropna)
+diff --git a/pandas/core/arrays/base.py b/pandas/core/arrays/base.py
+index 1556b6538..20a12b6a4 100644
+--- a/pandas/core/arrays/base.py
++++ b/pandas/core/arrays/base.py
+@@ -1,4 +1,6 @@
+ """An interface for extending pandas with custom arrays."""
++import numpy as np
++
+ from pandas.errors import AbstractMethodError
+ 
+ _not_implemented_message = "{} does not implement {}."
+@@ -23,14 +25,14 @@ class ExtensionArray(object):
+     * isna
+     * take
+     * copy
+-    * _formatting_values
+     * _concat_same_type
+ 
+     Some additional methods are required to satisfy pandas' internal, private
+     block API.
+ 
+-    * _concat_same_type
+     * _can_hold_na
++    * _formatting_values
++    * _fill_value
+ 
+     This class does not inherit from 'abc.ABCMeta' for performance reasons.
+     Methods and properties required by the interface raise
+@@ -51,9 +53,6 @@ class ExtensionArray(object):
+     Extension arrays should be able to be constructed with instances of
+     the class, i.e. ``ExtensionArray(extension_array)`` should return
+     an instance, not error.
+-
+-    Additionally, certain methods and interfaces are required for proper
+-    this array to be properly stored inside a ``DataFrame`` or ``Series``.
+     """
+     # ------------------------------------------------------------------------
+     # Must be a Sequence
+@@ -90,7 +89,37 @@ class ExtensionArray(object):
+         raise AbstractMethodError(self)
+ 
+     def __setitem__(self, key, value):
+-        # type: (Any, Any) -> None
++        # type: (Union[int, np.ndarray], Any) -> None
++        """Set one or more values inplace.
++
++        Parameters
++        ----------
++        key : int or ndarray
++            When called from, e.g. ``Series.__setitem__``, ``key`` will
++            always be an ndarray of integers.
++        value : ExtensionDtype.type, Sequence[ExtensionDtype.type], or object
++            ExtensionArrays may
++
++        Notes
++        -----
++        This method is not required to satisfy the interface. If an
++        ExtensionArray chooses to implement __setitem__, then some semantics
++        should be observed.
++
++        * Setting multiple values : ExtensionArrays should support setting
++          multiple values at once, ``key`` will be a sequence of integers.
++
++        * Broadcasting : For a sequence ``key`` and a scalar ``value``,
++          each position in ``key`` should be set to ``value``.
++
++        * Coercion : Most users will expect basic coercion to work. For
++          example, a string like ``'2018-01-01'`` is coerced to a datetime
++          when setting on a datetime64ns array. In general, if the
++        ``__init__`` method coerces that value, then so should ``__setitem__``.
++
++        When called from, e.g. ``Series.__setitem__``, ``key`` will always
++        be an ndarray of positions.
++        """
+         raise NotImplementedError(_not_implemented_message.format(
+             type(self), '__setitem__')
+         )
+@@ -105,6 +134,16 @@ class ExtensionArray(object):
+         # type: () -> int
+         raise AbstractMethodError(self)
+ 
++    def __iter__(self):
++        """Iterate over elements.
++
++        This needs to be implemented so that pandas recognizes extension arrays
++        as list-like. The default implementation makes successive calls to
++        ``__getitem__``, which may be slower than necessary.
++        """
++        for i in range(len(self)):
++            yield self[i]
++
+     # ------------------------------------------------------------------------
+     # Required attributes
+     # ------------------------------------------------------------------------
+@@ -138,6 +177,34 @@ class ExtensionArray(object):
+     # ------------------------------------------------------------------------
+     # Additional Methods
+     # ------------------------------------------------------------------------
++    def astype(self, dtype, copy=True):
++        """Cast to a NumPy array with 'dtype'.
++
++        The default implementation only allows casting to 'object' dtype.
++
++        Parameters
++        ----------
++        dtype : str or dtype
++            Typecode or data-type to which the array is cast.
++        copy : bool, default True
++            Whether to copy the data, even if not necessary. If False,
++            a copy is made only if the old dtype does not match the
++            new dtype.
++
++        Returns
++        -------
++        array : ndarray
++            NumPy ndarray with 'dtype' for its dtype.
++        """
++        np_dtype = np.dtype(dtype)
++
++        if np_dtype != 'object':
++            msg = ("{} can only be coerced to 'object' dtype, "
++                   "not '{}'.").format(type(self).__name__, dtype)
++            raise ValueError(msg)
++
++        return np.array(self, dtype=np_dtype, copy=copy)
++
+     def isna(self):
+         # type: () -> np.ndarray
+         """Boolean NumPy array indicating if each value is missing.
+@@ -177,9 +244,9 @@ class ExtensionArray(object):
+ 
+         Examples
+         --------
+-        Suppose the extension array somehow backed by a NumPy structured array
+-        and that the underlying structured array is stored as ``self.data``.
+-        Then ``take`` may be written as
++        Suppose the extension array somehow backed by a NumPy array and that
++        the underlying structured array is stored as ``self.data``. Then
++        ``take`` may be written as
+ 
+         .. code-block:: python
+ 
+@@ -219,7 +286,7 @@ class ExtensionArray(object):
+         # type: () -> np.ndarray
+         # At the moment, this has to be an array since we use result.dtype
+         """An array of values to be printed in, e.g. the Series repr"""
+-        raise AbstractMethodError(self)
++        return np.array(self)
+ 
+     @classmethod
+     def _concat_same_type(cls, to_concat):
+@@ -236,6 +303,7 @@ class ExtensionArray(object):
+         """
+         raise AbstractMethodError(cls)
+ 
++    @property
+     def _can_hold_na(self):
+         # type: () -> bool
+         """Whether your array can hold missing values. True by default.
+@@ -245,3 +313,11 @@ class ExtensionArray(object):
+         Setting this to false will optimize some operations like fillna.
+         """
+         return True
++
++    def value_counts(self, dropna=True):
++        from pandas import value_counts
++
++        if dropna:
++            self = self[~self.isna()]
++
++        return value_counts(np.array(self))
+diff --git a/pandas/core/arrays/categorical.py b/pandas/core/arrays/categorical.py
+index 62c6a6b16..d5e8fc5e0 100644
+--- a/pandas/core/arrays/categorical.py
++++ b/pandas/core/arrays/categorical.py
+@@ -2137,6 +2137,10 @@ class Categorical(ExtensionArray, PandasObject):
+     def _can_hold_na(self):
+         return True
+ 
++    @property
++    def _fill_value(self):
++        return np.nan
++
+     @classmethod
+     def _concat_same_type(self, to_concat):
+         from pandas.core.dtypes.concat import _concat_categorical
+diff --git a/pandas/core/base.py b/pandas/core/base.py
+index 3d8f5f265..01dba132e 100644
+--- a/pandas/core/base.py
++++ b/pandas/core/base.py
+@@ -13,6 +13,7 @@ from pandas.core.dtypes.common import (
+     is_list_like,
+     is_scalar,
+     is_datetimelike,
++    is_categorical_dtype,
+     is_extension_type)
+ 
+ from pandas.util._validators import validate_bool_kwarg
+@@ -710,7 +711,7 @@ class IndexOpsMixin(object):
+     @property
+     def shape(self):
+         """ return a tuple of the shape of the underlying data """
+-        return self._values.shape
++        return self._ndarray_values.shape
+ 
+     @property
+     def ndim(self):
+@@ -738,22 +739,22 @@ class IndexOpsMixin(object):
+     @property
+     def itemsize(self):
+         """ return the size of the dtype of the item of the underlying data """
+-        return self._values.itemsize
++        return self._ndarray_values.itemsize
+ 
+     @property
+     def nbytes(self):
+         """ return the number of bytes in the underlying data """
+-        return self._values.nbytes
++        return self._ndarray_values.nbytes
+ 
+     @property
+     def strides(self):
+         """ return the strides of the underlying data """
+-        return self._values.strides
++        return self._ndarray_values.strides
+ 
+     @property
+     def size(self):
+         """ return the number of elements in the underlying data """
+-        return self._values.size
++        return self._ndarray_values.size
+ 
+     @property
+     def flags(self):
+@@ -768,8 +769,21 @@ class IndexOpsMixin(object):
+         return self.values.base
+ 
+     @property
+-    def _values(self):
+-        """ the internal implementation """
++    def _ndarray_values(self):
++        """The data as an ndarray, possibly losing information.
++
++        The expectation is that this is cheap to compute.
++
++        - categorical -> codes
++
++        See '_values' for more.
++        """
++        # type: () -> np.ndarray
++        from pandas.core.dtypes.common import is_categorical_dtype
++
++        if is_categorical_dtype(self):
++            return self._values.codes
++
+         return self.values
+ 
+     @property
+@@ -819,8 +833,10 @@ class IndexOpsMixin(object):
+ 
+         if is_datetimelike(self):
+             return [com._maybe_box_datetimelike(x) for x in self._values]
++        elif is_categorical_dtype(self):
++            return self.values.tolist()
+         else:
+-            return self._values.tolist()
++            return self._ndarray_values.tolist()
+ 
+     def __iter__(self):
+         """
+@@ -978,7 +994,9 @@ class IndexOpsMixin(object):
+     def unique(self):
+         values = self._values
+ 
++        # TODO: Make unique part of the ExtensionArray interface.
+         if hasattr(values, 'unique'):
++
+             result = values.unique()
+         else:
+             from pandas.core.algorithms import unique1d
+diff --git a/pandas/core/dtypes/base.py b/pandas/core/dtypes/base.py
+index c7c537880..2f071a3b3 100644
+--- a/pandas/core/dtypes/base.py
++++ b/pandas/core/dtypes/base.py
+@@ -1,4 +1,6 @@
+ """Extend pandas with custom array types"""
++import inspect
++
+ from pandas.errors import AbstractMethodError
+ 
+ 
+@@ -106,7 +108,8 @@ class ExtensionDtype(object):
+ 
+         Parameters
+         ----------
+-        dtype : str or dtype
++        dtype : str, object, or type
++            The dtype to check.
+ 
+         Returns
+         -------
+@@ -118,12 +121,15 @@ class ExtensionDtype(object):
+ 
+         1. ``cls.construct_from_string(dtype)`` is an instance
+            of ``cls``.
+-        2. 'dtype' is ``cls`` or a subclass of ``cls``.
++        2. ``dtype`` is an object and is an instance of ``cls``
++        3. 'dtype' is a class and is ``cls`` or a subclass of ``cls``.
+         """
+         if isinstance(dtype, str):
+             try:
+                 return isinstance(cls.construct_from_string(dtype), cls)
+             except TypeError:
+                 return False
+-        else:
++        elif inspect.isclass(dtype):
+             return issubclass(dtype, cls)
++        else:
++            return isinstance(dtype, cls)
+diff --git a/pandas/core/dtypes/cast.py b/pandas/core/dtypes/cast.py
+index b2816343f..55919fb2b 100644
+--- a/pandas/core/dtypes/cast.py
++++ b/pandas/core/dtypes/cast.py
+@@ -927,7 +927,7 @@ def maybe_infer_to_datetimelike(value, convert_dates=False):
+         # will try first with a string & object conversion
+         from pandas import to_timedelta
+         try:
+-            return to_timedelta(v)._values.reshape(shape)
++            return to_timedelta(v)._ndarray_values.reshape(shape)
+         except Exception:
+             return v.reshape(shape)
+ 
+diff --git a/pandas/core/dtypes/common.py b/pandas/core/dtypes/common.py
+index c66e7fcfc..197b35de8 100644
+--- a/pandas/core/dtypes/common.py
++++ b/pandas/core/dtypes/common.py
+@@ -1708,9 +1708,9 @@ def is_extension_array_dtype(arr_or_dtype):
+     """
+     from pandas.core.arrays import ExtensionArray
+ 
+-    # we want to unpack series, anything else?
+-    if isinstance(arr_or_dtype, ABCSeries):
++    if isinstance(arr_or_dtype, (ABCIndexClass, ABCSeries)):
+         arr_or_dtype = arr_or_dtype._values
++
+     return isinstance(arr_or_dtype, (ExtensionDtype, ExtensionArray))
+ 
+ 
+diff --git a/pandas/core/dtypes/concat.py b/pandas/core/dtypes/concat.py
+index ddecbe850..b36dc03bb 100644
+--- a/pandas/core/dtypes/concat.py
++++ b/pandas/core/dtypes/concat.py
+@@ -480,7 +480,7 @@ def _concat_datetimetz(to_concat, name=None):
+ 
+ def _concat_index_same_dtype(indexes, klass=None):
+     klass = klass if klass is not None else indexes[0].__class__
+-    return klass(np.concatenate([x._values for x in indexes]))
++    return klass(np.concatenate([x._ndarray_values for x in indexes]))
+ 
+ 
+ def _concat_index_asobject(to_concat, name=None):
+@@ -488,12 +488,14 @@ def _concat_index_asobject(to_concat, name=None):
+     concat all inputs as object. DatetimeIndex, TimedeltaIndex and
+     PeriodIndex are converted to object dtype before concatenation
+     """
++    from pandas import Index
++    from pandas.core.arrays import ExtensionArray
+ 
+-    klasses = ABCDatetimeIndex, ABCTimedeltaIndex, ABCPeriodIndex
++    klasses = (ABCDatetimeIndex, ABCTimedeltaIndex, ABCPeriodIndex,
++               ExtensionArray)
+     to_concat = [x.astype(object) if isinstance(x, klasses) else x
+                  for x in to_concat]
+ 
+-    from pandas import Index
+     self = to_concat[0]
+     attribs = self._get_attributes_dict()
+     attribs['name'] = name
+diff --git a/pandas/core/dtypes/missing.py b/pandas/core/dtypes/missing.py
+index ffac70247..002839af6 100644
+--- a/pandas/core/dtypes/missing.py
++++ b/pandas/core/dtypes/missing.py
+@@ -10,9 +10,10 @@ from .common import (is_string_dtype, is_datetimelike,
+                      is_datetimelike_v_numeric, is_float_dtype,
+                      is_datetime64_dtype, is_datetime64tz_dtype,
+                      is_timedelta64_dtype, is_interval_dtype,
+-                     is_complex_dtype, is_categorical_dtype,
++                     is_complex_dtype,
+                      is_string_like_dtype, is_bool_dtype,
+                      is_integer_dtype, is_dtype_equal,
++                     is_extension_array_dtype,
+                      needs_i8_conversion, _ensure_object,
+                      pandas_dtype,
+                      is_scalar,
+@@ -52,12 +53,15 @@ isnull = isna
+ 
+ 
+ def _isna_new(obj):
++    from ..arrays import ExtensionArray
++
+     if is_scalar(obj):
+         return libmissing.checknull(obj)
+     # hack (for now) because MI registers as ndarray
+     elif isinstance(obj, ABCMultiIndex):
+         raise NotImplementedError("isna is not defined for MultiIndex")
+-    elif isinstance(obj, (ABCSeries, np.ndarray, ABCIndexClass)):
++    elif isinstance(obj, (ABCSeries, np.ndarray, ABCIndexClass,
++                          ExtensionArray)):
+         return _isna_ndarraylike(obj)
+     elif isinstance(obj, ABCGeneric):
+         return obj._constructor(obj._data.isna(func=isna))
+@@ -124,17 +128,18 @@ def _use_inf_as_na(key):
+ 
+ 
+ def _isna_ndarraylike(obj):
+-
+     values = getattr(obj, 'values', obj)
+     dtype = values.dtype
+ 
+-    if is_string_dtype(dtype):
+-        if is_categorical_dtype(values):
+-            from pandas import Categorical
+-            if not isinstance(values, Categorical):
+-                values = values.values
+-            result = values.isna()
+-        elif is_interval_dtype(values):
++    if is_extension_array_dtype(obj):
++        if isinstance(obj, (ABCIndexClass, ABCSeries)):
++            values = obj._values
++        else:
++            values = obj
++        result = values.isna()
++    elif is_string_dtype(dtype):
++        if is_interval_dtype(values):
++            # TODO(IntervalArray): remove this if block
+             from pandas import IntervalIndex
+             result = IntervalIndex(obj).isna()
+         else:
+@@ -406,4 +411,7 @@ def remove_na_arraylike(arr):
+     """
+     Return array-like containing only true/non-NaN values, possibly empty.
+     """
+-    return arr[notna(lib.values_from_object(arr))]
++    if is_extension_array_dtype(arr):
++        return arr[notna(arr)]
++    else:
++        return arr[notna(lib.values_from_object(arr))]
+diff --git a/pandas/core/frame.py b/pandas/core/frame.py
+index 6d8dcb8a1..e91a93827 100644
+--- a/pandas/core/frame.py
++++ b/pandas/core/frame.py
+@@ -39,6 +39,7 @@ from pandas.core.dtypes.common import (
+     is_categorical_dtype,
+     is_object_dtype,
+     is_extension_type,
++    is_extension_array_dtype,
+     is_datetimetz,
+     is_datetime64_any_dtype,
+     is_datetime64tz_dtype,
+@@ -71,7 +72,7 @@ from pandas.core.internals import (BlockManager,
+                                    create_block_manager_from_arrays,
+                                    create_block_manager_from_blocks)
+ from pandas.core.series import Series
+-from pandas.core.arrays import Categorical
++from pandas.core.arrays import Categorical, ExtensionArray
+ import pandas.core.algorithms as algorithms
+ from pandas.compat import (range, map, zip, lrange, lmap, lzip, StringIO, u,
+                            OrderedDict, raise_with_traceback)
+@@ -511,7 +512,7 @@ class DataFrame(NDFrame):
+             index, columns = _get_axes(len(values), 1)
+             return _arrays_to_mgr([values], columns, index, columns,
+                                   dtype=dtype)
+-        elif is_datetimetz(values):
++        elif (is_datetimetz(values) or is_extension_array_dtype(values)):
+             # GH19157
+             if columns is None:
+                 columns = [0]
+@@ -2802,7 +2803,7 @@ class DataFrame(NDFrame):
+             # now align rows
+             value = reindexer(value).T
+ 
+-        elif isinstance(value, Categorical):
++        elif isinstance(value, ExtensionArray):
+             value = value.copy()
+ 
+         elif isinstance(value, Index) or is_sequence(value):
+@@ -2810,7 +2811,7 @@ class DataFrame(NDFrame):
+ 
+             # turn me into an ndarray
+             value = _sanitize_index(value, self.index, copy=False)
+-            if not isinstance(value, (np.ndarray, Index)):
++            if not isinstance(value, (np.ndarray, Index, ExtensionArray)):
+                 if isinstance(value, list) and len(value) > 0:
+                     value = maybe_convert_platform(value)
+                 else:
+@@ -2832,7 +2833,7 @@ class DataFrame(NDFrame):
+             value = maybe_cast_to_datetime(value, value.dtype)
+ 
+         # return internal types directly
+-        if is_extension_type(value):
++        if is_extension_type(value) or is_extension_array_dtype(value):
+             return value
+ 
+         # broadcast across multiple columns if necessary
+@@ -3369,12 +3370,8 @@ class DataFrame(NDFrame):
+             new_obj = self.copy()
+ 
+         def _maybe_casted_values(index, labels=None):
+-            if isinstance(index, PeriodIndex):
+-                values = index.astype(object).values
+-            elif isinstance(index, DatetimeIndex) and index.tz is not None:
+-                values = index
+-            else:
+-                values = index.values
++            values = index._values
++            if not isinstance(index, (PeriodIndex, DatetimeIndex)):
+                 if values.dtype == np.object_:
+                     values = lib.maybe_convert_objects(values)
+ 
+@@ -5634,7 +5631,7 @@ class DataFrame(NDFrame):
+         if len(frame._get_axis(axis)) == 0:
+             result = Series(0, index=frame._get_agg_axis(axis))
+         else:
+-            if frame._is_mixed_type:
++            if frame._is_mixed_type or frame._data.any_extension_types:
+                 result = notna(frame).sum(axis=axis)
+             else:
+                 counts = notna(frame.values).sum(axis=axis)
+diff --git a/pandas/core/indexes/base.py b/pandas/core/indexes/base.py
+index 15df77bf7..7db7a9748 100644
+--- a/pandas/core/indexes/base.py
++++ b/pandas/core/indexes/base.py
+@@ -13,6 +13,7 @@ from pandas.compat.numpy import function as nv
+ from pandas import compat
+ 
+ from pandas.core.accessor import CachedAccessor
++from pandas.core.arrays import ExtensionArray
+ from pandas.core.dtypes.generic import (
+     ABCSeries, ABCDataFrame,
+     ABCMultiIndex,
+@@ -31,12 +32,14 @@ from pandas.core.dtypes.common import (
+     is_object_dtype,
+     is_categorical_dtype,
+     is_interval_dtype,
++    is_period_dtype,
+     is_bool,
+     is_bool_dtype,
+     is_signed_integer_dtype,
+     is_unsigned_integer_dtype,
+     is_integer_dtype, is_float_dtype,
+     is_datetime64_any_dtype,
++    is_datetime64tz_dtype,
+     is_timedelta64_dtype,
+     needs_i8_conversion,
+     is_iterator, is_list_like,
+@@ -412,7 +415,7 @@ class Index(IndexOpsMixin, PandasObject):
+                 values = np.array(values, copy=False)
+                 if is_object_dtype(values):
+                     values = cls(values, name=name, dtype=dtype,
+-                                 **kwargs)._values
++                                 **kwargs)._ndarray_values
+ 
+         result = object.__new__(cls)
+         result._data = values
+@@ -594,6 +597,39 @@ class Index(IndexOpsMixin, PandasObject):
+         """ return the underlying data as an ndarray """
+         return self._data.view(np.ndarray)
+ 
++    @property
++    def _values(self):
++        # type: () -> Union[ExtensionArray, Index]
++        # TODO: remove index types as they become is extension arrays
++        """The best array representation.
++
++        This is an ndarray, ExtensionArray, or Index subclass. This differs
++        from ``_ndarray_values``, which always returns an ndarray.
++
++        Both ``_values`` and ``_ndarray_values`` are consistent between
++        ``Series`` and ``Index``.
++
++        It may differ from the public '.values' method.
++
++        index             | values          | _values     | _ndarray_values |
++        ----------------- | -------------- -| ----------- | --------------- |
++        CategoricalIndex  | Categorical     | Categorical | codes           |
++        DatetimeIndex[tz] | ndarray[M8ns]   | DTI[tz]     | ndarray[M8ns]   |
++
++        In the near-future, we'll implement two more.
++
++        index             | values          | _values     | _ndarray_values |
++        ----------------- | --------------- | ----------- | --------------- |
++        PeriodIndex       | ndarray[object] | PeriodArray | ndarray[int]    |
++        IntervalIndex     | ndarray[object] | PeriodArray | ndarray[object] |
++
++        See Also
++        --------
++        values
++        _ndarray_values
++        """
++        return self.values
++
+     def get_values(self):
+         """ return the underlying data as an ndarray """
+         return self.values
+@@ -664,7 +700,7 @@ class Index(IndexOpsMixin, PandasObject):
+         --------
+         numpy.ndarray.ravel
+         """
+-        return self._values.ravel(order=order)
++        return self._ndarray_values.ravel(order=order)
+ 
+     # construction helpers
+     @classmethod
+@@ -1597,7 +1633,7 @@ class Index(IndexOpsMixin, PandasObject):
+     @cache_readonly
+     def _engine(self):
+         # property, for now, slow to look up
+-        return self._engine_type(lambda: self._values, len(self))
++        return self._engine_type(lambda: self._ndarray_values, len(self))
+ 
+     def _validate_index_level(self, level):
+         """
+@@ -1966,6 +2002,12 @@ class Index(IndexOpsMixin, PandasObject):
+ 
+         if is_categorical_dtype(values.dtype):
+             values = np.array(values)
++
++        elif isinstance(values, ExtensionArray):
++            # This is still un-exercised within pandas, since all our
++            # extension dtypes have custom indexes.
++            values = values._formatting_values()
++
+         elif is_object_dtype(values.dtype):
+             values = lib.maybe_convert_objects(values, safe=1)
+ 
+@@ -2228,27 +2270,37 @@ class Index(IndexOpsMixin, PandasObject):
+             other = other.astype('O')
+             return this.union(other)
+ 
++        # TODO: setops-refactor, clean all this up
++        if is_period_dtype(self) or is_datetime64tz_dtype(self):
++            lvals = self._ndarray_values
++        else:
++            lvals = self._values
++        if is_period_dtype(other) or is_datetime64tz_dtype(other):
++            rvals = other._ndarray_values
++        else:
++            rvals = other._values
++
+         if self.is_monotonic and other.is_monotonic:
+             try:
+-                result = self._outer_indexer(self._values, other._values)[0]
++                result = self._outer_indexer(lvals, rvals)[0]
+             except TypeError:
+                 # incomparable objects
+-                result = list(self._values)
++                result = list(lvals)
+ 
+                 # worth making this faster? a very unusual case
+-                value_set = set(self._values)
+-                result.extend([x for x in other._values if x not in value_set])
++                value_set = set(lvals)
++                result.extend([x for x in rvals if x not in value_set])
+         else:
+             indexer = self.get_indexer(other)
+             indexer, = (indexer == -1).nonzero()
+ 
+             if len(indexer) > 0:
+-                other_diff = algos.take_nd(other._values, indexer,
++                other_diff = algos.take_nd(rvals, indexer,
+                                            allow_fill=False)
+-                result = _concat._concat_compat((self._values, other_diff))
++                result = _concat._concat_compat((lvals, other_diff))
+ 
+                 try:
+-                    self._values[0] < other_diff[0]
++                    lvals[0] < other_diff[0]
+                 except TypeError as e:
+                     warnings.warn("%s, sort order is undefined for "
+                                   "incomparable objects" % e, RuntimeWarning,
+@@ -2260,7 +2312,7 @@ class Index(IndexOpsMixin, PandasObject):
+                         result.sort()
+ 
+             else:
+-                result = self._values
++                result = lvals
+ 
+                 try:
+                     result = np.sort(result)
+@@ -2311,20 +2363,30 @@ class Index(IndexOpsMixin, PandasObject):
+             other = other.astype('O')
+             return this.intersection(other)
+ 
++        # TODO: setops-refactor, clean all this up
++        if is_period_dtype(self):
++            lvals = self._ndarray_values
++        else:
++            lvals = self._values
++        if is_period_dtype(other):
++            rvals = other._ndarray_values
++        else:
++            rvals = other._values
++
+         if self.is_monotonic and other.is_monotonic:
+             try:
+-                result = self._inner_indexer(self._values, other._values)[0]
++                result = self._inner_indexer(lvals, rvals)[0]
+                 return self._wrap_union_result(other, result)
+             except TypeError:
+                 pass
+ 
+         try:
+-            indexer = Index(other._values).get_indexer(self._values)
++            indexer = Index(rvals).get_indexer(lvals)
+             indexer = indexer.take((indexer != -1).nonzero()[0])
+         except Exception:
+-            # duplicates
++            # duplicateters
+             indexer = algos.unique1d(
+-                Index(other._values).get_indexer_non_unique(self._values)[0])
++                Index(rvals).get_indexer_non_unique(lvals)[0])
+             indexer = indexer[indexer != -1]
+ 
+         taken = other.take(indexer)
+@@ -2545,7 +2607,7 @@ class Index(IndexOpsMixin, PandasObject):
+         # if we have something that is Index-like, then
+         # use this, e.g. DatetimeIndex
+         s = getattr(series, '_values', None)
+-        if isinstance(s, Index) and is_scalar(key):
++        if isinstance(s, (ExtensionArray, Index)) and is_scalar(key):
+             try:
+                 return s[key]
+             except (IndexError, ValueError):
+@@ -2700,7 +2762,7 @@ class Index(IndexOpsMixin, PandasObject):
+                 raise ValueError('limit argument only valid if doing pad, '
+                                  'backfill or nearest reindexing')
+ 
+-            indexer = self._engine.get_indexer(target._values)
++            indexer = self._engine.get_indexer(target._ndarray_values)
+ 
+         return _ensure_platform_int(indexer)
+ 
+@@ -2716,12 +2778,13 @@ class Index(IndexOpsMixin, PandasObject):
+         if self.is_monotonic_increasing and target.is_monotonic_increasing:
+             method = (self._engine.get_pad_indexer if method == 'pad' else
+                       self._engine.get_backfill_indexer)
+-            indexer = method(target._values, limit)
++            indexer = method(target._ndarray_values, limit)
+         else:
+             indexer = self._get_fill_indexer_searchsorted(target, method,
+                                                           limit)
+         if tolerance is not None:
+-            indexer = self._filter_indexer_tolerance(target._values, indexer,
++            indexer = self._filter_indexer_tolerance(target._ndarray_values,
++                                                     indexer,
+                                                      tolerance)
+         return indexer
+ 
+@@ -2812,7 +2875,7 @@ class Index(IndexOpsMixin, PandasObject):
+             self = Index(self.asi8)
+             tgt_values = target.asi8
+         else:
+-            tgt_values = target._values
++            tgt_values = target._ndarray_values
+ 
+         indexer, missing = self._engine.get_indexer_non_unique(tgt_values)
+         return _ensure_platform_int(indexer), missing
+@@ -3247,16 +3310,17 @@ class Index(IndexOpsMixin, PandasObject):
+     def _join_non_unique(self, other, how='left', return_indexers=False):
+         from pandas.core.reshape.merge import _get_join_indexers
+ 
+-        left_idx, right_idx = _get_join_indexers([self._values],
+-                                                 [other._values], how=how,
++        left_idx, right_idx = _get_join_indexers([self._ndarray_values],
++                                                 [other._ndarray_values],
++                                                 how=how,
+                                                  sort=True)
+ 
+         left_idx = _ensure_platform_int(left_idx)
+         right_idx = _ensure_platform_int(right_idx)
+ 
+-        join_index = np.asarray(self._values.take(left_idx))
++        join_index = np.asarray(self._ndarray_values.take(left_idx))
+         mask = left_idx == -1
+-        np.putmask(join_index, mask, other._values.take(right_idx))
++        np.putmask(join_index, mask, other._ndarray_values.take(right_idx))
+ 
+         join_index = self._wrap_joined_index(join_index, other)
+ 
+@@ -3403,8 +3467,8 @@ class Index(IndexOpsMixin, PandasObject):
+             else:
+                 return ret_index
+ 
+-        sv = self._values
+-        ov = other._values
++        sv = self._ndarray_values
++        ov = other._ndarray_values
+ 
+         if self.is_unique and other.is_unique:
+             # We can perform much better than the general case
+@@ -3756,7 +3820,7 @@ class Index(IndexOpsMixin, PandasObject):
+             item = self._na_value
+ 
+         _self = np.asarray(self)
+-        item = self._coerce_scalar_to_index(item)._values
++        item = self._coerce_scalar_to_index(item)._ndarray_values
+         idx = np.concatenate((_self[:loc], item, _self[loc:]))
+         return self._shallow_copy_with_infer(idx)
+ 
+diff --git a/pandas/core/indexes/category.py b/pandas/core/indexes/category.py
+index b36bc1df2..5aa940499 100644
+--- a/pandas/core/indexes/category.py
++++ b/pandas/core/indexes/category.py
+@@ -293,6 +293,19 @@ class CategoricalIndex(Index, accessor.PandasDelegate):
+         """ return the underlying data, which is a Categorical """
+         return self._data
+ 
++    @property
++    def _ndarray_values(self):
++        return self._data.codes
++
++    @property
++    def itemsize(self):
++        return self.values.itemsize
++
++    @property
++    def nbytes(self):
++        """ return the number of bytes in the underlying data """
++        return self.values.nbytes
++
+     def get_values(self):
+         """ return the underlying data as an ndarray """
+         return self._data.get_values()
+@@ -386,8 +399,8 @@ class CategoricalIndex(Index, accessor.PandasDelegate):
+     def unique(self, level=None):
+         if level is not None:
+             self._validate_index_level(level)
+-        result = base.IndexOpsMixin.unique(self)
+-        # CategoricalIndex._shallow_copy uses keeps original categories
++        result = self.values.unique()
++        # CategoricalIndex._shallow_copy keeps original categories
+         # and ordered if not otherwise specified
+         return self._shallow_copy(result, categories=result.categories,
+                                   ordered=result.ordered)
+diff --git a/pandas/core/indexes/datetimelike.py b/pandas/core/indexes/datetimelike.py
+index 4a526955d..c98f8ceea 100644
+--- a/pandas/core/indexes/datetimelike.py
++++ b/pandas/core/indexes/datetimelike.py
+@@ -376,7 +376,7 @@ class DatetimeIndexOpsMixin(object):
+             sorted_index = self.take(_as)
+             return sorted_index, _as
+         else:
+-            sorted_values = np.sort(self._values)
++            sorted_values = np.sort(self._ndarray_values)
+             attribs = self._get_attributes_dict()
+             freq = attribs['freq']
+ 
+diff --git a/pandas/core/indexes/datetimes.py b/pandas/core/indexes/datetimes.py
+index 61c941c3d..22ce690b3 100644
+--- a/pandas/core/indexes/datetimes.py
++++ b/pandas/core/indexes/datetimes.py
+@@ -678,6 +678,15 @@ class DatetimeIndex(DatelikeOps, TimelikeOps, DatetimeIndexOpsMixin,
+             raise TypeError('Cannot compare tz-naive and tz-aware '
+                             'datetime-like objects')
+ 
++    @property
++    def _values(self):
++        # tz-naive -> ndarray
++        # tz-aware -> DatetimeIndex
++        if self.tz is not None:
++            return self
++        else:
++            return self.values
++
+     @property
+     def tzinfo(self):
+         """
+@@ -1086,6 +1095,19 @@ class DatetimeIndex(DatelikeOps, TimelikeOps, DatetimeIndexOpsMixin,
+         # we know it conforms; skip check
+         return DatetimeIndex(snapped, freq=freq, verify_integrity=False)
+ 
++    def unique(self, level=None):
++        # Override here since IndexOpsMixin.unique uses self._values.unique
++        # For DatetimeIndex with TZ, that's a DatetimeIndex -> recursion error
++        # So we extract the tz-naive DatetimeIndex, unique that, and wrap the
++        # result with out TZ.
++        if self.tz is not None:
++            naive = type(self)(self._ndarray_values, copy=False)
++        else:
++            naive = self
++        result = super(DatetimeIndex, naive).unique(level=level)
++        return self._simple_new(result, name=self.name, tz=self.tz,
++                                freq=self.freq)
++
+     def union(self, other):
+         """
+         Specialized union for DatetimeIndex objects. If combine
+diff --git a/pandas/core/indexes/multi.py b/pandas/core/indexes/multi.py
+index 510f7245c..907bbb2e8 100644
+--- a/pandas/core/indexes/multi.py
++++ b/pandas/core/indexes/multi.py
+@@ -799,9 +799,11 @@ class MultiIndex(Index):
+             box = hasattr(lev, '_box_values')
+             # Try to minimize boxing.
+             if box and len(lev) > len(lab):
+-                taken = lev._box_values(algos.take_1d(lev._values, lab))
++                taken = lev._box_values(algos.take_1d(lev._ndarray_values,
++                                                      lab))
+             elif box:
+-                taken = algos.take_1d(lev._box_values(lev._values), lab,
++                taken = algos.take_1d(lev._box_values(lev._ndarray_values),
++                                      lab,
+                                       fill_value=_get_na_value(lev.dtype.type))
+             else:
+                 taken = algos.take_1d(np.asarray(lev._values), lab)
+@@ -1317,7 +1319,7 @@ class MultiIndex(Index):
+             arrays = [[]] * len(names)
+         elif isinstance(tuples, (np.ndarray, Index)):
+             if isinstance(tuples, Index):
+-                tuples = tuples._values
++                tuples = tuples._ndarray_values
+ 
+             arrays = list(lib.tuples_to_object_array(tuples).T)
+         elif isinstance(tuples, list):
+@@ -2410,7 +2412,7 @@ class MultiIndex(Index):
+                 mapper = Series(indexer)
+                 indexer = labels.take(_ensure_platform_int(indexer))
+                 result = Series(Index(indexer).isin(r).nonzero()[0])
+-                m = result.map(mapper)._values
++                m = result.map(mapper)._ndarray_values
+ 
+             else:
+                 m = np.zeros(len(labels), dtype=bool)
+@@ -2505,6 +2507,7 @@ class MultiIndex(Index):
+         MultiIndex.slice_locs : Get slice location given start label(s) and
+                                 end label(s).
+         """
++        from .numeric import Int64Index
+ 
+         # must be lexsorted to at least as many levels
+         true_slices = [i for (i, s) in enumerate(com.is_true_slices(seq)) if s]
+@@ -2530,7 +2533,6 @@ class MultiIndex(Index):
+                                      "that is not the same length as the "
+                                      "index")
+                 r = r.nonzero()[0]
+-            from .numeric import Int64Index
+             return Int64Index(r)
+ 
+         def _update_indexer(idxr, indexer=indexer):
+@@ -2567,9 +2569,8 @@ class MultiIndex(Index):
+                 if indexers is not None:
+                     indexer = _update_indexer(indexers, indexer=indexer)
+                 else:
+-                    from .numeric import Int64Index
+                     # no matches we are done
+-                    return Int64Index([])._values
++                    return Int64Index([])._ndarray_values
+ 
+             elif com.is_null_slice(k):
+                 # empty slice
+@@ -2589,8 +2590,8 @@ class MultiIndex(Index):
+ 
+         # empty indexer
+         if indexer is None:
+-            return Int64Index([])._values
+-        return indexer._values
++            return Int64Index([])._ndarray_values
++        return indexer._ndarray_values
+ 
+     def truncate(self, before=None, after=None):
+         """
+@@ -2639,7 +2640,7 @@ class MultiIndex(Index):
+ 
+         if not isinstance(other, MultiIndex):
+             other_vals = com._values_from_object(_ensure_index(other))
+-            return array_equivalent(self._values, other_vals)
++            return array_equivalent(self._ndarray_values, other_vals)
+ 
+         if self.nlevels != other.nlevels:
+             return False
+@@ -2655,8 +2656,9 @@ class MultiIndex(Index):
+ 
+             olabels = other.labels[i]
+             olabels = olabels[olabels != -1]
+-            ovalues = algos.take_nd(np.asarray(other.levels[i]._values),
+-                                    olabels, allow_fill=False)
++            ovalues = algos.take_nd(
++                np.asarray(other.levels[i]._values),
++                olabels, allow_fill=False)
+ 
+             # since we use NaT both datetime64 and timedelta64
+             # we can have a situation where a level is typed say
+@@ -2704,7 +2706,8 @@ class MultiIndex(Index):
+         if len(other) == 0 or self.equals(other):
+             return self
+ 
+-        uniq_tuples = lib.fast_unique_multiple([self._values, other._values])
++        uniq_tuples = lib.fast_unique_multiple([self._ndarray_values,
++                                                other._ndarray_values])
+         return MultiIndex.from_arrays(lzip(*uniq_tuples), sortorder=0,
+                                       names=result_names)
+ 
+@@ -2726,8 +2729,8 @@ class MultiIndex(Index):
+         if self.equals(other):
+             return self
+ 
+-        self_tuples = self._values
+-        other_tuples = other._values
++        self_tuples = self._ndarray_values
++        other_tuples = other._ndarray_values
+         uniq_tuples = sorted(set(self_tuples) & set(other_tuples))
+         if len(uniq_tuples) == 0:
+             return MultiIndex(levels=[[]] * self.nlevels,
+@@ -2756,7 +2759,8 @@ class MultiIndex(Index):
+                               labels=[[]] * self.nlevels,
+                               names=result_names, verify_integrity=False)
+ 
+-        difference = sorted(set(self._values) - set(other._values))
++        difference = sorted(set(self._ndarray_values) -
++                            set(other._ndarray_values))
+ 
+         if len(difference) == 0:
+             return MultiIndex(levels=[[]] * self.nlevels,
+diff --git a/pandas/core/indexes/numeric.py b/pandas/core/indexes/numeric.py
+index b02aee049..a4558116b 100644
+--- a/pandas/core/indexes/numeric.py
++++ b/pandas/core/indexes/numeric.py
+@@ -378,7 +378,7 @@ class Float64Index(NumericIndex):
+             if (not is_dtype_equal(self.dtype, other.dtype) or
+                     self.shape != other.shape):
+                 return False
+-            left, right = self._values, other._values
++            left, right = self._ndarray_values, other._ndarray_values
+             return ((left == right) | (self._isnan & other._isnan)).all()
+         except (TypeError, ValueError):
+             return False
+diff --git a/pandas/core/indexes/period.py b/pandas/core/indexes/period.py
+index 1f8542ed5..e90d3827f 100644
+--- a/pandas/core/indexes/period.py
++++ b/pandas/core/indexes/period.py
+@@ -54,7 +54,7 @@ _index_doc_kwargs.update(
+ def _field_accessor(name, alias, docstring=None):
+     def f(self):
+         base, mult = _gfc(self.freq)
+-        result = get_period_field_arr(alias, self._values, base)
++        result = get_period_field_arr(alias, self._ndarray_values, base)
+         return Index(result, name=self.name)
+     f.__name__ = name
+     f.__doc__ = docstring
+@@ -82,7 +82,7 @@ def _period_index_cmp(opname, cls, nat_result=False):
+ 
+     def wrapper(self, other):
+         if isinstance(other, Period):
+-            func = getattr(self._values, opname)
++            func = getattr(self._ndarray_values, opname)
+             other_base, _ = _gfc(other.freq)
+             if other.freq != self.freq:
+                 msg = _DIFFERENT_FREQ_INDEX.format(self.freqstr, other.freqstr)
+@@ -94,7 +94,8 @@ def _period_index_cmp(opname, cls, nat_result=False):
+                 msg = _DIFFERENT_FREQ_INDEX.format(self.freqstr, other.freqstr)
+                 raise IncompatibleFrequency(msg)
+ 
+-            result = getattr(self._values, opname)(other._values)
++            op = getattr(self._ndarray_values, opname)
++            result = op(other._ndarray_values)
+ 
+             mask = self._isnan | other._isnan
+             if mask.any():
+@@ -102,11 +103,11 @@ def _period_index_cmp(opname, cls, nat_result=False):
+ 
+             return result
+         elif other is tslib.NaT:
+-            result = np.empty(len(self._values), dtype=bool)
++            result = np.empty(len(self._ndarray_values), dtype=bool)
+             result.fill(nat_result)
+         else:
+             other = Period(other, freq=self.freq)
+-            func = getattr(self._values, opname)
++            func = getattr(self._ndarray_values, opname)
+             result = func(other.ordinal)
+ 
+         if self.hasnans:
+@@ -275,11 +276,11 @@ class PeriodIndex(DatelikeOps, DatetimeIndexOpsMixin, Int64Index):
+         if isinstance(data, PeriodIndex):
+             if freq is None or freq == data.freq:  # no freq change
+                 freq = data.freq
+-                data = data._values
++                data = data._ndarray_values
+             else:
+                 base1, _ = _gfc(data.freq)
+                 base2, _ = _gfc(freq)
+-                data = period.period_asfreq_arr(data._values,
++                data = period.period_asfreq_arr(data._ndarray_values,
+                                                 base1, base2, 1)
+             return cls._simple_new(data, name=name, freq=freq)
+ 
+@@ -374,7 +375,7 @@ class PeriodIndex(DatelikeOps, DatetimeIndexOpsMixin, Int64Index):
+         if freq is None:
+             freq = self.freq
+         if values is None:
+-            values = self._values
++            values = self._ndarray_values
+         return super(PeriodIndex, self)._shallow_copy(values=values,
+                                                       freq=freq, **kwargs)
+ 
+@@ -407,7 +408,7 @@ class PeriodIndex(DatelikeOps, DatetimeIndexOpsMixin, Int64Index):
+ 
+     @property
+     def asi8(self):
+-        return self._values.view('i8')
++        return self._ndarray_values.view('i8')
+ 
+     @cache_readonly
+     def _int64index(self):
+@@ -418,7 +419,8 @@ class PeriodIndex(DatelikeOps, DatetimeIndexOpsMixin, Int64Index):
+         return self.astype(object).values
+ 
+     @property
+-    def _values(self):
++    def _ndarray_values(self):
++        # Ordinals
+         return self._data
+ 
+     def __array__(self, dtype=None):
+@@ -489,13 +491,15 @@ class PeriodIndex(DatelikeOps, DatetimeIndexOpsMixin, Int64Index):
+         if isinstance(where_idx, DatetimeIndex):
+             where_idx = PeriodIndex(where_idx.values, freq=self.freq)
+ 
+-        locs = self._values[mask].searchsorted(where_idx._values, side='right')
++        locs = self._ndarray_values[mask].searchsorted(
++            where_idx._ndarray_values, side='right')
+ 
+         locs = np.where(locs > 0, locs - 1, 0)
+         result = np.arange(len(self))[mask].take(locs)
+ 
+         first = mask.argmax()
+-        result[(locs == 0) & (where_idx._values < self._values[first])] = -1
++        result[(locs == 0) & (where_idx._ndarray_values <
++                              self._ndarray_values[first])] = -1
+ 
+         return result
+ 
+@@ -523,7 +527,8 @@ class PeriodIndex(DatelikeOps, DatetimeIndexOpsMixin, Int64Index):
+         elif isinstance(value, compat.string_types):
+             value = Period(value, freq=self.freq).ordinal
+ 
+-        return self._values.searchsorted(value, side=side, sorter=sorter)
++        return self._ndarray_values.searchsorted(value, side=side,
++                                                 sorter=sorter)
+ 
+     @property
+     def is_all_dates(self):
+@@ -664,7 +669,7 @@ class PeriodIndex(DatelikeOps, DatetimeIndexOpsMixin, Int64Index):
+         base, mult = _gfc(freq)
+         new_data = self.asfreq(freq, how)
+ 
+-        new_data = period.periodarr_to_dt64arr(new_data._values, base)
++        new_data = period.periodarr_to_dt64arr(new_data._ndarray_values, base)
+         return DatetimeIndex(new_data, freq='infer', name=self.name)
+ 
+     def _maybe_convert_timedelta(self, other):
+@@ -744,7 +749,7 @@ class PeriodIndex(DatelikeOps, DatetimeIndexOpsMixin, Int64Index):
+         -------
+         shifted : PeriodIndex
+         """
+-        values = self._values + n * self.freq.n
++        values = self._ndarray_values + n * self.freq.n
+         if self.hasnans:
+             values[self._isnan] = tslib.iNaT
+         return self._shallow_copy(values=values)
+@@ -775,7 +780,7 @@ class PeriodIndex(DatelikeOps, DatetimeIndexOpsMixin, Int64Index):
+                 grp = resolution.Resolution.get_freq_group(reso)
+                 freqn = resolution.get_freq_group(self.freq)
+ 
+-                vals = self._values
++                vals = self._ndarray_values
+ 
+                 # if our data is higher resolution than requested key, slice
+                 if grp < freqn:
+@@ -786,7 +791,7 @@ class PeriodIndex(DatelikeOps, DatetimeIndexOpsMixin, Int64Index):
+                     if ord2 < vals[0] or ord1 > vals[-1]:
+                         raise KeyError(key)
+ 
+-                    pos = np.searchsorted(self._values, [ord1, ord2])
++                    pos = np.searchsorted(self._ndarray_values, [ord1, ord2])
+                     key = slice(pos[0], pos[1] + 1)
+                     return series[key]
+                 elif grp == freqn:
+diff --git a/pandas/core/indexing.py b/pandas/core/indexing.py
+index 352ce921d..1d07900a4 100755
+--- a/pandas/core/indexing.py
++++ b/pandas/core/indexing.py
+@@ -618,6 +618,9 @@ class _NDFrameIndexer(_NDFrameIndexerBase):
+                     return
+ 
+             if isinstance(value, (ABCSeries, dict)):
++                # TODO: ExtensionBlock.setitem this causes issues with setting
++                # for extensionarrays that store dicts. Need to decide if it's
++                # worth supporting that or now
+                 value = self._align_series(indexer, Series(value))
+ 
+             elif isinstance(value, ABCDataFrame):
+diff --git a/pandas/core/internals.py b/pandas/core/internals.py
+index f553e1a02..fffbe18d3 100644
+--- a/pandas/core/internals.py
++++ b/pandas/core/internals.py
+@@ -56,7 +56,10 @@ from pandas.core.dtypes.missing import (
+     is_null_datelike_scalar)
+ import pandas.core.dtypes.concat as _concat
+ 
+-from pandas.core.dtypes.generic import ABCSeries, ABCDatetimeIndex
++from pandas.core.dtypes.generic import (
++    ABCSeries,
++    ABCDatetimeIndex,
++    ABCIndexClass)
+ import pandas.core.common as com
+ import pandas.core.algorithms as algos
+ 
+@@ -99,6 +102,7 @@ class Block(PandasObject):
+     is_object = False
+     is_categorical = False
+     is_sparse = False
++    is_extension = False
+     _box_to_block_values = True
+     _can_hold_na = False
+     _can_consolidate = True
+@@ -1854,11 +1858,29 @@ class ExtensionBlock(NonConsolidatableMixIn, Block):
+ 
+     ExtensionArrays are limited to 1-D.
+     """
++    is_extension = True
++
++    def __init__(self, values, placement, ndim=None):
++        values = self._maybe_coerce_values(values)
++        super(ExtensionBlock, self).__init__(values, placement, ndim)
++
++    def _maybe_coerce_values(self, values):
++        # Unboxes Series / Index
++        # Doesn't change any underlying dtypes.
++        if isinstance(values, (ABCIndexClass, ABCSeries)):
++            values = values.values
++        return values
++
+     @property
+     def _holder(self):
+         # For extension blocks, the holder is values-dependent.
+         return type(self.values)
+ 
++    @property
++    def _can_hold_na(self):
++        # The default ExtensionBlock._can_hold_na is True
++        return self._holder._can_hold_na
++
+     @property
+     def is_view(self):
+         """Extension arrays are never treated as views."""
+@@ -3451,6 +3473,8 @@ class BlockManager(PandasObject):
+         else:
+             align_keys = []
+ 
++        # TODO: may interfere with ExtensionBlock.setitem for blocks
++        # with a .values attribute.
+         aligned_args = dict((k, kwargs[k])
+                             for k in align_keys
+                             if hasattr(kwargs[k], 'values'))
+@@ -3696,6 +3720,11 @@ class BlockManager(PandasObject):
+         self._consolidate_inplace()
+         return any(block.is_datelike for block in self.blocks)
+ 
++    @property
++    def any_extension_types(self):
++        """Whether any of the blocks in this manager are extension blocks"""
++        return any(block.is_extension for block in self.blocks)
++
+     @property
+     def is_view(self):
+         """ return a boolean if we are a single block and are a view """
+@@ -4834,13 +4863,10 @@ def form_blocks(arrays, names, axes):
+     if len(items_dict['ExtensionBlock']):
+ 
+         external_blocks = []
++
+         for i, _, array in items_dict['ExtensionBlock']:
+-            if isinstance(array, ABCSeries):
+-                array = array.values
+-            # Allow our internal arrays to chose their block type.
+-            block_type = getattr(array, '_block_type', ExtensionBlock)
+             external_blocks.append(
+-                make_block(array, klass=block_type,
++                make_block(array, klass=ExtensionBlock,
+                            fastpath=True, placement=[i]))
+         blocks.extend(external_blocks)
+ 
+@@ -5673,6 +5699,8 @@ class JoinUnit(object):
+             if not values._null_fill_value and values.sp_index.ngaps > 0:
+                 return False
+             values_flat = values.ravel(order='K')
++        elif isinstance(self.block, ExtensionBlock):
++            values_flat = values
+         else:
+             values_flat = values.ravel(order='K')
+         total_len = values_flat.shape[0]
+diff --git a/pandas/core/series.py b/pandas/core/series.py
+index e4b8979d6..7884794c6 100644
+--- a/pandas/core/series.py
++++ b/pandas/core/series.py
+@@ -14,6 +14,7 @@ import numpy as np
+ import numpy.ma as ma
+ 
+ from pandas.core.accessor import CachedAccessor
++from pandas.core.arrays import ExtensionArray
+ from pandas.core.dtypes.common import (
+     is_categorical_dtype,
+     is_bool,
+@@ -173,12 +174,16 @@ class Series(base.IndexOpsMixin, generic.NDFrame):
+                 raise NotImplementedError("initializing a Series from a "
+                                           "MultiIndex is not supported")
+             elif isinstance(data, Index):
+-                # need to copy to avoid aliasing issues
+                 if name is None:
+                     name = data.name
+ 
+-                data = data._to_embed(keep_tz=True, dtype=dtype)
++                if dtype is not None:
++                    data = data.astype(dtype)
++
++                # need to copy to avoid aliasing issues
++                data = data._values.copy()
+                 copy = False
++
+             elif isinstance(data, np.ndarray):
+                 pass
+             elif isinstance(data, Series):
+@@ -234,6 +239,10 @@ class Series(base.IndexOpsMixin, generic.NDFrame):
+                                        copy=copy)
+                 elif copy:
+                     data = data.copy()
++            elif isinstance(data, ExtensionArray):
++                if copy:
++                    data = data.copy()
++                data = SingleBlockManager(data, index, fastpath=True)
+             else:
+                 data = _sanitize_array(data, index, dtype, copy,
+                                        raise_cast_failure=True)
+@@ -2570,7 +2579,11 @@ class Series(base.IndexOpsMixin, generic.NDFrame):
+             return self
+ 
+         # be subclass-friendly
+-        new_values = algorithms.take_1d(self.get_values(), indexer)
++        if isinstance(self.values, ExtensionArray):
++            new_values = self.values.take(indexer)
++        else:
++            new_values = algorithms.take_1d(self.get_values(), indexer)
++
+         return self._constructor(new_values, index=new_index)
+ 
+     def _needs_reindex_multi(self, axes, method, level):
+@@ -3126,10 +3139,9 @@ def _sanitize_index(data, index, copy=False):
+ 
+     if isinstance(data, ABCIndexClass) and not copy:
+         pass
+-    elif isinstance(data, PeriodIndex):
+-        data = data.astype(object).values
+-    elif isinstance(data, DatetimeIndex):
+-        data = data._to_embed(keep_tz=True)
++    elif isinstance(data, (PeriodIndex, DatetimeIndex)):
++        data = data._values
++
+     elif isinstance(data, np.ndarray):
+ 
+         # coerce datetimelike types
+@@ -3202,7 +3214,7 @@ def _sanitize_array(data, index, dtype=None, copy=False,
+             # we will try to copy be-definition here
+             subarr = _try_cast(data, True)
+ 
+-    elif isinstance(data, Categorical):
++    elif isinstance(data, ExtensionArray):
+         subarr = data
+ 
+         if copy:
+diff --git a/pandas/io/formats/format.py b/pandas/io/formats/format.py
+index 621641747..d590499fa 100644
+--- a/pandas/io/formats/format.py
++++ b/pandas/io/formats/format.py
+@@ -1897,7 +1897,7 @@ class GenericArrayFormatter(object):
+ 
+         vals = self.values
+         if isinstance(vals, Index):
+-            vals = vals._values
++            vals = vals._ndarray_values
+         elif isinstance(vals, ABCSparseArray):
+             vals = vals.values
+ 
+diff --git a/pandas/io/pytables.py b/pandas/io/pytables.py
+index 0d8338076..2437b7d39 100644
+--- a/pandas/io/pytables.py
++++ b/pandas/io/pytables.py
+@@ -4430,7 +4430,7 @@ def _convert_index(index, encoding=None, format_type=None):
+     elif isinstance(index, (Int64Index, PeriodIndex)):
+         atom = _tables().Int64Col()
+         # avoid to store ndarray of Period objects
+-        return IndexCol(index._values, 'integer', atom,
++        return IndexCol(index._ndarray_values, 'integer', atom,
+                         freq=getattr(index, 'freq', None),
+                         index_name=index_name)
+ 
+diff --git a/pandas/plotting/_converter.py b/pandas/plotting/_converter.py
+index 07163615c..9ca064752 100644
+--- a/pandas/plotting/_converter.py
++++ b/pandas/plotting/_converter.py
+@@ -249,11 +249,11 @@ class PeriodConverter(dates.DateConverter):
+                 is_float(values)):
+             return get_datevalue(values, axis.freq)
+         if isinstance(values, PeriodIndex):
+-            return values.asfreq(axis.freq)._values
++            return values.asfreq(axis.freq)._ndarray_values
+         if isinstance(values, Index):
+             return values.map(lambda x: get_datevalue(x, axis.freq))
+         if is_period_arraylike(values):
+-            return PeriodIndex(values, freq=axis.freq)._values
++            return PeriodIndex(values, freq=axis.freq)._ndarray_values
+         if isinstance(values, (list, tuple, np.ndarray, Index)):
+             return [get_datevalue(x, axis.freq) for x in values]
+         return values
+@@ -642,7 +642,7 @@ def _daily_finder(vmin, vmax, freq):
+     info = np.zeros(span,
+                     dtype=[('val', np.int64), ('maj', bool),
+                            ('min', bool), ('fmt', '|S20')])
+-    info['val'][:] = dates_._values
++    info['val'][:] = dates_._ndarray_values
+     info['fmt'][:] = ''
+     info['maj'][[0, -1]] = True
+     # .. and set some shortcuts
+diff --git a/pandas/tests/dtypes/test_dtypes.py b/pandas/tests/dtypes/test_dtypes.py
+index eca4dd4cf..d800a7b92 100644
+--- a/pandas/tests/dtypes/test_dtypes.py
++++ b/pandas/tests/dtypes/test_dtypes.py
+@@ -10,14 +10,12 @@ from pandas import (
+     Series, Categorical, CategoricalIndex, IntervalIndex, date_range)
+ 
+ from pandas.compat import string_types
+-from pandas.core.arrays import ExtensionArray
+ from pandas.core.dtypes.dtypes import (
+     DatetimeTZDtype, PeriodDtype,
+-    IntervalDtype, CategoricalDtype, ExtensionDtype)
++    IntervalDtype, CategoricalDtype)
+ from pandas.core.dtypes.common import (
+     is_categorical_dtype, is_categorical,
+     is_datetime64tz_dtype, is_datetimetz,
+-    is_extension_array_dtype,
+     is_period_dtype, is_period,
+     is_dtype_equal, is_datetime64_ns_dtype,
+     is_datetime64_dtype, is_interval_dtype,
+@@ -744,31 +742,3 @@ class TestCategoricalDtypeParametrized(object):
+         tm.assert_index_equal(c1.categories, pd.Index(['a', 'b']))
+         c1 = CategoricalDtype(CategoricalIndex(['a', 'b']))
+         tm.assert_index_equal(c1.categories, pd.Index(['a', 'b']))
+-
+-
+-class DummyArray(ExtensionArray):
+-    pass
+-
+-
+-class DummyDtype(ExtensionDtype):
+-    pass
+-
+-
+-class TestExtensionArrayDtype(object):
+-
+-    @pytest.mark.parametrize('values', [
+-        pd.Categorical([]),
+-        pd.Categorical([]).dtype,
+-        pd.Series(pd.Categorical([])),
+-        DummyDtype(),
+-        DummyArray(),
+-    ])
+-    def test_is_extension_array_dtype(self, values):
+-        assert is_extension_array_dtype(values)
+-
+-    @pytest.mark.parametrize('values', [
+-        np.array([]),
+-        pd.Series(np.array([])),
+-    ])
+-    def test_is_not_extension_array_dtype(self, values):
+-        assert not is_extension_array_dtype(values)
+diff --git a/pandas/tests/extension/__init__.py b/pandas/tests/extension/__init__.py
+new file mode 100644
+index 000000000..e69de29bb
+diff --git a/pandas/tests/extension/base.py b/pandas/tests/extension/base.py
+new file mode 100644
+index 000000000..dc9bca653
+--- /dev/null
++++ b/pandas/tests/extension/base.py
+@@ -0,0 +1,460 @@
++import operator
++
++import numpy as np
++import pytest
++
++import pandas as pd
++import pandas.util.testing as tm
++from pandas.compat import StringIO
++from pandas.core.internals import ExtensionBlock
++from pandas.core.dtypes.common import is_extension_array_dtype
++from pandas.core.dtypes.dtypes import ExtensionDtype
++
++
++class BaseDtypeTests(object):
++    """Base class for ExtensionDtype classes"""
++
++    @pytest.fixture
++    def dtype(self):
++        """A fixture providing the ExtensionDtype to validate."""
++        raise NotImplementedError
++
++    def test_name(self, dtype):
++        assert isinstance(dtype.name, str)
++
++    def test_kind(self, dtype):
++        valid = set('biufcmMOSUV')
++        if dtype.kind is not None:
++            assert dtype.kind in valid
++
++    def test_construct_from_string_own_name(self, dtype):
++        result = dtype.construct_from_string(dtype.name)
++        assert type(result) is type(dtype)
++
++        # check OK as classmethod
++        result = type(dtype).construct_from_string(dtype.name)
++        assert type(result) is type(dtype)
++
++    def test_is_dtype_from_name(self, dtype):
++        result = type(dtype).is_dtype(dtype.name)
++        assert result is True
++
++    def test_is_dtype_from_self(self, dtype):
++        result = type(dtype).is_dtype(dtype)
++        assert result is True
++
++
++class BaseArrayTests(object):
++    """Base class for extension array classes.
++
++    Subclasses should implement the following fixtures
++
++    * data
++    * data_missing
++    """
++
++    # ------------------------------------------------------------------------
++    # Fixtures
++    # ------------------------------------------------------------------------
++    @pytest.fixture
++    def data(self):
++        """Length-100 array for this type."""
++        raise NotImplementedError
++
++    @pytest.fixture
++    def data_missing(self):
++        """Length-2 array with [NA, Valid]"""
++        raise NotImplementedError
++
++    @pytest.fixture(params=['data', 'data_missing'])
++    def all_data(self, request, data, data_missing):
++        if request.param == 'data':
++            return data
++        elif request.param == 'data_missing':
++            return data_missing
++
++    @pytest.fixture
++    def na_cmp(self):
++        """Binary operator for comparing NA values.
++
++        Should return a function of two arguments that returns
++        True if both arguments are (scalar) NA for your type.
++
++        By defult, uses ``operator.or``
++        """
++        return operator.is_
++
++    # ------------------------------------------------------------------------
++    # Interface
++    # ------------------------------------------------------------------------
++
++    def test_len(self, data):
++        assert len(data) == 100
++
++    def test_ndim(self, data):
++        assert data.ndim == 1
++
++    def test_can_hold_na_valid(self, data):
++        assert data._can_hold_na in {True, False}
++
++    def test_memory_usage(self, data):
++        s = pd.Series(data)
++        result = s.memory_usage(index=False)
++        assert result == s.nbytes
++
++    def test_array_interface(self, data):
++        result = np.array(data)
++        assert result[0] == data[0]
++
++    def test_as_ndarray_with_dtype_kind(self, data):
++        np.array(data, dtype=data.dtype.kind)
++
++    def test_repr(self, data):
++        ser = pd.Series(data)
++        assert data.dtype.name in repr(ser)
++
++        df = pd.DataFrame({"A": data})
++        repr(df)
++
++    def test_dtype_name_in_info(self, data):
++        buf = StringIO()
++        pd.DataFrame({"A": data}).info(buf=buf)
++        result = buf.getvalue()
++        assert data.dtype.name in result
++
++    # ------------------------------------------------------------------------
++    # Constructors
++    # ------------------------------------------------------------------------
++
++    def test_series_constructor(self, data):
++        result = pd.Series(data)
++        assert result.dtype == data.dtype
++        assert len(result) == len(data)
++        assert isinstance(result._data.blocks[0], ExtensionBlock)
++        assert result._data.blocks[0].values is data
++
++    @pytest.mark.parametrize("from_series", [True, False])
++    def dataframe_constructor(self, data, from_series):
++        if from_series:
++            data = pd.Series(data)
++        result = pd.DataFrame({"A": data})
++        assert result.dtypes['A'] == data.dtype
++        assert result.shape == (len(data), 1)
++        assert isinstance(result._data.blocks[0], ExtensionBlock)
++
++    @pytest.mark.xfail(reason="GH-19342")
++    def test_series_given_mismatched_index_raises(self, data):
++        msg = 'Wrong number of items passed 3, placement implies 4'
++        with tm.assert_raises_regex(ValueError, None) as m:
++            pd.Series(data[:3], index=[0, 1, 2, 3, 4])
++
++        assert m.match(msg)
++
++    # ------------------------------------------------------------------------
++    # Reshaping
++    # ------------------------------------------------------------------------
++
++    def test_concat(self, data):
++        result = pd.concat([
++            pd.Series(data),
++            pd.Series(data),
++        ], ignore_index=True)
++        assert len(result) == len(data) * 2
++        assert result.dtype == data.dtype
++        assert isinstance(result._data.blocks[0], ExtensionBlock)
++
++    # ------------------------------------------------------------------------
++    # Indexing - getting
++    # ------------------------------------------------------------------------
++
++    def test_iloc_series(self, data):
++        ser = pd.Series(data)
++        result = ser.iloc[:4]
++        expected = pd.Series(data[:4])
++        tm.assert_series_equal(result, expected)
++
++        result = ser.iloc[[0, 1, 2, 3]]
++        tm.assert_series_equal(result, expected)
++
++    def test_iloc_frame(self, data):
++        df = pd.DataFrame({"A": data, 'B': np.arange(len(data))})
++        expected = pd.DataFrame({"A": data[:4]})
++
++        # slice -> frame
++        result = df.iloc[:4, [0]]
++        tm.assert_frame_equal(result, expected)
++
++        # sequence -> frame
++        result = df.iloc[[0, 1, 2, 3], [0]]
++        tm.assert_frame_equal(result, expected)
++
++        expected = pd.Series(data[:4], name='A')
++
++        # slice -> series
++        result = df.iloc[:4, 0]
++        tm.assert_series_equal(result, expected)
++
++        # sequence -> series
++        result = df.iloc[:4, 0]
++        tm.assert_series_equal(result, expected)
++
++    def test_loc_series(self, data):
++        ser = pd.Series(data)
++        result = ser.loc[:3]
++        expected = pd.Series(data[:4])
++        tm.assert_series_equal(result, expected)
++
++        result = ser.loc[[0, 1, 2, 3]]
++        tm.assert_series_equal(result, expected)
++
++    def test_loc_frame(self, data):
++        df = pd.DataFrame({"A": data, 'B': np.arange(len(data))})
++        expected = pd.DataFrame({"A": data[:4]})
++
++        # slice -> frame
++        result = df.loc[:3, ['A']]
++        tm.assert_frame_equal(result, expected)
++
++        # sequence -> frame
++        result = df.loc[[0, 1, 2, 3], ['A']]
++        tm.assert_frame_equal(result, expected)
++
++        expected = pd.Series(data[:4], name='A')
++
++        # slice -> series
++        result = df.loc[:3, 'A']
++        tm.assert_series_equal(result, expected)
++
++        # sequence -> series
++        result = df.loc[:3, 'A']
++        tm.assert_series_equal(result, expected)
++
++    def test_is_extension_array_dtype(self, data):
++        assert is_extension_array_dtype(data)
++        assert is_extension_array_dtype(data.dtype)
++        assert is_extension_array_dtype(pd.Series(data))
++        assert isinstance(data.dtype, ExtensionDtype)
++
++    def test_getitem_scalar(self, data):
++        result = data[0]
++        assert isinstance(result, data.dtype.type)
++
++        result = pd.Series(data)[0]
++        assert isinstance(result, data.dtype.type)
++
++    def test_getitem_scalar_na(self, data_missing, na_cmp):
++        result = data_missing[0]
++        assert na_cmp(result, data_missing._fill_value)
++
++    def test_getitem_mask(self, data):
++        # Empty mask, raw array
++        mask = np.zeros(len(data), dtype=bool)
++        result = data[mask]
++        assert len(result) == 0
++        assert isinstance(result, type(data))
++
++        # Empty mask, in series
++        mask = np.zeros(len(data), dtype=bool)
++        result = pd.Series(data)[mask]
++        assert len(result) == 0
++        assert result.dtype == data.dtype
++
++        # non-empty mask, raw array
++        mask[0] = True
++        result = data[mask]
++        assert len(result) == 1
++        assert isinstance(result, type(data))
++
++        # non-empty mask, in series
++        result = pd.Series(data)[mask]
++        assert len(result) == 1
++        assert result.dtype == data.dtype
++
++    def test_getitem_slice(self, data):
++        # getitem[slice] should return an array
++        result = data[slice(0)]  # empty
++        assert isinstance(result, type(data))
++
++        result = data[slice(1)]  # scalar
++        assert isinstance(result, type(data))
++
++    def test_take_sequence(self, data):
++        result = pd.Series(data)[[0, 1, 3]]
++        assert result.iloc[0] == data[0]
++        assert result.iloc[1] == data[1]
++        assert result.iloc[2] == data[3]
++
++    # ------------------------------------------------------------------------
++    # Indexing - Setting
++    # ------------------------------------------------------------------------
++
++    @pytest.mark.xfail(reason="ExtensionBlock.__setitem__ not implemented.")
++    def test_setitem_scalar(self, data):
++        arr = pd.Series(data)
++        arr[0] = data[1]
++        assert arr[0] == data[1]
++
++    @pytest.mark.xfail(reason="ExtensionBlock.__setitem__ not implemented.")
++    def test_setitem_sequence(self, data):
++        arr = pd.Series(data)
++        original = data.copy()
++
++        arr[[0, 1]] = [data[1], data[0]]
++        assert arr[0] == original[1]
++        assert arr[1] == original[0]
++
++    @pytest.mark.xfail(reason="ExtensionBlock.__setitem__ not implemented.")
++    def test_setitem_sequence_broadcasts(self, data):
++        arr = pd.Series(data)
++
++        arr[[0, 1]] = data[2]
++        assert arr[0] == data[2]
++        assert arr[1] == data[2]
++
++    @pytest.mark.xfail(reason="ExtensionBlock.__setitem__ not implemented.")
++    @pytest.mark.parametrize('setter', ['loc', 'iloc'])
++    def test_set_scalar(self, data, setter):
++        arr = pd.Series(data)
++        setter = getattr(arr, setter)
++        operator.setitem(setter, 0, data[1])
++        assert arr[0] == data[1]
++
++    @pytest.mark.xfail(reason="ExtensionBlock.__setitem__ not implemented.")
++    def test_set_loc_scalar_mixed(self, data):
++        df = pd.DataFrame({"A": np.arange(len(data)), "B": data})
++        df.loc[0, 'B'] = data[1]
++        assert df.loc[0, 'B'] == data[1]
++
++    @pytest.mark.xfail(reason="ExtensionBlock.__setitem__ not implemented.")
++    def test_set_loc_scalar_single(self, data):
++        df = pd.DataFrame({"B": data})
++        df.loc[10, 'B'] = data[1]
++        assert df.loc[10, 'B'] == data[1]
++
++    @pytest.mark.xfail(reason="ExtensionBlock.__setitem__ not implemented.")
++    def test_set_loc_scalar_multiple_homogoneous(self, data):
++        df = pd.DataFrame({"A": data, "B": data})
++        df.loc[10, 'B'] = data[1]
++        assert df.loc[10, 'B'] == data[1]
++
++    @pytest.mark.xfail(reason="ExtensionBlock.__setitem__ not implemented.")
++    def test_set_iloc_scalar_mixed(self, data):
++        df = pd.DataFrame({"A": np.arange(len(data)), "B": data})
++        df.iloc[0, 1] = data[1]
++        assert df.loc[0, 'B'] == data[1]
++
++    @pytest.mark.xfail(reason="ExtensionBlock.__setitem__ not implemented.")
++    def test_set_iloc_scalar_single(self, data):
++        df = pd.DataFrame({"B": data})
++        df.iloc[10, 0] = data[1]
++        assert df.loc[10, 'B'] == data[1]
++
++    @pytest.mark.xfail(reason="ExtensionBlock.__setitem__ not implemented.")
++    def test_set_iloc_scalar_multiple_homogoneous(self, data):
++        df = pd.DataFrame({"A": data, "B": data})
++        df.iloc[10, 1] = data[1]
++        assert df.loc[10, 'B'] == data[1]
++
++    @pytest.mark.xfail(reason="ExtensionBlock.__setitem__ not implemented.")
++    def test_set_mask_aligned(self, data):
++        ser = pd.Series(data)
++        mask = np.zeros(len(data), dtype=bool)
++        mask[:2] = True
++
++        ser[mask] = data[5:7]
++        assert ser[0] == data[5]
++        assert ser[1] == data[6]
++
++    @pytest.mark.xfail(reason="ExtensionBlock.__setitem__ not implemented.")
++    def test_set_mask_broadcast(self, data):
++        ser = pd.Series(data)
++        mask = np.zeros(len(data), dtype=bool)
++        mask[:2] = True
++
++        ser[mask] = data[10]
++        assert ser[0] == data[10]
++        assert ser[1] == data[10]
++
++    @pytest.mark.xfail(reason="ExtensionBlock.__setitem__ not implemented.")
++    def test_setitem_expand_columns(self, data):
++        df = pd.DataFrame({"A": data})
++        df['B'] = 1
++        assert len(df.columns) == 2
++
++    # ------------------------------------------------------------------------
++    # Methods
++    # ------------------------------------------------------------------------
++
++    def test_isna(self, data_missing):
++        if data_missing._can_hold_na:
++            expected = np.array([True, False])
++        else:
++            expected = np.array([False, False])
++
++        result = pd.isna(data_missing)
++        tm.assert_numpy_array_equal(result, expected)
++
++        result = pd.Series(data_missing).isna()
++        expected = pd.Series(expected)
++        tm.assert_series_equal(result, expected)
++
++    def test_dropna(self, data_missing):
++        result = pd.Series(data_missing).dropna()
++        expected = pd.Series(data_missing).iloc[[1]]
++        tm.assert_series_equal(result, expected)
++
++    def test_align(self, data):
++        a = data[:3]
++        b = data[2:5]
++        r1, r2 = pd.Series(a).align(pd.Series(b, index=[1, 2, 3]))
++
++        # TODO: assumes that the ctor can take a list of scalars of the type
++        e1 = pd.Series(type(data)(list(a) + [data._fill_value]))
++        e2 = pd.Series(type(data)([data._fill_value] + list(b)))
++        tm.assert_series_equal(r1, e1)
++        tm.assert_series_equal(r2, e2)
++
++    @pytest.mark.parametrize('dropna', [True, False])
++    def test_value_counts(self, all_data, dropna):
++        all_data = all_data[:10]
++        if dropna:
++            other = np.array(all_data[~all_data.isna()])
++        else:
++            other = all_data
++
++        result = pd.Series(all_data).value_counts(dropna=dropna).sort_index()
++        expected = pd.Series(other).value_counts(dropna=dropna).sort_index()
++
++        tm.assert_series_equal(result, expected)
++
++    def test_count(self, data_missing):
++        df = pd.DataFrame({"A": data_missing})
++        result = df.count(axis='columns')
++        expected = pd.Series([0, 1])
++        tm.assert_series_equal(result, expected)
++
++    def test_dropna_series(self, data_missing):
++        ser = pd.Series(data_missing)
++        result = ser.dropna()
++        expected = ser.iloc[[1]]
++        tm.assert_series_equal(result, expected)
++
++    def test_dropna_frame(self, data_missing):
++        df = pd.DataFrame({"A": data_missing})
++
++        # defaults
++        result = df.dropna()
++        expected = df.iloc[[1]]
++        tm.assert_frame_equal(result, expected)
++
++        # axis = 1
++        result = df.dropna(axis='columns')
++        expected = pd.DataFrame(index=[0, 1])
++        tm.assert_frame_equal(result, expected)
++
++        # multiple
++        df = pd.DataFrame({"A": data_missing,
++                           "B": [1, np.nan]})
++        result = df.dropna()
++        expected = df.iloc[:0]
++        tm.assert_frame_equal(result, expected)
+diff --git a/pandas/tests/extension/test_categorical.py b/pandas/tests/extension/test_categorical.py
+new file mode 100644
+index 000000000..237963bc3
+--- /dev/null
++++ b/pandas/tests/extension/test_categorical.py
+@@ -0,0 +1,63 @@
++import string
++
++import pytest
++import numpy as np
++
++import pandas as pd
++import pandas.util.testing as tm
++from pandas.api.types import CategoricalDtype
++from pandas import Categorical
++from .base import BaseArrayTests, BaseDtypeTests
++
++
++class TestCategoricalDtype(BaseDtypeTests):
++    @pytest.fixture
++    def dtype(self):
++        return CategoricalDtype()
++
++
++def make_data():
++    return np.random.choice(list(string.ascii_letters), size=100)
++
++
++class TestCategoricalArray(BaseArrayTests):
++
++    @pytest.fixture
++    def data(self):
++        """Length-100 PeriodArray for semantics test."""
++        return Categorical(make_data())
++
++    @pytest.fixture
++    def data_missing(self):
++        """Length 2 array with [NA, Valid]"""
++        return Categorical([np.nan, 'A'])
++
++    @pytest.mark.skip(reason="Memory usage doesn't match")
++    def test_memory_usage(self):
++        # Is this deliberate?
++        pass
++
++    @pytest.mark.skip(reason="Backwards compatability")
++    def test_getitem_scalar(self):
++        # CategoricalDtype.type isn't "correct" since it should
++        # be a parent of the elements (object). But don't want
++        # to break things by changing.
++        pass
++
++    def test_align(self, data):
++        # Override to pass through dtype
++        a = data[:3]
++        b = data[2:5]
++        r1, r2 = pd.Series(a).align(pd.Series(b, index=[1, 2, 3]))
++
++        # TODO: assumes that the ctor can take a list of scalars of the type
++        e1 = pd.Series(type(data)(list(a) + [data._fill_value],
++                                  dtype=data.dtype))
++        e2 = pd.Series(type(data)([data._fill_value] + list(b),
++                                  dtype=data.dtype))
++        tm.assert_series_equal(r1, e1)
++        tm.assert_series_equal(r2, e2)
++
++    @pytest.mark.skip(reason="Different value_counts semantics.")
++    def test_value_counts(self, all_data, dropna):
++        pass
+diff --git a/pandas/tests/extension/test_decimal.py b/pandas/tests/extension/test_decimal.py
+new file mode 100644
+index 000000000..687e64582
+--- /dev/null
++++ b/pandas/tests/extension/test_decimal.py
+@@ -0,0 +1,143 @@
++import decimal
++import numbers
++import random
++import sys
++
++import numpy as np
++import pandas as pd
++import pandas.util.testing as tm
++import pytest
++
++from pandas.core.arrays import ExtensionArray
++from pandas.core.dtypes.base import ExtensionDtype
++
++from .base import BaseDtypeTests, BaseArrayTests
++
++
++class DecimalDtype(ExtensionDtype):
++    type = decimal.Decimal
++    name = 'decimal'
++
++    @classmethod
++    def construct_from_string(cls, string):
++        if string == cls.name:
++            return cls()
++        else:
++            raise TypeError("Cannot construct a '{}' from "
++                            "'{}'".format(cls, string))
++
++
++class DecimalArray(ExtensionArray):
++    dtype = DecimalDtype()
++
++    def __init__(self, values):
++        values = np.asarray(values, dtype=object)
++
++        self.values = values
++
++    def __getitem__(self, item):
++        if isinstance(item, numbers.Integral):
++            return self.values[item]
++        elif isinstance(item, np.ndarray) and item.dtype == 'bool':
++            return type(self)([x for x, m in zip(self, item) if m])
++        else:
++            return type(self)(self.values[item])
++
++    def copy(self, deep=False):
++        if deep:
++            return type(self)(self.values.copy())
++        return type(self)(self)
++
++    def __setitem__(self, key, value):
++        if pd.api.types.is_list_like(value):
++            value = [decimal.Decimal(v) for v in value]
++        else:
++            value = decimal.Decimal(value)
++        self.values[key] = value
++
++    def __len__(self):
++        return len(self.values)
++
++    def __repr__(self):
++        return repr(self.values)
++
++    @property
++    def nbytes(self):
++        n = len(self)
++        if n:
++            return n * sys.getsizeof(self[0])
++        return 0
++
++    def isna(self):
++        return np.array([x.is_nan() for x in self.values])
++
++    def take(self, indexer, allow_fill=True, fill_value=None):
++        mask = indexer == -1
++
++        out = self.values.take(indexer)
++        out[mask] = self._fill_value
++
++        return type(self)(out)
++
++    @property
++    def _fill_value(self):
++        return decimal.Decimal('NaN')
++
++    @classmethod
++    def _concat_same_type(cls, to_concat):
++        return cls(np.concatenate([x.values for x in to_concat]))
++
++
++def make_data():
++    return [decimal.Decimal(random.random()) for _ in range(100)]
++
++
++class TestDecimalDtype(BaseDtypeTests):
++
++    @pytest.fixture
++    def dtype(self):
++        return DecimalDtype()
++
++
++class TestDecimalArray(BaseArrayTests):
++
++    @pytest.fixture
++    def data(self):
++        return DecimalArray(make_data())
++
++    @pytest.fixture
++    def data_missing(self):
++        return DecimalArray([decimal.Decimal('NaN'), decimal.Decimal(1)])
++
++    @pytest.fixture
++    def na_cmp(self):
++        return lambda x, y: x.is_nan() and y.is_nan()
++
++    def test_align(self, data):
++        a = data[:3]
++        b = data[2:5]
++        r1, r2 = pd.Series(a).align(pd.Series(b, index=[1, 2, 3]))
++
++        # NaN handling
++        e1 = pd.Series(type(data)(list(a) + [data._fill_value]))
++        e2 = pd.Series(type(data)([data._fill_value] + list(b)))
++        tm.assert_series_equal(r1.iloc[:3], e1.iloc[:3])
++        assert r1[3].is_nan()
++        assert e1[3].is_nan()
++
++        tm.assert_series_equal(r2.iloc[1:], e2.iloc[1:])
++        assert r2[0].is_nan()
++        assert e2[0].is_nan()
++
++    @pytest.mark.skip(reason="NaN Sorting")
++    def test_value_counts(self, all_data, dropna):
++        all_data = all_data[:10]
++        if dropna:
++            other = np.array(all_data[~all_data.isna()])
++        else:
++            other = all_data
++
++        result = pd.Series(all_data).value_counts(dropna=dropna).sort_index()
++        expected = pd.Series(other).value_counts(dropna=dropna).sort_index()
++
++        tm.assert_series_equal(result, expected)
+diff --git a/pandas/tests/extension/test_json.py b/pandas/tests/extension/test_json.py
+new file mode 100644
+index 000000000..515272a48
+--- /dev/null
++++ b/pandas/tests/extension/test_json.py
+@@ -0,0 +1,175 @@
++import collections
++import itertools
++import numbers
++import operator
++import random
++import string
++import sys
++
++import numpy as np
++import pytest
++
++
++from pandas.core.dtypes.base import ExtensionDtype
++from pandas.core.arrays import ExtensionArray
++
++from .base import BaseArrayTests, BaseDtypeTests
++
++
++pytestmark = pytest.mark.skipif(sys.version_info[0] == 2,
++                                reason="Py2 doesn't have a UserDict")
++
++
++class JSONDtype(ExtensionDtype):
++    type = collections.Mapping
++    name = 'json'
++
++    @classmethod
++    def construct_from_string(cls, string):
++        if string == cls.name:
++            return cls()
++        else:
++            raise TypeError("Cannot construct a '{}' from "
++                            "'{}'".format(cls, string))
++
++
++class JSONArray(ExtensionArray):
++    dtype = JSONDtype()
++
++    def __init__(self, values):
++        for val in values:
++            if not isinstance(val, self.dtype.type):
++                raise TypeError
++        self.data = values
++
++    def __getitem__(self, item):
++        if isinstance(item, numbers.Integral):
++            return self.data[item]
++        elif isinstance(item, np.ndarray) and item.dtype == 'bool':
++            return type(self)([x for x, m in zip(self, item) if m])
++        else:
++            return type(self)(self.data[item])
++
++    def __setitem__(self, key, value):
++        if isinstance(key, numbers.Integral):
++            self.data[key] = value
++        else:
++            if not isinstance(value, (type(self),
++                                      collections.Sequence)):
++                # broadcast value
++                value = itertools.cycle([value])
++
++            if isinstance(key, np.ndarray) and key.dtype == 'bool':
++                # masking
++                for i, (k, v) in enumerate(zip(key, value)):
++                    if k:
++                        assert isinstance(v, self.dtype.type)
++                        self.data[i] = v
++            else:
++                for k, v in zip(key, value):
++                    assert isinstance(v, self.dtype.type)
++                    self.data[k] = v
++
++    def __len__(self):
++        return len(self.data)
++
++    def __repr__(self):
++        return 'JSONArary({!r})'.format(self.data)
++
++    @property
++    def nbytes(self):
++        return sys.getsizeof(self.data)
++
++    def isna(self):
++        return np.array([x == self._fill_value for x in self.data])
++
++    def take(self, indexer, allow_fill=True, fill_value=None):
++        output = [self.data[loc] if loc != -1 else self._fill_value
++                  for loc in indexer]
++        return type(self)(output)
++
++    def copy(self, deep=False):
++        return type(self)(self.data[:])
++
++    @property
++    def _fill_value(self):
++        return {}
++
++    @classmethod
++    def _concat_same_type(cls, to_concat):
++        data = list(itertools.chain.from_iterable([x.data for x in to_concat]))
++        return cls(data)
++
++
++def make_data():
++    # TODO: Use a regular dict. See _NDFrameIndexer._setitem_with_indexer
++    return [collections.UserDict([
++        (random.choice(string.ascii_letters), random.randint(0, 100))
++        for _ in range(random.randint(0, 10))]) for _ in range(100)]
++
++
++class TestJSONDtype(BaseDtypeTests):
++    @pytest.fixture
++    def dtype(self):
++        return JSONDtype()
++
++
++class TestJSON(BaseArrayTests):
++
++    @pytest.fixture
++    def data(self):
++        """Length-100 PeriodArray for semantics test."""
++        return JSONArray(make_data())
++
++    @pytest.fixture
++    def data_missing(self):
++        """Length 2 array with [NA, Valid]"""
++        return JSONArray([{}, {'a': 10}])
++
++    @pytest.fixture
++    def na_cmp(self):
++        return operator.eq
++
++    @pytest.mark.skip(reason="Unhashable")
++    def test_value_counts(self, all_data, dropna):
++        pass
++
++    # @pytest.mark.xfail(reason="Difficulty setting sized objects.")
++    # def test_set_scalar(self):
++    #     pass
++    #
++
++    @pytest.mark.xfail(reason="Difficulty setting sized objects.")
++    def test_set_loc_scalar_mixed(self):
++        # This fails on an np.ndarary(dict) call in _setitem_with_indexer
++        pass
++
++    # @pytest.mark.xfail(reason="Difficulty setting sized objects.")
++    # def test_set_loc_scalar_single(self):
++    #     pass
++    #
++
++    @pytest.mark.xfail(reason="Difficulty setting sized objects.")
++    def test_set_loc_scalar_multiple_homogoneous(self):
++        # This fails in _setitem_with_indexer with a
++        # ValueError: Must have equal len keys and value when setting with
++        # and iterable
++        pass
++
++    @pytest.mark.xfail(reason="Difficulty setting sized objects.")
++    def test_set_iloc_scalar_mixed(self):
++        # This fails in _setitem_with_indexer with a
++        # ValueError: Must have equal len keys and value when setting with an
++        # iterable
++        pass
++
++    # @pytest.mark.xfail(reason="Difficulty setting sized objects.")
++    # def test_set_iloc_scalar_single(self):
++    #     pass
++    #
++    @pytest.mark.xfail(reason="Difficulty setting sized objects.")
++    def test_set_iloc_scalar_multiple_homogoneous(self):
++        # this fails in _setitem_with_indexer with a
++        # ValueError: Must have equal len keys and value when setting with an
++        # iterable
++        pass
+diff --git a/pandas/tests/indexes/common.py b/pandas/tests/indexes/common.py
+index 8948c5f79..2d8d70aa2 100644
+--- a/pandas/tests/indexes/common.py
++++ b/pandas/tests/indexes/common.py
+@@ -314,7 +314,8 @@ class Base(object):
+                 # .values an object array of Period, thus copied
+                 result = index_type(ordinal=index.asi8, copy=False,
+                                     **init_kwargs)
+-                tm.assert_numpy_array_equal(index._values, result._values,
++                tm.assert_numpy_array_equal(index._ndarray_values,
++                                            result._ndarray_values,
+                                             check_same='same')
+             elif isinstance(index, IntervalIndex):
+                 # checked in test_interval.py
+@@ -323,7 +324,8 @@ class Base(object):
+                 result = index_type(index.values, copy=False, **init_kwargs)
+                 tm.assert_numpy_array_equal(index.values, result.values,
+                                             check_same='same')
+-                tm.assert_numpy_array_equal(index._values, result._values,
++                tm.assert_numpy_array_equal(index._ndarray_values,
++                                            result._ndarray_values,
+                                             check_same='same')
+ 
+     def test_copy_and_deepcopy(self, indices):
+diff --git a/pandas/tests/indexes/period/test_construction.py b/pandas/tests/indexes/period/test_construction.py
+index 639a9272c..eca80d17b 100644
+--- a/pandas/tests/indexes/period/test_construction.py
++++ b/pandas/tests/indexes/period/test_construction.py
+@@ -119,8 +119,8 @@ class TestPeriodIndex(object):
+         tm.assert_index_equal(PeriodIndex(idx.values), idx)
+         tm.assert_index_equal(PeriodIndex(list(idx.values)), idx)
+ 
+-        pytest.raises(ValueError, PeriodIndex, idx._values)
+-        pytest.raises(ValueError, PeriodIndex, list(idx._values))
++        pytest.raises(ValueError, PeriodIndex, idx._ndarray_values)
++        pytest.raises(ValueError, PeriodIndex, list(idx._ndarray_values))
+         pytest.raises(TypeError, PeriodIndex,
+                       data=Period('2007', freq='A'))
+ 
+diff --git a/pandas/tests/indexes/period/test_period.py b/pandas/tests/indexes/period/test_period.py
+index 6fc7fa548..e3b1256fa 100644
+--- a/pandas/tests/indexes/period/test_period.py
++++ b/pandas/tests/indexes/period/test_period.py
+@@ -205,7 +205,7 @@ class TestPeriodIndex(DatetimeLike):
+         tm.assert_numpy_array_equal(idx.values, exp)
+         tm.assert_numpy_array_equal(idx.get_values(), exp)
+         exp = np.array([], dtype=np.int64)
+-        tm.assert_numpy_array_equal(idx._values, exp)
++        tm.assert_numpy_array_equal(idx._ndarray_values, exp)
+ 
+         idx = pd.PeriodIndex(['2011-01', pd.NaT], freq='M')
+ 
+@@ -213,7 +213,7 @@ class TestPeriodIndex(DatetimeLike):
+         tm.assert_numpy_array_equal(idx.values, exp)
+         tm.assert_numpy_array_equal(idx.get_values(), exp)
+         exp = np.array([492, -9223372036854775808], dtype=np.int64)
+-        tm.assert_numpy_array_equal(idx._values, exp)
++        tm.assert_numpy_array_equal(idx._ndarray_values, exp)
+ 
+         idx = pd.PeriodIndex(['2011-01-01', pd.NaT], freq='D')
+ 
+@@ -222,7 +222,7 @@ class TestPeriodIndex(DatetimeLike):
+         tm.assert_numpy_array_equal(idx.values, exp)
+         tm.assert_numpy_array_equal(idx.get_values(), exp)
+         exp = np.array([14975, -9223372036854775808], dtype=np.int64)
+-        tm.assert_numpy_array_equal(idx._values, exp)
++        tm.assert_numpy_array_equal(idx._ndarray_values, exp)
+ 
+     def test_period_index_length(self):
+         pi = PeriodIndex(freq='A', start='1/1/2001', end='12/1/2009')
+diff --git a/pandas/tests/indexes/period/test_tools.py b/pandas/tests/indexes/period/test_tools.py
+index 0e72cadb5..f5a62371a 100644
+--- a/pandas/tests/indexes/period/test_tools.py
++++ b/pandas/tests/indexes/period/test_tools.py
+@@ -22,7 +22,7 @@ class TestPeriodRepresentation(object):
+     def _check_freq(self, freq, base_date):
+         rng = PeriodIndex(start=base_date, periods=10, freq=freq)
+         exp = np.arange(10, dtype=np.int64)
+-        tm.assert_numpy_array_equal(rng._values, exp)
++
+         tm.assert_numpy_array_equal(rng.asi8, exp)
+ 
+     def test_annual(self):
+diff --git a/pandas/tests/indexes/test_category.py b/pandas/tests/indexes/test_category.py
+index c2e40c79f..e9fddfde9 100644
+--- a/pandas/tests/indexes/test_category.py
++++ b/pandas/tests/indexes/test_category.py
+@@ -353,6 +353,14 @@ class TestCategoricalIndex(Base):
+         expected = Index(list('caaabbca'))
+         tm.assert_index_equal(result, expected, exact=True)
+ 
++    def test_append_to_another(self):
++        # hits _concat_index_asobject
++        fst = Index(['a', 'b'])
++        snd = CategoricalIndex(['d', 'e'])
++        result = fst.append(snd)
++        expected = Index(['a', 'b', 'd', 'e'])
++        tm.assert_index_equal(result, expected)
++
+     def test_insert(self):
+ 
+         ci = self.create_index()
+diff --git a/pandas/tests/internals/test_external_block.py b/pandas/tests/internals/test_external_block.py
+index 2487363df..991da4116 100644
+--- a/pandas/tests/internals/test_external_block.py
++++ b/pandas/tests/internals/test_external_block.py
+@@ -5,12 +5,12 @@ import numpy as np
+ 
+ import pandas as pd
+ from pandas.core.internals import (
+-    BlockManager, SingleBlockManager, ExtensionBlock)
++    BlockManager, SingleBlockManager, NonConsolidatableMixIn, Block)
+ 
+ import pytest
+ 
+ 
+-class CustomBlock(ExtensionBlock):
++class CustomBlock(NonConsolidatableMixIn, Block):
+ 
+     _holder = np.ndarray
+ 
+diff --git a/pandas/tests/test_base.py b/pandas/tests/test_base.py
+index df2547fc7..ce1e3d492 100644
+--- a/pandas/tests/test_base.py
++++ b/pandas/tests/test_base.py
+@@ -338,8 +338,9 @@ class TestIndexOps(Ops):
+                 if not isinstance(o, PeriodIndex):
+                     expected = getattr(o.values, op)()
+                 else:
+-                    expected = pd.Period(ordinal=getattr(o._values, op)(),
+-                                         freq=o.freq)
++                    expected = pd.Period(
++                        ordinal=getattr(o._ndarray_values, op)(),
++                        freq=o.freq)
+                 try:
+                     assert result == expected
+                 except TypeError:
+@@ -450,7 +451,7 @@ class TestIndexOps(Ops):
+             for orig in self.objs:
+                 o = orig.copy()
+                 klass = type(o)
+-                values = o._values
++                values = o._ndarray_values
+ 
+                 if not self._allow_na_ops(o):
+                     continue
+@@ -1175,3 +1176,136 @@ class TestToIterable(object):
+             assert isinstance(res, pd.Period)
+             assert res.freq == 'M'
+             assert res == exp
++
++
++@pytest.mark.parametrize('arr, expected', [
++    (pd.DatetimeIndex(['2017', '2017']), pd.DatetimeIndex(['2017'])),
++    (pd.DatetimeIndex(['2017', '2017'], tz='US/Eastern'),
++     pd.DatetimeIndex(['2017'], tz='US/Eastern')),
++])
++def test_unique_datetime_index(arr, expected):
++    result = arr.unique()
++
++    if isinstance(expected, np.ndarray):
++        tm.assert_numpy_array_equal(result, expected)
++    if isinstance(expected, pd.Series):
++        tm.assert_series_equal(result, expected)
++    if isinstance(expected, pd.DatetimeIndex):
++        tm.assert_index_equal(result, expected)
++
++
++@pytest.mark.parametrize('arr, expected', [
++    (pd.Series(pd.DatetimeIndex(['2017', '2017'])),
++     np.array(['2017-01-01T00:00:00'], dtype='M8[ns]')),
++    (pd.Series(pd.DatetimeIndex(['2017', '2017'], tz='US/Eastern')),
++     np.array([pd.Timestamp('2017', tz="US/Eastern")], dtype=object)),
++])
++def test_unique_datetime_series(arr, expected):
++    result = arr.unique()
++
++    if isinstance(expected, np.ndarray):
++        tm.assert_numpy_array_equal(result, expected)
++    if isinstance(expected, pd.Series):
++        tm.assert_series_equal(result, expected)
++    if isinstance(expected, pd.DatetimeIndex):
++        tm.assert_index_equal(result, expected)
++
++
++@pytest.mark.parametrize('array, expected_type, dtype', [
++    (np.array([0, 1], dtype=np.int64), np.ndarray, 'int64'),
++    (np.array(['a', 'b']), np.ndarray, 'object'),
++    (pd.Categorical(['a', 'b']), pd.Categorical, 'category'),
++    (pd.DatetimeIndex(['2017', '2018']), np.ndarray, 'datetime64[ns]'),
++    (pd.DatetimeIndex(['2017', '2018'], tz="US/Central"), pd.DatetimeIndex,
++     'datetime64[ns, US/Central]'),
++    (pd.TimedeltaIndex([10**10]), np.ndarray, 'm8[ns]'),
++    (pd.PeriodIndex([2018, 2019], freq='A'), np.ndarray, 'object'),
++    (pd.IntervalIndex.from_breaks([0, 1, 2]), np.ndarray, 'object'),
++])
++def test_values_consistent(array, expected_type, dtype):
++    l_values = pd.Series(array)._values
++    r_values = pd.Index(array)._values
++    assert type(l_values) is expected_type
++    assert type(l_values) is type(r_values)
++
++    if isinstance(l_values, np.ndarray):
++        tm.assert_numpy_array_equal(l_values, r_values)
++    elif isinstance(l_values, pd.Index):
++        tm.assert_index_equal(l_values, r_values)
++    elif pd.api.types.is_categorical(l_values):
++        tm.assert_categorical_equal(l_values, r_values)
++    else:
++        raise TypeError("Unexpected type {}".format(type(l_values)))
++
++    assert l_values.dtype == dtype
++    assert r_values.dtype == dtype
++
++
++@pytest.mark.parametrize('array, expected', [
++    (np.array([0, 1], dtype=np.int64), np.array([0, 1], dtype=np.int64)),
++    (np.array(['0', '1']), np.array(['0', '1'], dtype=object)),
++    (pd.Categorical(['a', 'a']), np.array([0, 0], dtype='int8')),
++    (pd.DatetimeIndex(['2017-01-01T00:00:00']),
++     np.array(['2017-01-01T00:00:00'], dtype='M8[ns]')),
++    (pd.DatetimeIndex(['2017-01-01T00:00:00'], tz="US/Eastern"),
++     np.array(['2017-01-01T05:00:00'], dtype='M8[ns]')),
++    (pd.TimedeltaIndex([10**10]), np.array([10**10], dtype='m8[ns]')),
++    pytest.mark.xfail(reason='PeriodArray not implemented')((
++        pd.PeriodIndex(['2017', '2018'], freq='D'),
++        np.array([17167, 17532]),
++    )),
++])
++def test_ndarray_values(array, expected):
++    l_values = pd.Series(array)._ndarray_values
++    r_values = pd.Index(array)._ndarray_values
++    tm.assert_numpy_array_equal(l_values, r_values)
++    tm.assert_numpy_array_equal(l_values, expected)
++
++
++def test_values_multiindex_datetimeindex():
++    # Test to ensure we hit the boxing / nobox part of MI.values
++    ints = np.arange(10**18, 10**18 + 5)
++    naive = pd.DatetimeIndex(ints)
++    aware = pd.DatetimeIndex(ints, tz='US/Central')
++
++    idx = pd.MultiIndex.from_arrays([naive, aware])
++    result = idx.values
++
++    outer = pd.DatetimeIndex([x[0] for x in result])
++    tm.assert_index_equal(outer, naive)
++
++    inner = pd.DatetimeIndex([x[1] for x in result])
++    tm.assert_index_equal(inner, aware)
++
++    # n_lev > n_lab
++    result = idx[:2].values
++
++    outer = pd.DatetimeIndex([x[0] for x in result])
++    tm.assert_index_equal(outer, naive[:2])
++
++    inner = pd.DatetimeIndex([x[1] for x in result])
++    tm.assert_index_equal(inner, aware[:2])
++
++
++def test_values_multiindex_periodindex():
++    # Test to ensure we hit the boxing / nobox part of MI.values
++    ints = np.arange(2007, 2012)
++    pidx = pd.PeriodIndex(ints, freq='D')
++
++    idx = pd.MultiIndex.from_arrays([ints, pidx])
++    result = idx.values
++
++    outer = pd.Int64Index([x[0] for x in result])
++    tm.assert_index_equal(outer, pd.Int64Index(ints))
++
++    inner = pd.PeriodIndex([x[1] for x in result])
++    tm.assert_index_equal(inner, pidx)
++
++    # n_lev > n_lab
++    result = idx[:2].values
++
++    outer = pd.Int64Index([x[0] for x in result])
++    tm.assert_index_equal(outer, pd.Int64Index(ints[:2]))
++
++    inner = pd.PeriodIndex([x[1] for x in result])
++    tm.assert_index_equal(inner, pidx[:2])
+-- 
+2.15.1
+
