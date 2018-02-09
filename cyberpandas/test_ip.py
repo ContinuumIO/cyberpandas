@@ -8,7 +8,7 @@ from hypothesis import given, example
 import numpy as np
 import numpy.testing as npt
 import pandas as pd
-import pandas_ip as ip
+import cyberpandas as ip
 import pandas.util.testing as tm
 
 

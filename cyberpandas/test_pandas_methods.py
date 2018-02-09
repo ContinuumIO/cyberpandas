@@ -5,7 +5,7 @@ import pandas as pd
 import pandas.util.testing as tm
 import pytest
 
-import pandas_ip as ip
+import cyberpandas as ip
 
 
 @pytest.fixture

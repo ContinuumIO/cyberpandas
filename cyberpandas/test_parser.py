@@ -1,6 +1,6 @@
 import pytest
 
-from pandas_ip import parser, IPAddress
+from cyberpandas import parser, IPAddress
 
 
 @pytest.mark.parametrize('values', [

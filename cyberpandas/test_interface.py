@@ -1,7 +1,7 @@
 import pytest
 from pandas.tests.extension.base import BaseArrayTests
 
-import pandas_ip as ip
+import cyberpandas as ip
 
 
 class TestIP(BaseArrayTests):

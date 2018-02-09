@@ -10,7 +10,7 @@ import pandas as pd
 from pandas.core.internals import ExtensionBlock
 import pandas.util.testing as tm
 
-import pandas_ip as ip
+import cyberpandas as ip
 
 
 # ----------------------------------------------------------------------------

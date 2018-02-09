@@ -6,7 +6,7 @@ This requires some modifications to pandas. These modifications are being
 merged upstream in pandas, but for now you can install from my channel with
 
 ```
-conda install -c TomAugspurger pandas pandas_ip
+conda install -c TomAugspurger pandas cyberpandas
 ```
 
 ## Abstract
@@ -128,7 +128,7 @@ library's design.
 ### Reference Implementation
 
 An implementation of the types and block is available at
-[pandas-ip](https://github.com/ContinuumIO/pandas-ip/) (at the moment
+[cyberpandas](https://github.com/ContinuumIO/cyberpandas/) (at the moment
 it's a proof of concept).
 
 ### Alternatives
@@ -157,7 +157,7 @@ into whatever container is being created:
 ```python
 In [1]: import pandas as pd
 
-In [2]: import pandas_ip as ip
+In [2]: import cyberpandas as ip
 
 In [3]: arr = ip.IPAddress.from_pyints([1, 2])
 
@@ -179,7 +179,7 @@ That might be the best possible outcome to all this.
 
 ### References
 
--   [pandas-ip](https://github.com/ContinuumIO/pandas-ip/)
+-   [cyberpandas](https://github.com/ContinuumIO/cyberpandas/)
 -   [PEP 3144](https://www.python.org/dev/peps/pep-3144/)
 -   [RFC 2373](https://tools.ietf.org/html/rfc2373.html#section-2.5.2)
 -   [ipaddress howto](https://docs.python.org/3/howto/ipaddress.html)

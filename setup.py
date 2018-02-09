@@ -4,11 +4,11 @@ from os import path
 here = path.abspath(path.dirname(__file__))
 
 setup(
-    name='pandas_ip',
+    name='cyberpandas',
     use_scm_version=True,
     setup_requires=['setuptools_scm'],
-    description='Pandas IP',
-    url='https://github.com/ContinuumIO/pandas-ip',
+    description='IP Address type for pandas',
+    url='https://github.com/ContinuumIO/cyberpandas',
     author='Tom Augspurger',
     author_email='tom.w.augspurger@gmail.com',
     license="BSD",

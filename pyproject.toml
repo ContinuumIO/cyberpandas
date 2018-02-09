@@ -3,7 +3,7 @@ requires = ["flit"]
 build-backend = "flit.buildapi"
 
 [tool.flit.metadata]
-module = "pandas_ip"
+module = "cyberpandas"
 author = "tom"
 author-email = "tom.augspurger88@gmail.com"
-home-page = "https://github.com/continuumio/pandas-ip"
+home-page = "https://github.com/continuumio/cyberpandas"

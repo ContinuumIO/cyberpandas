@@ -1,4 +1,4 @@
 set -e
-echo "Building pandas-ip"
+echo "Building cyberpandas"
 
-conda build conda-recipes/pandas_ip --python ${PYTHON}
+conda build conda-recipes/cyberpandas --python ${PYTHON}

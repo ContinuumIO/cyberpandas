@@ -24,9 +24,9 @@ echo ${UPLOADFILE}
 anaconda -t ${UPLOAD_KEY} upload -u TomAugspurger --force ${UPLOADFILE}
 
 
-export UPLOADFILE=`conda build conda-recipes/pandas_ip --python=${PYTHON} --output`
+export UPLOADFILE=`conda build conda-recipes/cyberpandas --python=${PYTHON} --output`
 echo "UPLOADFILE = ${UPLOADFILE}"
 
-echo "[Upload pandas-ip]"
+echo "[Upload cyberpandas]"
 echo ${UPLOADFILE}
 anaconda -t ${UPLOAD_KEY} upload -u TomAugspurger --force ${UPLOADFILE}

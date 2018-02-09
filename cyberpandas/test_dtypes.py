@@ -1,6 +1,6 @@
 import pytest
 
-from pandas_ip import dtypes
+from cyberpandas import dtypes
 
 
 @pytest.mark.parametrize('value', [
