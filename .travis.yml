@@ -19,8 +19,8 @@ install:
 script:
   - echo "script start"
   - source activate test-environment
-  - pytest pandas_ip
-  - flake8 pandas_ip
+  - pytest cyberpandas
+  - flake8 cyberpandas
   - source ./ci/build.sh
 
 after_success:
