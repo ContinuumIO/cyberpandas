@@ -21,7 +21,7 @@ echo "UPLOADFILE = ${UPLOADFILE}"
 
 echo "[Upload pandas]"
 echo ${UPLOADFILE}
-anaconda -t ${UPLOAD_KEY} upload -u TomAugspurger --force ${UPLOADFILE}
+anaconda -t ${UPLOAD_KEY} upload -u intake --force ${UPLOADFILE}
 
 
 export UPLOADFILE=`conda build conda-recipes/cyberpandas --python=${PYTHON} --output`
@@ -29,4 +29,4 @@ echo "UPLOADFILE = ${UPLOADFILE}"
 
 echo "[Upload cyberpandas]"
 echo ${UPLOADFILE}
-anaconda -t ${UPLOAD_KEY} upload -u TomAugspurger --force ${UPLOADFILE}
+anaconda -t ${UPLOAD_KEY} upload -u intake --force ${UPLOADFILE}
