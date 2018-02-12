@@ -31,6 +31,7 @@ conda install -q \
       coverage \
       cython \
       flake8 \
+      hypothesis \
       numpy \
       pytest \
       pytest-cov \
