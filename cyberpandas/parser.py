@@ -1,9 +1,9 @@
 import ipaddress
-import struct
-import typing as T
 
 import numpy as np
 from pandas.api.types import is_list_like
+
+from ._utils import pack, unpack
 
 
 def to_ipaddress(values):
@@ -81,19 +81,3 @@ def _to_ipaddress_pyint(values):
 
     values2 = [unpack(pack(x)) for x in values]
     return np.atleast_1d(np.asarray(values2, dtype=IPType.mybase))
-
-
-def pack(ip: int) -> bytes:
-    return ip.to_bytes(16, 'big')
-
-
-def unpack(ip: bytes) -> T.Tuple[int, int]:
-    # Recipe 3.5 from Python Cookbook 3rd ed. (p. 90)
-    # int.from_bytes(data, 'big') for Py3+
-    hi, lo = struct.unpack(">QQ", ip)
-    return hi, lo
-
-
-def combine(hi: int, lo: int) -> int:
-    """Combine the hi and lo bytes into the final ip address."""
-    return (hi << 64) + lo

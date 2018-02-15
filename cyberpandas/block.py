@@ -12,6 +12,7 @@ from pandas.core.dtypes.dtypes import ExtensionDtype
 
 from .common import _U8_MAX, _IPv4_MAX
 from .parser import _to_ipaddress_pyint
+from ._utils import pack, unpack, combine
 
 # -----------------------------------------------------------------------------
 # Extension Type
@@ -84,8 +85,6 @@ class IPAddress(ExtensionArray):
         return self.data.view()
 
     def take(self, indexer, allow_fill=True, fill_value=None):
-        from .parser import pack, unpack
-
         mask = indexer == -1
         result = self.data.take(indexer)
         result[mask] = unpack(pack(int(self._fill_value)))
@@ -111,8 +110,6 @@ class IPAddress(ExtensionArray):
         return len(self.data)
 
     def __getitem__(self, *args):
-        from .parser import combine
-
         result = operator.getitem(self.data, *args)
         if isinstance(result, tuple):
             return ipaddress.ip_address(combine(*result))
@@ -140,7 +137,6 @@ class IPAddress(ExtensionArray):
         return [ipaddress.ip_address(x) for x in self._format_values()]
 
     def to_pyints(self):
-        from .parser import combine
         return [combine(*map(int, x)) for x in self.data]
 
     def __repr__(self):
