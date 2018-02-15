@@ -10,9 +10,11 @@ import pandas as pd
 from pandas.core.arrays import ExtensionArray
 from pandas.core.dtypes.dtypes import ExtensionDtype
 
+from ._accessor import (DelegatedMethod, DelegatedProperty,
+                        delegated_method)
+from ._utils import combine, pack, unpack
 from .common import _U8_MAX, _IPv4_MAX
 from .parser import _to_ipaddress_pyint
-from ._utils import pack, unpack, combine
 
 # -----------------------------------------------------------------------------
 # Extension Type
@@ -20,6 +22,7 @@ from ._utils import pack, unpack, combine
 
 
 class IPv4v6Base(metaclass=abc.ABCMeta):
+    """Metaclass providing a common base class for the two scalar IP types."""
     pass
 
 
@@ -390,52 +393,22 @@ class IPAddressIndex(pd.Index):
 # Accessor
 # -----------------------------------------------------------------------------
 
-
-class _Delegated:
-
-    def __init__(self, name):
-        self.name = name
-
-    def __get__(self, obj, type=None):
-        index = object.__getattribute__(obj, '_index')
-        name = object.__getattribute__(obj, '_name')
-        result = self._get_result(obj)
-        return pd.Series(result, index, name)
-
-
-class _DelegatedProperty(_Delegated):
-    def _get_result(self, obj, type=None):
-        return getattr(object.__getattribute__(obj, '_data'), self.name)
-
-
-class _DelegatedMethod(_Delegated):
-    def __get__(self, obj, type=None):
-        index = object.__getattribute__(obj, '_index')
-        name = object.__getattribute__(obj, '_name')
-        method = getattr(object.__getattribute__(obj, '_data'), self.name)
-        return _delegated_method(method, index, name)
-
-
-def _delegated_method(method, index, name, *args, **kwargs):
-    return pd.Series(method(*args, **kwargs), index, name)
-
-
 @pd.api.extensions.register_series_accessor("ip")
 class IPAccessor:
 
-    is_ipv4 = _DelegatedProperty("is_ipv4")
-    is_ipv6 = _DelegatedProperty("is_ipv6")
-    version = _DelegatedProperty("version")
-    is_multicast = _DelegatedProperty("is_multicast")
-    is_private = _DelegatedProperty("is_private")
-    is_global = _DelegatedProperty("is_global")
-    is_unspecified = _DelegatedProperty("is_unspecified")
-    is_reserved = _DelegatedProperty("is_reserved")
-    is_loopback = _DelegatedProperty("is_loopback")
-    is_link_local = _DelegatedProperty("is_link_local")
+    is_ipv4 = DelegatedProperty("is_ipv4")
+    is_ipv6 = DelegatedProperty("is_ipv6")
+    version = DelegatedProperty("version")
+    is_multicast = DelegatedProperty("is_multicast")
+    is_private = DelegatedProperty("is_private")
+    is_global = DelegatedProperty("is_global")
+    is_unspecified = DelegatedProperty("is_unspecified")
+    is_reserved = DelegatedProperty("is_reserved")
+    is_loopback = DelegatedProperty("is_loopback")
+    is_link_local = DelegatedProperty("is_link_local")
 
-    isna = _DelegatedMethod("isna")
-    to_pyints = _DelegatedMethod("to_pyints")
+    isna = DelegatedMethod("isna")
+    to_pyints = DelegatedMethod("to_pyints")
 
     def __init__(self, obj):
         self._validate(obj)
@@ -450,8 +423,8 @@ class IPAccessor:
                                  "dtype '{}'.".format(obj.dtype))
 
     def isin(self, other):
-        return _delegated_method(self._data.isin, self._index,
-                                 self._name, other)
+        return delegated_method(self._data.isin, self._index,
+                                self._name, other)
 
 
 def is_ipaddress_type(obj):
