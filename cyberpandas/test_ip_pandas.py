@@ -72,6 +72,7 @@ def test_index_constructor():
     assert repr(result) == "IPAddressIndex(['0.0.0.0', '0.0.0.1', '0.0.0.2'])"
 
 
+@pytest.mark.xfail(reason="ExtensionIndex not implemented")
 def test_series_with_index():
     ser = pd.Series([1, 2, 3], index=ip.IPAddressIndex([0, 1, 2]))
     repr(ser)

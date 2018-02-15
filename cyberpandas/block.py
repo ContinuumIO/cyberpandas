@@ -84,9 +84,11 @@ class IPAddress(ExtensionArray):
         return self.data.view()
 
     def take(self, indexer, allow_fill=True, fill_value=None):
+        from .parser import pack, unpack
+
         mask = indexer == -1
         result = self.data.take(indexer)
-        result[mask] = self._fill_value
+        result[mask] = unpack(pack(int(self._fill_value)))
         return type(self)(result)
 
     def _formatting_values(self):
