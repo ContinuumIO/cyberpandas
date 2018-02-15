@@ -1,196 +1,427 @@
-From 73508320179fbc883c9e4d3a2f3ca296065ed870 Mon Sep 17 00:00:00 2001
+From dd2cac6d4ee7d4ca72e56f38b6ed4f848ec266b8 Mon Sep 17 00:00:00 2001
 From: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date: Fri, 2 Feb 2018 15:29:55 -0600
-Subject: [PATCH] ENH: non-interval changes
+Date: Thu, 15 Feb 2018 12:47:21 -0600
+Subject: [PATCH] Squashed
 
-COMPAT: py2 Super
-
-BUG: Use original object for extension array
-
-Consistent boxing / unboxing
-
-NumPy compat
-
-32-bit compat
-
-Add a test array
-
-linting
-
-Default __iter__
-
-Tests for value_counts
-
-Implement value_counts
-
-Py2 compat
-
-Fixed dropna
-
-Test fixups
-
-Started setitem
-
-Setitem tests, decimal example
-
-Compat
-
-Fixed extension block tests.
-
-The only "API change" was that you can't just inherit from
-NonConsolidatableMixin, which is OK since
-
-1. it's a mixin
-2. geopandas also inherits from Block
-
-Clarify binop tests
-
-Make it clearer which bit might raise
-
-TST: Removed ops tests
-
-More failing tests
-
-remove bad test
-
-better setitem
-
-Dropna works.
-
-Restore xfail test
-
-Test Categorical
-
-Xfail setitem tests
-
-TST: Skip JSON tests on py2
-
-cleanup
-
-(cherry picked from commit 242562108b099b4e7a205541ee15b9272dcb5265)
-
-REF/Clean: Internal / External values
-
-Move to index base
-
-Cleanup unique handling
-
-Simplify object concat
-
-Use values for intersection
-
-I think eventually we'll want to ndarray_values for this, but it'll
-require a bit more work to support. Currently, using ndarary_values
-causes occasional failures on categorical.
-
-hmm
-
-Additional testing
-
-More tests
-
-ndarray_values
-
-API: Default ExtensionArray.astype
-
-(cherry picked from commit 943a915562b72bed147c857de927afa0daf31c1a)
-(cherry picked from commit fbf0a0672380e210d3cb3c527fa8045a204d81be)
-
-Simplify concat_as_object
-
-Py2 compat
-
-(cherry picked from commit b20e12cae68dd86ff51597464045656763d369f7)
-
-Set-ops ugliness
-
-better docstrings
-
-tolist
-
-linting
-
-Moved dtypes
-
-(cherry picked from commit d1362271bca8a7b183f3241e5c2f040c422118b8)
-
-clean
-
-cleanup
-
-NumPy compat
-
-Use base _values for CategoricalIndex
-
-Update dev docs
-
-cleanup
-
-cleanup
-
-Linting
-
-Precision in tests
-
-Linting
-
-Move to extension
-
-Push _ndarray_values to ExtensionArray
-
-Now IndexOpsMixin._ndarray_values will dispatch all the way down to the EA.
-Subclasses like Categorical can override it as they see fit.
-
-Clean up tolist
-
-Move test locations
-
-Fixed test
-
-REF: Update per comments
 ---
- doc/source/internals.rst                         |  19 +
- pandas/core/algorithms.py                        |   3 +-
- pandas/core/arrays/base.py                       |  78 +++-
- pandas/core/arrays/categorical.py                |   8 +
- pandas/core/base.py                              |  29 +-
- pandas/core/dtypes/base.py                       |  12 +-
- pandas/core/dtypes/cast.py                       |   2 +-
- pandas/core/dtypes/common.py                     |   4 +-
- pandas/core/dtypes/concat.py                     |   6 +-
- pandas/core/dtypes/missing.py                    |  30 +-
- pandas/core/frame.py                             |  21 +-
- pandas/core/indexes/base.py                      | 118 ++++--
- pandas/core/indexes/category.py                  |   9 +-
- pandas/core/indexes/datetimelike.py              |   2 +-
- pandas/core/indexes/datetimes.py                 |  22 ++
- pandas/core/indexes/multi.py                     |  34 +-
- pandas/core/indexes/numeric.py                   |   2 +-
- pandas/core/indexes/period.py                    |  39 +-
- pandas/core/indexing.py                          |   3 +
- pandas/core/internals.py                         |  40 +-
- pandas/core/series.py                            |  28 +-
- pandas/io/pytables.py                            |   2 +-
- pandas/plotting/_converter.py                    |   6 +-
- pandas/tests/extension/base.py                   | 460 +++++++++++++++++++++++
- pandas/tests/extension/test_categorical.py       |  63 ++++
- pandas/tests/extension/test_decimal.py           | 143 +++++++
- pandas/tests/extension/test_json.py              | 175 +++++++++
- pandas/tests/indexes/common.py                   |   6 +-
- pandas/tests/indexes/datetimes/test_datetime.py  |   9 +
- pandas/tests/indexes/period/test_construction.py |   4 +-
- pandas/tests/indexes/period/test_period.py       |   6 +-
- pandas/tests/indexes/period/test_tools.py        |   2 +-
- pandas/tests/indexes/test_category.py            |   8 +
- pandas/tests/indexes/test_multi.py               |  47 +++
- pandas/tests/internals/test_external_block.py    |   4 +-
- pandas/tests/test_base.py                        |  58 ++-
- 36 files changed, 1358 insertions(+), 144 deletions(-)
+ .travis.yml                                        |  12 +-
+ asv_bench/benchmarks/rolling.py                    |  16 +-
+ ci/asv.sh                                          |  35 --
+ ci/install_travis.sh                               |  17 +-
+ ...NDA_BUILD_TEST.build => requirements-3.5.build} |   0
+ ...5_CONDA_BUILD_TEST.pip => requirements-3.5.pip} |   0
+ ...5_CONDA_BUILD_TEST.run => requirements-3.5.run} |   0
+ ...3.5_CONDA_BUILD_TEST.sh => requirements-3.5.sh} |   2 +-
+ ci/requirements-3.6_ASV.build                      |   5 -
+ ci/requirements-3.6_ASV.run                        |  25 --
+ ci/requirements-3.6_ASV.sh                         |   7 -
+ ci/script_multi.sh                                 |   5 +-
+ ci/script_single.sh                                |   5 +-
+ circle.yml                                         |   1 +
+ doc/source/conf.py                                 |   9 +
+ doc/source/internals.rst                           |  19 +
+ doc/source/io.rst                                  | 418 ++++++++++---------
+ doc/source/whatsnew/v0.23.0.txt                    |   3 +
+ pandas/_libs/groupby_helper.pxi.in                 |   2 +-
+ pandas/_libs/src/headers/cmath                     |  15 +
+ pandas/_libs/src/headers/math.h                    |  11 -
+ pandas/_libs/tslib.pyx                             |  15 +-
+ pandas/_libs/window.pyx                            |  54 ++-
+ pandas/conftest.py                                 |   6 +
+ pandas/core/algorithms.py                          |   3 +-
+ pandas/core/arrays/base.py                         |  92 ++++-
+ pandas/core/arrays/categorical.py                  |   8 +
+ pandas/core/base.py                                |  21 +-
+ pandas/core/dtypes/base.py                         |  12 +-
+ pandas/core/dtypes/cast.py                         |   2 +-
+ pandas/core/dtypes/common.py                       |   4 +-
+ pandas/core/dtypes/concat.py                       |   6 +-
+ pandas/core/dtypes/missing.py                      |  30 +-
+ pandas/core/frame.py                               |  23 +-
+ pandas/core/generic.py                             |   3 +
+ pandas/core/indexes/base.py                        | 112 +++--
+ pandas/core/indexes/category.py                    |   9 +-
+ pandas/core/indexes/datetimelike.py                |   2 +-
+ pandas/core/indexes/datetimes.py                   |  43 ++
+ pandas/core/indexes/interval.py                    |  10 +
+ pandas/core/indexes/multi.py                       |  34 +-
+ pandas/core/indexes/numeric.py                     |   2 +-
+ pandas/core/indexes/period.py                      |  49 ++-
+ pandas/core/indexing.py                            |   3 +
+ pandas/core/internals.py                           |  42 +-
+ pandas/core/series.py                              |  28 +-
+ pandas/io/gbq.py                                   |   2 +-
+ pandas/io/pytables.py                              |   2 +-
+ pandas/plotting/_converter.py                      |   6 +-
+ pandas/tests/extension/base.py                     | 455 +++++++++++++++++++++
+ pandas/tests/extension/test_categorical.py         |  62 +++
+ pandas/tests/extension/test_decimal.py             | 143 +++++++
+ pandas/tests/extension/test_json.py                | 135 ++++++
+ pandas/tests/indexes/common.py                     |   6 +-
+ pandas/tests/indexes/datetimes/test_datetime.py    |   9 +
+ pandas/tests/indexes/datetimes/test_timezones.py   |  13 +-
+ pandas/tests/indexes/period/test_construction.py   |   4 +-
+ pandas/tests/indexes/period/test_period.py         |   6 +-
+ pandas/tests/indexes/period/test_tools.py          |   2 +-
+ pandas/tests/indexes/test_category.py              |   8 +
+ pandas/tests/indexes/test_multi.py                 |  47 +++
+ pandas/tests/internals/test_external_block.py      |   4 +-
+ pandas/tests/io/test_parquet.py                    |  50 ++-
+ pandas/tests/series/test_alter_axes.py             |   8 +
+ pandas/tests/test_base.py                          |  58 ++-
+ pandas/tests/tseries/test_timezones.py             |  86 +---
+ pandas/tests/tslibs/test_conversion.py             |  57 +++
+ pandas/tests/tslibs/test_timezones.py              |  37 ++
+ setup.py                                           |   5 +-
+ 69 files changed, 1846 insertions(+), 579 deletions(-)
+ delete mode 100755 ci/asv.sh
+ rename ci/{requirements-3.5_CONDA_BUILD_TEST.build => requirements-3.5.build} (100%)
+ rename ci/{requirements-3.5_CONDA_BUILD_TEST.pip => requirements-3.5.pip} (100%)
+ rename ci/{requirements-3.5_CONDA_BUILD_TEST.run => requirements-3.5.run} (100%)
+ rename ci/{requirements-3.5_CONDA_BUILD_TEST.sh => requirements-3.5.sh} (86%)
+ delete mode 100644 ci/requirements-3.6_ASV.build
+ delete mode 100644 ci/requirements-3.6_ASV.run
+ delete mode 100755 ci/requirements-3.6_ASV.sh
+ create mode 100644 pandas/_libs/src/headers/cmath
+ delete mode 100644 pandas/_libs/src/headers/math.h
  create mode 100644 pandas/tests/extension/base.py
  create mode 100644 pandas/tests/extension/test_categorical.py
  create mode 100644 pandas/tests/extension/test_decimal.py
  create mode 100644 pandas/tests/extension/test_json.py
+ create mode 100644 pandas/tests/tslibs/test_conversion.py
+ create mode 100644 pandas/tests/tslibs/test_timezones.py
 
+diff --git a/.travis.yml b/.travis.yml
+index 4cbe7f86b..b1168f183 100644
+--- a/.travis.yml
++++ b/.travis.yml
+@@ -52,7 +52,7 @@ matrix:
+     # In allow_failures
+     - dist: trusty
+       env:
+-        - JOB="3.5_CONDA_BUILD_TEST" TEST_ARGS="--skip-slow --skip-network" CONDA_BUILD_TEST=true
++        - JOB="3.5" TEST_ARGS="--skip-slow --skip-network"
+     - dist: trusty
+       env:
+         - JOB="3.6" TEST_ARGS="--skip-slow --skip-network" PANDAS_TESTING_MODE="deprecate" CONDA_FORGE=true COVERAGE=true
+@@ -73,17 +73,13 @@ matrix:
+       env:
+         - JOB="3.6_NUMPY_DEV" TEST_ARGS="--skip-slow --skip-network" PANDAS_TESTING_MODE="deprecate"
+     # In allow_failures
+-    - dist: trusty
+-      env:
+-        - JOB="3.6_ASV" ASV=true
+-    # In allow_failures
+     - dist: trusty
+       env:
+         - JOB="3.6_DOC" DOC=true
+     allow_failures:
+       - dist: trusty
+         env:
+-          - JOB="3.5_CONDA_BUILD_TEST" TEST_ARGS="--skip-slow --skip-network" CONDA_BUILD_TEST=true
++          - JOB="3.5" TEST_ARGS="--skip-slow --skip-network"
+       - dist: trusty
+         env:
+           - JOB="2.7_SLOW" SLOW=true
+@@ -97,9 +93,6 @@ matrix:
+       - dist: trusty
+         env:
+           - JOB="3.6_NUMPY_DEV" TEST_ARGS="--skip-slow --skip-network" PANDAS_TESTING_MODE="deprecate"
+-      - dist: trusty
+-        env:
+-          - JOB="3.6_ASV" ASV=true
+       - dist: trusty
+         env:
+           - JOB="3.6_DOC" DOC=true
+@@ -135,7 +128,6 @@ script:
+   - ci/script_single.sh
+   - ci/script_multi.sh
+   - ci/lint.sh
+-  - ci/asv.sh
+   - echo "checking imports"
+   - source activate pandas && python ci/check_imports.py
+   - echo "script done"
+diff --git a/asv_bench/benchmarks/rolling.py b/asv_bench/benchmarks/rolling.py
+index 75990d83f..ba25ad6c5 100644
+--- a/asv_bench/benchmarks/rolling.py
++++ b/asv_bench/benchmarks/rolling.py
+@@ -16,12 +16,26 @@ class Methods(object):
+ 
+     def setup(self, constructor, window, dtype, method):
+         N = 10**5
+-        arr = np.random.random(N).astype(dtype)
++        arr = (100 * np.random.random(N)).astype(dtype)
+         self.roll = getattr(pd, constructor)(arr).rolling(window)
+ 
+     def time_rolling(self, constructor, window, dtype, method):
+         getattr(self.roll, method)()
+ 
++class VariableWindowMethods(Methods):
++    sample_time = 0.2
++    params = (['DataFrame', 'Series'],
++              ['50s', '1h', '1d'],
++              ['int', 'float'],
++              ['median', 'mean', 'max', 'min', 'std', 'count', 'skew', 'kurt',
++               'sum'])
++    param_names = ['contructor', 'window', 'dtype', 'method']
++
++    def setup(self, constructor, window, dtype, method):
++        N = 10**5
++        arr = (100 * np.random.random(N)).astype(dtype)
++        index = pd.date_range('2017-01-01', periods=N, freq='5s')
++        self.roll = getattr(pd, constructor)(arr, index=index).rolling(window)
+ 
+ class Pairwise(object):
+ 
+diff --git a/ci/asv.sh b/ci/asv.sh
+deleted file mode 100755
+index 1e9a8d638..000000000
+--- a/ci/asv.sh
++++ /dev/null
+@@ -1,35 +0,0 @@
+-#!/bin/bash
+-
+-echo "inside $0"
+-
+-source activate pandas
+-
+-RET=0
+-
+-if [ "$ASV" ]; then
+-    echo "Check for failed asv benchmarks"
+-
+-    cd asv_bench
+-
+-    asv machine --yes
+-
+-    time asv dev | tee failed_asv.txt
+-
+-    echo "The following asvs benchmarks (if any) failed."
+-
+-    cat failed_asv.txt | grep "failed" failed_asv.txt
+-
+-    if [ $? = "0" ]; then
+-        RET=1
+-    fi
+-
+-    echo "DONE displaying failed asvs benchmarks."
+-
+-    rm failed_asv.txt
+-
+-    echo "Check for failed asv benchmarks DONE"
+-else
+-    echo "NOT checking for failed asv benchmarks"
+-fi
+-
+-exit $RET
+diff --git a/ci/install_travis.sh b/ci/install_travis.sh
+index 6e270519e..458ff083b 100755
+--- a/ci/install_travis.sh
++++ b/ci/install_travis.sh
+@@ -50,12 +50,6 @@ conda config --set ssl_verify false || exit 1
+ conda config --set quiet true --set always_yes true --set changeps1 false || exit 1
+ conda update -q conda
+ 
+-if [ "$CONDA_BUILD_TEST" ]; then
+-    echo
+-    echo "[installing conda-build]"
+-    conda install conda-build
+-fi
+-
+ echo
+ echo "[add channels]"
+ conda config --remove channels defaults || exit 1
+@@ -122,7 +116,7 @@ if [ "$COVERAGE" ]; then
+ fi
+ 
+ echo
+-if [ -z "$PIP_BUILD_TEST" ] && [ -z "$CONDA_BUILD_TEST" ]; then
++if [ -z "$PIP_BUILD_TEST" ] ; then
+ 
+     # build but don't install
+     echo "[build em]"
+@@ -177,15 +171,6 @@ if [ "$PIP_BUILD_TEST" ]; then
+     conda uninstall -y cython
+     time pip install dist/*tar.gz || exit 1
+ 
+-elif [ "$CONDA_BUILD_TEST" ]; then
+-
+-    # build & install testing
+-    echo "[building conda recipe]"
+-    time conda build ./conda.recipe --python 3.5 -q --no-test || exit 1
+-
+-    echo "[installing]"
+-    conda install pandas --use-local || exit 1
+-
+ else
+ 
+     # install our pandas
+diff --git a/ci/requirements-3.5_CONDA_BUILD_TEST.build b/ci/requirements-3.5.build
+similarity index 100%
+rename from ci/requirements-3.5_CONDA_BUILD_TEST.build
+rename to ci/requirements-3.5.build
+diff --git a/ci/requirements-3.5_CONDA_BUILD_TEST.pip b/ci/requirements-3.5.pip
+similarity index 100%
+rename from ci/requirements-3.5_CONDA_BUILD_TEST.pip
+rename to ci/requirements-3.5.pip
+diff --git a/ci/requirements-3.5_CONDA_BUILD_TEST.run b/ci/requirements-3.5.run
+similarity index 100%
+rename from ci/requirements-3.5_CONDA_BUILD_TEST.run
+rename to ci/requirements-3.5.run
+diff --git a/ci/requirements-3.5_CONDA_BUILD_TEST.sh b/ci/requirements-3.5.sh
+similarity index 86%
+rename from ci/requirements-3.5_CONDA_BUILD_TEST.sh
+rename to ci/requirements-3.5.sh
+index 093fdbcf2..529e1e874 100644
+--- a/ci/requirements-3.5_CONDA_BUILD_TEST.sh
++++ b/ci/requirements-3.5.sh
+@@ -2,7 +2,7 @@
+ 
+ source activate pandas
+ 
+-echo "install 35 CONDA_BUILD_TEST"
++echo "install 35"
+ 
+ # pip install python-dateutil to get latest
+ conda remove -n pandas python-dateutil --force
+diff --git a/ci/requirements-3.6_ASV.build b/ci/requirements-3.6_ASV.build
+deleted file mode 100644
+index bc72eed2a..000000000
+--- a/ci/requirements-3.6_ASV.build
++++ /dev/null
+@@ -1,5 +0,0 @@
+-python=3.6*
+-python-dateutil
+-pytz
+-numpy=1.13*
+-cython
+diff --git a/ci/requirements-3.6_ASV.run b/ci/requirements-3.6_ASV.run
+deleted file mode 100644
+index 6c45e3371..000000000
+--- a/ci/requirements-3.6_ASV.run
++++ /dev/null
+@@ -1,25 +0,0 @@
+-ipython
+-ipykernel
+-ipywidgets
+-sphinx=1.5*
+-nbconvert
+-nbformat
+-notebook
+-matplotlib
+-seaborn
+-scipy
+-lxml
+-beautifulsoup4
+-html5lib
+-pytables
+-python-snappy
+-openpyxl
+-xlrd
+-xlwt
+-xlsxwriter
+-sqlalchemy
+-numexpr
+-bottleneck
+-statsmodels
+-xarray
+-pyqt
+diff --git a/ci/requirements-3.6_ASV.sh b/ci/requirements-3.6_ASV.sh
+deleted file mode 100755
+index 8a46f85db..000000000
+--- a/ci/requirements-3.6_ASV.sh
++++ /dev/null
+@@ -1,7 +0,0 @@
+-#!/bin/bash
+-
+-source activate pandas
+-
+-echo "[install ASV_BUILD deps]"
+-
+-pip install git+https://github.com/spacetelescope/asv
+diff --git a/ci/script_multi.sh b/ci/script_multi.sh
+index 766e51625..6c354fc4c 100755
+--- a/ci/script_multi.sh
++++ b/ci/script_multi.sh
+@@ -18,7 +18,7 @@ fi
+ export PYTHONHASHSEED=$(python -c 'import random; print(random.randint(1, 4294967295))')
+ echo PYTHONHASHSEED=$PYTHONHASHSEED
+ 
+-if [ "$PIP_BUILD_TEST" ] || [ "$CONDA_BUILD_TEST" ]; then
++if [ "$PIP_BUILD_TEST" ] ; then
+     echo "[build-test]"
+ 
+     echo "[env]"
+@@ -37,9 +37,6 @@ if [ "$PIP_BUILD_TEST" ] || [ "$CONDA_BUILD_TEST" ]; then
+ elif [ "$DOC" ]; then
+     echo "We are not running pytest as this is a doc-build"
+ 
+-elif [ "$ASV" ]; then
+-    echo "We are not running pytest as this is an asv-build"
+-
+ elif [ "$COVERAGE" ]; then
+     echo pytest -s -n 2 -m "not single" --cov=pandas --cov-report xml:/tmp/cov-multiple.xml --junitxml=/tmp/multiple.xml --strict $TEST_ARGS pandas
+     pytest -s -n 2 -m "not single" --cov=pandas --cov-report xml:/tmp/cov-multiple.xml --junitxml=/tmp/multiple.xml --strict $TEST_ARGS pandas
+diff --git a/ci/script_single.sh b/ci/script_single.sh
+index 153847ab2..74b0e897f 100755
+--- a/ci/script_single.sh
++++ b/ci/script_single.sh
+@@ -16,15 +16,12 @@ if [ "$SLOW" ]; then
+     TEST_ARGS="--only-slow --skip-network"
+ fi
+ 
+-if [ "$PIP_BUILD_TEST" ] || [ "$CONDA_BUILD_TEST" ]; then
++if [ "$PIP_BUILD_TEST" ]; then
+     echo "We are not running pytest as this is a build test."
+ 
+ elif [ "$DOC" ]; then
+     echo "We are not running pytest as this is a doc-build"
+ 
+-elif [ "$ASV" ]; then
+-    echo "We are not running pytest as this is an asv-build"
+-
+ elif [ "$COVERAGE" ]; then
+     echo pytest -s -m "single" --strict --cov=pandas --cov-report xml:/tmp/cov-single.xml --junitxml=/tmp/single.xml $TEST_ARGS pandas
+     pytest -s -m "single" --strict --cov=pandas --cov-report xml:/tmp/cov-single.xml --junitxml=/tmp/single.xml $TEST_ARGS pandas
+diff --git a/circle.yml b/circle.yml
+index 9d49145af..dd322c80d 100644
+--- a/circle.yml
++++ b/circle.yml
+@@ -2,6 +2,7 @@ machine:
+   environment:
+     # these are globally set
+     MINICONDA_DIR: /home/ubuntu/miniconda3
++    PANDAS_TESTING_MODE: deprecate
+ 
+ 
+ database:
+diff --git a/doc/source/conf.py b/doc/source/conf.py
+index c188f83f8..7c4edd048 100644
+--- a/doc/source/conf.py
++++ b/doc/source/conf.py
+@@ -15,6 +15,8 @@ import os
+ import re
+ import inspect
+ import importlib
++import warnings
++
+ from pandas.compat import u, PY3
+ 
+ try:
+@@ -375,6 +377,13 @@ extlinks = {'issue': ('https://github.com/pandas-dev/pandas/issues/%s',
+             'wiki': ('https://github.com/pandas-dev/pandas/wiki/%s',
+                      'wiki ')}
+ 
++
++# ignore all deprecation warnings from Panel during doc build
++# (to avoid the need to add :okwarning: in many places)
++warnings.filterwarnings("ignore", message="\nPanel is deprecated",
++                        category=FutureWarning)
++
++
+ ipython_exec_lines = [
+     'import numpy as np',
+     'import pandas as pd',
 diff --git a/doc/source/internals.rst b/doc/source/internals.rst
 index ee4df879d..957f82fd9 100644
 --- a/doc/source/internals.rst
@@ -221,6 +452,1599 @@ index ee4df879d..957f82fd9 100644
  .. _ref-subclassing-pandas:
  
  Subclassing pandas Data Structures
+diff --git a/doc/source/io.rst b/doc/source/io.rst
+index 1785de54b..7bb34e4d2 100644
+--- a/doc/source/io.rst
++++ b/doc/source/io.rst
+@@ -28,8 +28,11 @@
+ IO Tools (Text, CSV, HDF5, ...)
+ ===============================
+ 
+-The pandas I/O API is a set of top level ``reader`` functions accessed like ``pd.read_csv()`` that generally return a ``pandas``
+-object. The corresponding ``writer`` functions are object methods that are accessed like ``df.to_csv()``
++The pandas I/O API is a set of top level ``reader`` functions accessed like 
++:func:`pandas.read_csv` that generally return a pandas object. The corresponding 
++``writer`` functions are object methods that are accessed like 
++:meth:`DataFrame.to_csv`. Below is a table containing available ``readers`` and 
++``writers``.
+ 
+ .. csv-table::
+     :header: "Format Type", "Data Description", "Reader", "Writer"
+@@ -65,13 +68,14 @@ CSV & Text files
+ 
+ The two workhorse functions for reading text files (a.k.a. flat files) are
+ :func:`read_csv` and :func:`read_table`. They both use the same parsing code to
+-intelligently convert tabular data into a DataFrame object. See the
++intelligently convert tabular data into a ``DataFrame`` object. See the
+ :ref:`cookbook<cookbook.csv>` for some advanced strategies.
+ 
+ Parsing options
+ '''''''''''''''
+ 
+-:func:`read_csv` and :func:`read_table` accept the following arguments:
++The functions :func:`read_csv` and :func:`read_table` accept the following 
++common arguments:
+ 
+ Basic
+ +++++
+@@ -94,7 +98,7 @@ delimiter : str, default ``None``
+ delim_whitespace : boolean, default False
+   Specifies whether or not whitespace (e.g. ``' '`` or ``'\t'``)
+   will be used as the delimiter. Equivalent to setting ``sep='\s+'``.
+-  If this option is set to True, nothing should be passed in for the
++  If this option is set to ``True``, nothing should be passed in for the
+   ``delimiter`` parameter.
+ 
+   .. versionadded:: 0.18.1 support for the Python parser.
+@@ -122,7 +126,7 @@ names : array-like, default ``None``
+   explicitly pass ``header=None``. Duplicates in this list will cause
+   a ``UserWarning`` to be issued.
+ index_col :  int or sequence or ``False``, default ``None``
+-  Column to use as the row labels of the DataFrame. If a sequence is given, a
++  Column to use as the row labels of the ``DataFrame``. If a sequence is given, a
+   MultiIndex is used. If you have a malformed file with delimiters at the end of
+   each line, you might consider ``index_col=False`` to force pandas to *not* use
+   the first column as the index (row names).
+@@ -131,8 +135,8 @@ usecols : array-like or callable, default ``None``
+   be positional (i.e. integer indices into the document columns) or strings
+   that correspond to column names provided either by the user in `names` or
+   inferred from the document header row(s). For example, a valid array-like
+-  `usecols` parameter would be [0, 1, 2] or ['foo', 'bar', 'baz']. Element
+-  order is ignored, so usecols=[0,1] is the same as [1, 0].
++  `usecols` parameter would be ``[0, 1, 2]`` or ``['foo', 'bar', 'baz']``. 
++  Element order is ignored, so ``usecols=[0, 1]`` is the same as ``[1, 0]``.
+ 
+   If callable, the callable function will be evaluated against the column names,
+   returning names where the callable function evaluates to True:
+@@ -145,12 +149,12 @@ usecols : array-like or callable, default ``None``
+ 
+   Using this parameter results in much faster parsing time and lower memory usage.
+ squeeze : boolean, default ``False``
+-  If the parsed data only contains one column then return a Series.
++  If the parsed data only contains one column then return a ``Series``.
+ prefix : str, default ``None``
+   Prefix to add to column numbers when no header, e.g. 'X' for X0, X1, ...
+ mangle_dupe_cols : boolean, default ``True``
+   Duplicate columns will be specified as 'X', 'X.1'...'X.N', rather than 'X'...'X'.
+-  Passing in False will cause data to be overwritten if there are duplicate
++  Passing in ``False`` will cause data to be overwritten if there are duplicate
+   names in the columns.
+ 
+ General Parsing Configuration
+@@ -197,7 +201,7 @@ low_memory : boolean, default ``True``
+   Internally process the file in chunks, resulting in lower memory use
+   while parsing, but possibly mixed type inference.  To ensure no mixed
+   types either set ``False``, or specify the type with the ``dtype`` parameter.
+-  Note that the entire file is read into a single DataFrame regardless,
++  Note that the entire file is read into a single ``DataFrame`` regardless,
+   use the ``chunksize`` or ``iterator`` parameter to return the data in chunks.
+   (Only valid with C parser)
+ memory_map : boolean, default False
+@@ -217,16 +221,16 @@ keep_default_na : boolean, default ``True``
+   Whether or not to include the default NaN values when parsing the data.
+   Depending on whether `na_values` is passed in, the behavior is as follows:
+ 
+-  * If `keep_default_na` is True, and `na_values` are specified, `na_values`
++  * If `keep_default_na` is ``True``, and `na_values` are specified, `na_values`
+     is appended to the default NaN values used for parsing.
+-  * If `keep_default_na` is True, and `na_values` are not specified, only
++  * If `keep_default_na` is ``True``, and `na_values` are not specified, only
+     the default NaN values are used for parsing.
+-  * If `keep_default_na` is False, and `na_values` are specified, only
++  * If `keep_default_na` is ``False``, and `na_values` are specified, only
+     the NaN values specified `na_values` are used for parsing.
+-  * If `keep_default_na` is False, and `na_values` are not specified, no
++  * If `keep_default_na` is ``False``, and `na_values` are not specified, no
+     strings will be parsed as NaN.
+ 
+-  Note that if `na_filter` is passed in as False, the `keep_default_na` and
++  Note that if `na_filter` is passed in as ``False``, the `keep_default_na` and
+   `na_values` parameters will be ignored.
+ na_filter : boolean, default ``True``
+   Detect missing value markers (empty strings and the value of na_values). In
+@@ -341,9 +345,9 @@ Error Handling
+ 
+ error_bad_lines : boolean, default ``True``
+   Lines with too many fields (e.g. a csv line with too many commas) will by
+-  default cause an exception to be raised, and no DataFrame will be returned. If
+-  ``False``, then these "bad lines" will dropped from the DataFrame that is
+-  returned. See :ref:`bad lines <io.bad_lines>`
++  default cause an exception to be raised, and no ``DataFrame`` will be 
++  returned. If ``False``, then these "bad lines" will dropped from the 
++  ``DataFrame`` that is returned. See :ref:`bad lines <io.bad_lines>`
+   below.
+ warn_bad_lines : boolean, default ``True``
+   If error_bad_lines is ``False``, and warn_bad_lines is ``True``, a warning for
+@@ -354,8 +358,8 @@ warn_bad_lines : boolean, default ``True``
+ Specifying column data types
+ ''''''''''''''''''''''''''''
+ 
+-You can indicate the data type for the whole DataFrame or
+-individual columns:
++You can indicate the data type for the whole ``DataFrame`` or individual 
++columns:
+ 
+ .. ipython:: python
+ 
+@@ -368,11 +372,11 @@ individual columns:
+     df = pd.read_csv(StringIO(data), dtype={'b': object, 'c': np.float64})
+     df.dtypes
+ 
+-Fortunately, ``pandas`` offers more than one way to ensure that your column(s)
++Fortunately, pandas offers more than one way to ensure that your column(s)
+ contain only one ``dtype``. If you're unfamiliar with these concepts, you can
+ see :ref:`here<basics.dtypes>` to learn more about dtypes, and
+ :ref:`here<basics.object_conversion>` to learn more about ``object`` conversion in
+-``pandas``.
++pandas.
+ 
+ 
+ For instance, you can use the ``converters`` argument
+@@ -395,7 +399,7 @@ dtypes after reading in the data,
+     df2
+     df2['col_1'].apply(type).value_counts()
+ 
+-which would convert all valid parsing to floats, leaving the invalid parsing
++which will convert all valid parsing to floats, leaving the invalid parsing
+ as ``NaN``.
+ 
+ Ultimately, how you deal with reading in columns containing mixed dtypes
+@@ -407,7 +411,7 @@ worth trying.
+ 
+   .. versionadded:: 0.20.0 support for the Python parser.
+ 
+-     The ``dtype`` option is supported by the 'python' engine
++     The ``dtype`` option is supported by the 'python' engine.
+ 
+ .. note::
+    In some cases, reading in abnormal data with columns containing mixed dtypes
+@@ -453,7 +457,8 @@ Specifying Categorical dtype
+    pd.read_csv(StringIO(data)).dtypes
+    pd.read_csv(StringIO(data), dtype='category').dtypes
+ 
+-Individual columns can be parsed as a ``Categorical`` using a dict specification
++Individual columns can be parsed as a ``Categorical`` using a dict 
++specification:
+ 
+ .. ipython:: python
+ 
+@@ -551,17 +556,18 @@ If the header is in a row other than the first, pass the row number to
+ Duplicate names parsing
+ '''''''''''''''''''''''
+ 
+-If the file or header contains duplicate names, pandas by default will deduplicate
+-these names so as to prevent data overwrite:
++If the file or header contains duplicate names, pandas will by default 
++distinguish between them so as to prevent overwriting data:
+ 
+ .. ipython :: python
+ 
+    data = 'a,b,a\n0,1,2\n3,4,5'
+    pd.read_csv(StringIO(data))
+ 
+-There is no more duplicate data because ``mangle_dupe_cols=True`` by default, which modifies
+-a series of duplicate columns 'X'...'X' to become 'X', 'X.1',...'X.N'.  If ``mangle_dupe_cols
+-=False``, duplicate data can arise:
++There is no more duplicate data because ``mangle_dupe_cols=True`` by default, 
++which modifies a series of duplicate columns 'X', ..., 'X' to become 
++'X', 'X.1', ..., 'X.N'.  If ``mangle_dupe_cols=False``, duplicate data can 
++arise:
+ 
+ .. code-block :: python
+ 
+@@ -716,7 +722,7 @@ result in byte strings being decoded to unicode in the result:
+ Some formats which encode all characters as multiple bytes, like UTF-16, won't
+ parse correctly at all without specifying the encoding. `Full list of Python
+ standard encodings
+-<https://docs.python.org/3/library/codecs.html#standard-encodings>`_
++<https://docs.python.org/3/library/codecs.html#standard-encodings>`_.
+ 
+ .. _io.index_col:
+ 
+@@ -724,7 +730,7 @@ Index columns and trailing delimiters
+ '''''''''''''''''''''''''''''''''''''
+ 
+ If a file has one more column of data than the number of column names, the
+-first column will be used as the DataFrame's row names:
++first column will be used as the ``DataFrame``'s row names:
+ 
+ .. ipython:: python
+ 
+@@ -894,30 +900,31 @@ Pandas will try to call the ``date_parser`` function in three different ways. If
+ an exception is raised, the next one is tried:
+ 
+ 1. ``date_parser`` is first called with one or more arrays as arguments,
+-   as defined using `parse_dates` (e.g., ``date_parser(['2013', '2013'], ['1', '2'])``)
++   as defined using `parse_dates` (e.g., ``date_parser(['2013', '2013'], ['1', '2'])``).
+ 
+ 2. If #1 fails, ``date_parser`` is called with all the columns
+-   concatenated row-wise into a single array (e.g., ``date_parser(['2013 1', '2013 2'])``)
++   concatenated row-wise into a single array (e.g., ``date_parser(['2013 1', '2013 2'])``).
+ 
+ 3. If #2 fails, ``date_parser`` is called once for every row with one or more
+    string arguments from the columns indicated with `parse_dates`
+    (e.g., ``date_parser('2013', '1')`` for the first row, ``date_parser('2013', '2')``
+-   for the second, etc.)
++   for the second, etc.).
+ 
+ Note that performance-wise, you should try these methods of parsing dates in order:
+ 
+-1. Try to infer the format using ``infer_datetime_format=True`` (see section below)
++1. Try to infer the format using ``infer_datetime_format=True`` (see section below).
+ 
+ 2. If you know the format, use ``pd.to_datetime()``:
+-   ``date_parser=lambda x: pd.to_datetime(x, format=...)``
++   ``date_parser=lambda x: pd.to_datetime(x, format=...)``.
+ 
+ 3. If you have a really non-standard format, use a custom ``date_parser`` function.
+    For optimal performance, this should be vectorized, i.e., it should accept arrays
+    as arguments.
+ 
+-You can explore the date parsing functionality in ``date_converters.py`` and
+-add your own. We would love to turn this module into a community supported set
+-of date/time parsers. To get you started, ``date_converters.py`` contains
++You can explore the date parsing functionality in 
++`date_converters.py <https://github.com/pandas-dev/pandas/blob/master/pandas/io/date_converters.py>`__ 
++and add your own. We would love to turn this module into a community supported 
++set of date/time parsers. To get you started, ``date_converters.py`` contains
+ functions to parse dual date and time columns, year/month/day columns,
+ and year/month/day/hour/minute/second columns. It also contains a
+ ``generic_parser`` function so you can curry it with a function that deals with
+@@ -945,7 +952,7 @@ of strings.  So in general, ``infer_datetime_format`` should not have any
+ negative consequences if enabled.
+ 
+ Here are some examples of datetime strings that can be guessed (All
+-representing December 30th, 2011 at 00:00:00)
++representing December 30th, 2011 at 00:00:00):
+ 
+ - "20111230"
+ - "2011/12/30"
+@@ -954,7 +961,7 @@ representing December 30th, 2011 at 00:00:00)
+ - "30/Dec/2011 00:00:00"
+ - "30/December/2011 00:00:00"
+ 
+-``infer_datetime_format`` is sensitive to ``dayfirst``.  With
++Note that ``infer_datetime_format`` is sensitive to ``dayfirst``.  With
+ ``dayfirst=True``, it will guess "01/12/2011" to be December 1st. With
+ ``dayfirst=False`` (default) it will guess "01/12/2011" to be January 12th.
+ 
+@@ -1030,7 +1037,7 @@ correctly:
+    with open('tmp.csv', 'w') as fh:
+        fh.write(data)
+ 
+-By default, numbers with a thousands separator will be parsed as strings
++By default, numbers with a thousands separator will be parsed as strings:
+ 
+ .. ipython:: python
+ 
+@@ -1040,7 +1047,7 @@ By default, numbers with a thousands separator will be parsed as strings
+ 
+     df.level.dtype
+ 
+-The ``thousands`` keyword allows integers to be parsed correctly
++The ``thousands`` keyword allows integers to be parsed correctly:
+ 
+ .. ipython:: python
+ 
+@@ -1060,11 +1067,12 @@ The ``thousands`` keyword allows integers to be parsed correctly
+ NA Values
+ '''''''''
+ 
+-To control which values are parsed as missing values (which are signified by ``NaN``), specify a
+-string in ``na_values``. If you specify a list of strings, then all values in
+-it are considered to be missing values. If you specify a number (a ``float``, like ``5.0`` or an ``integer`` like ``5``),
+-the corresponding equivalent values will also imply a missing value (in this case effectively
+-``[5.0,5]`` are recognized as ``NaN``.
++To control which values are parsed as missing values (which are signified by 
++``NaN``), specify a string in ``na_values``. If you specify a list of strings, 
++then all values in it are considered to be missing values. If you specify a 
++number (a ``float``, like ``5.0`` or an ``integer`` like ``5``), the 
++corresponding equivalent values will also imply a missing value (in this case 
++effectively ``[5.0, 5]`` are recognized as ``NaN``).
+ 
+ To completely override the default values that are recognized as missing, specify ``keep_default_na=False``.
+ 
+@@ -1073,29 +1081,34 @@ To completely override the default values that are recognized as missing, specif
+ The default ``NaN`` recognized values are ``['-1.#IND', '1.#QNAN', '1.#IND', '-1.#QNAN', '#N/A N/A', '#N/A', 'N/A',
+ 'n/a', 'NA', '#NA', 'NULL', 'null', 'NaN', '-NaN', 'nan', '-nan', '']``.
+ 
++Let us consider some examples:
++
+ .. code-block:: python
+ 
+    read_csv(path, na_values=[5])
+ 
+-the default values, in addition to ``5`` , ``5.0`` when interpreted as numbers are recognized as ``NaN``
++In the example above ``5`` and ``5.0`` will be recognized as ``NaN``, in
++addition to the defaults. A string will first be interpreted as a numerical 
++``5``, then as a ``NaN``.
+ 
+ .. code-block:: python
+ 
+    read_csv(path, keep_default_na=False, na_values=[""])
+ 
+-only an empty field will be ``NaN``
++Above, only an empty field will be recognized as ``NaN``.
+ 
+ .. code-block:: python
+ 
+    read_csv(path, keep_default_na=False, na_values=["NA", "0"])
+ 
+-only ``NA`` and ``0`` as strings are ``NaN``
++Above, both ``NA`` and ``0`` as strings are ``NaN``.
+ 
+ .. code-block:: python
+ 
+    read_csv(path, na_values=["Nope"])
+ 
+-the default values, in addition to the string ``"Nope"`` are recognized as ``NaN``
++The default values, in addition to the string ``"Nope"`` are recognized as 
++``NaN``.
+ 
+ .. _io.infinity:
+ 
+@@ -1143,9 +1156,9 @@ Boolean values
+ ''''''''''''''
+ 
+ The common values ``True``, ``False``, ``TRUE``, and ``FALSE`` are all
+-recognized as boolean. Sometime you would want to recognize some other values
+-as being boolean. To do this use the ``true_values`` and ``false_values``
+-options:
++recognized as boolean. Occasionally you might want to recognize other values
++as being boolean. To do this, use the ``true_values`` and ``false_values``
++options as follows:
+ 
+ .. ipython:: python
+ 
+@@ -1161,7 +1174,7 @@ Handling "bad" lines
+ 
+ Some files may have malformed lines with too few fields or too many. Lines with
+ too few fields will have NA values filled in the trailing fields. Lines with
+-too many will cause an error by default:
++too many fields will raise an error by default:
+ 
+ .. ipython:: python
+    :suppress:
+@@ -1228,7 +1241,7 @@ By default, ``read_csv`` uses the Excel dialect and treats the double quote as
+ the quote character, which causes it to fail when it finds a newline before it
+ finds the closing double quote.
+ 
+-We can get around this using ``dialect``
++We can get around this using ``dialect``:
+ 
+ .. ipython:: python
+    :okwarning:
+@@ -1253,9 +1266,9 @@ after a delimiter:
+    print(data)
+    pd.read_csv(StringIO(data), skipinitialspace=True)
+ 
+-The parsers make every attempt to "do the right thing" and not be very
+-fragile. Type inference is a pretty big deal. So if a column can be coerced to
+-integer dtype without altering the contents, it will do so. Any non-numeric
++The parsers make every attempt to "do the right thing" and not be fragile. Type 
++inference is a pretty big deal. If a column can be coerced to integer dtype 
++without altering the contents, the parser will do so. Any non-numeric
+ columns will come through as object dtype as with the rest of pandas objects.
+ 
+ .. _io.quoting:
+@@ -1278,7 +1291,7 @@ should pass the ``escapechar`` option:
+ Files with Fixed Width Columns
+ ''''''''''''''''''''''''''''''
+ 
+-While ``read_csv`` reads delimited data, the :func:`read_fwf` function works
++While :func:`read_csv` reads delimited data, the :func:`read_fwf` function works
+ with data files that have known and fixed column widths. The function parameters
+ to ``read_fwf`` are largely the same as `read_csv` with two extra parameters, and
+ a different usage of the ``delimiter`` parameter:
+@@ -1287,7 +1300,7 @@ a different usage of the ``delimiter`` parameter:
+     fixed-width fields of each line as half-open intervals (i.e.,  [from, to[ ).
+     String value 'infer' can be used to instruct the parser to try detecting
+     the column specifications from the first 100 rows of the data. Default
+-    behaviour, if not specified, is to infer.
++    behavior, if not specified, is to infer.
+   - ``widths``: A list of field widths which can be used instead of 'colspecs'
+     if the intervals are contiguous.
+   - ``delimiter``: Characters to consider as filler characters in the fixed-width file.
+@@ -1312,7 +1325,7 @@ Consider a typical fixed-width data file:
+ 
+    print(open('bar.csv').read())
+ 
+-In order to parse this file into a DataFrame, we simply need to supply the
++In order to parse this file into a ``DataFrame``, we simply need to supply the
+ column specifications to the `read_fwf` function along with the file name:
+ 
+ .. ipython:: python
+@@ -1383,7 +1396,7 @@ column:
+    print(open('foo.csv').read())
+ 
+ In this special case, ``read_csv`` assumes that the first column is to be used
+-as the index of the DataFrame:
++as the index of the ``DataFrame``:
+ 
+ .. ipython:: python
+ 
+@@ -1436,10 +1449,10 @@ rows will skip the intervening rows.
+ .. ipython:: python
+ 
+    from pandas.util.testing import makeCustomDataframe as mkdf
+-   df = mkdf(5,3,r_idx_nlevels=2,c_idx_nlevels=4)
++   df = mkdf(5, 3, r_idx_nlevels=2, c_idx_nlevels=4)
+    df.to_csv('mi.csv')
+    print(open('mi.csv').read())
+-   pd.read_csv('mi.csv',header=[0,1,2,3],index_col=[0,1])
++   pd.read_csv('mi.csv', header=[0, 1, 2, 3], index_col=[0, 1])
+ 
+ ``read_csv`` is also able to interpret a more common format
+ of multi-columns indices.
+@@ -1448,17 +1461,17 @@ of multi-columns indices.
+    :suppress:
+ 
+    data = ",a,a,a,b,c,c\n,q,r,s,t,u,v\none,1,2,3,4,5,6\ntwo,7,8,9,10,11,12"
+-   fh = open('mi2.csv','w')
++   fh = open('mi2.csv', 'w')
+    fh.write(data)
+    fh.close()
+ 
+ .. ipython:: python
+ 
+    print(open('mi2.csv').read())
+-   pd.read_csv('mi2.csv',header=[0,1],index_col=0)
++   pd.read_csv('mi2.csv', header=[0, 1], index_col=0)
+ 
+ Note: If an ``index_col`` is not specified (e.g. you don't have an index, or wrote it
+-with ``df.to_csv(..., index=False``), then any ``names`` on the columns index will be *lost*.
++with ``df.to_csv(..., index=False)``, then any ``names`` on the columns index will be *lost*.
+ 
+ .. ipython:: python
+    :suppress:
+@@ -1578,7 +1591,7 @@ Writing out Data
+ Writing to CSV format
+ +++++++++++++++++++++
+ 
+-The Series and DataFrame objects have an instance method ``to_csv`` which
++The ``Series`` and ``DataFrame`` objects have an instance method ``to_csv`` which
+ allows storing the contents of the object as a comma-separated-values file. The
+ function takes a number of arguments. Only the first is required.
+ 
+@@ -1591,7 +1604,7 @@ function takes a number of arguments. Only the first is required.
+   - ``index``: whether to write row (index) names (default True)
+   - ``index_label``: Column label(s) for index column(s) if desired. If None
+     (default), and `header` and `index` are True, then the index names are
+-    used. (A sequence should be given if the DataFrame uses MultiIndex).
++    used. (A sequence should be given if the ``DataFrame`` uses MultiIndex).
+   - ``mode`` : Python write mode, default 'w'
+   - ``encoding``: a string representing the encoding to use if the contents are
+     non-ASCII, for Python versions prior to 3
+@@ -1611,7 +1624,7 @@ Writing a formatted string
+ 
+ .. _io.formatting:
+ 
+-The DataFrame object has an instance method ``to_string`` which allows control
++The ``DataFrame`` object has an instance method ``to_string`` which allows control
+ over the string representation of the object. All arguments are optional:
+ 
+   - ``buf`` default None, for example a StringIO object
+@@ -1622,8 +1635,8 @@ over the string representation of the object. All arguments are optional:
+     which takes a single argument and returns a formatted string
+   - ``float_format`` default None, a function which takes a single (float)
+     argument and returns a formatted string; to be applied to floats in the
+-    DataFrame.
+-  - ``sparsify`` default True, set to False for a DataFrame with a hierarchical
++    ``DataFrame``.
++  - ``sparsify`` default True, set to False for a ``DataFrame`` with a hierarchical
+     index to print every multiindex key at each row.
+   - ``index_names`` default True, will print the names of the indices
+   - ``index`` default True, will print the index (ie, row labels)
+@@ -1631,7 +1644,7 @@ over the string representation of the object. All arguments are optional:
+   - ``justify`` default ``left``, will print column headers left- or
+     right-justified
+ 
+-The Series object also has a ``to_string`` method, but with only the ``buf``,
++The ``Series`` object also has a ``to_string`` method, but with only the ``buf``,
+ ``na_rep``, ``float_format`` arguments. There is also a ``length`` argument
+ which, if set to ``True``, will additionally output the length of the Series.
+ 
+@@ -1654,11 +1667,11 @@ with optional parameters:
+   This can be ``None`` in which case a JSON string is returned
+ - ``orient`` :
+ 
+-  Series :
++  ``Series``:
+       - default is ``index``
+       - allowed values are {``split``, ``records``, ``index``}
+ 
+-  DataFrame
++  ``DataFrame``:
+       - default is ``columns``
+       - allowed values are {``split``, ``records``, ``index``, ``columns``, ``values``, ``table``}
+ 
+@@ -1693,7 +1706,7 @@ Orient Options
+ ++++++++++++++
+ 
+ There are a number of different options for the format of the resulting JSON
+-file / string. Consider the following DataFrame and Series:
++file / string. Consider the following ``DataFrame`` and ``Series``:
+ 
+ .. ipython:: python
+ 
+@@ -1720,8 +1733,8 @@ but the index labels are now primary:
+   sjo.to_json(orient="index")
+ 
+ **Record oriented** serializes the data to a JSON array of column -> value records,
+-index labels are not included. This is useful for passing DataFrame data to plotting
+-libraries, for example the JavaScript library d3.js:
++index labels are not included. This is useful for passing ``DataFrame`` data to plotting
++libraries, for example the JavaScript library ``d3.js``:
+ 
+ .. ipython:: python
+ 
+@@ -1756,7 +1769,7 @@ preservation of metadata including but not limited to dtypes and index names.
+ Date Handling
+ +++++++++++++
+ 
+-Writing in ISO date format
++Writing in ISO date format:
+ 
+ .. ipython:: python
+ 
+@@ -1766,21 +1779,21 @@ Writing in ISO date format
+    json = dfd.to_json(date_format='iso')
+    json
+ 
+-Writing in ISO date format, with microseconds
++Writing in ISO date format, with microseconds:
+ 
+ .. ipython:: python
+ 
+    json = dfd.to_json(date_format='iso', date_unit='us')
+    json
+ 
+-Epoch timestamps, in seconds
++Epoch timestamps, in seconds:
+ 
+ .. ipython:: python
+ 
+    json = dfd.to_json(date_format='epoch', date_unit='s')
+    json
+ 
+-Writing to a file, with a date index and a date column
++Writing to a file, with a date index and a date column:
+ 
+ .. ipython:: python
+ 
+@@ -1795,7 +1808,8 @@ Writing to a file, with a date index and a date column
+ Fallback Behavior
+ +++++++++++++++++
+ 
+-If the JSON serializer cannot handle the container contents directly it will fallback in the following manner:
++If the JSON serializer cannot handle the container contents directly it will 
++fall back in the following manner:
+ 
+ - if the dtype is unsupported (e.g. ``np.complex``) then the ``default_handler``, if provided, will be called
+   for each value, otherwise an exception is raised.
+@@ -1864,13 +1878,13 @@ is ``None``. To explicitly force ``Series`` parsing, pass ``typ=series``
+      ``table``; adhering to the JSON `Table Schema`_
+ 
+ 
+-- ``dtype`` : if True, infer dtypes, if a dict of column to dtype, then use those, if False, then don't infer dtypes at all, default is True, apply only to the data
+-- ``convert_axes`` : boolean, try to convert the axes to the proper dtypes, default is True
+-- ``convert_dates`` : a list of columns to parse for dates; If True, then try to parse date-like columns, default is True
+-- ``keep_default_dates`` : boolean, default True. If parsing dates, then parse the default date-like columns
+-- ``numpy`` : direct decoding to NumPy arrays. default is False;
+-  Supports numeric data only, although labels may be non-numeric. Also note that the JSON ordering **MUST** be the same for each term if ``numpy=True``
+-- ``precise_float`` : boolean, default ``False``. Set to enable usage of higher precision (strtod) function when decoding string to double values. Default (``False``) is to use fast but less precise builtin functionality
++- ``dtype`` : if True, infer dtypes, if a dict of column to dtype, then use those, if ``False``, then don't infer dtypes at all, default is True, apply only to the data.
++- ``convert_axes`` : boolean, try to convert the axes to the proper dtypes, default is ``True``
++- ``convert_dates`` : a list of columns to parse for dates; If ``True``, then try to parse date-like columns, default is ``True``.
++- ``keep_default_dates`` : boolean, default ``True``. If parsing dates, then parse the default date-like columns.
++- ``numpy`` : direct decoding to NumPy arrays. default is ``False``;
++  Supports numeric data only, although labels may be non-numeric. Also note that the JSON ordering **MUST** be the same for each term if ``numpy=True``.
++- ``precise_float`` : boolean, default ``False``. Set to enable usage of higher precision (strtod) function when decoding string to double values. Default (``False``) is to use fast but less precise builtin functionality.
+ - ``date_unit`` : string, the timestamp unit to detect if converting dates. Default
+   None. By default the timestamp precision will be detected, if this is not desired
+   then pass one of 's', 'ms', 'us' or 'ns' to force timestamp precision to
+@@ -1888,9 +1902,11 @@ overview.
+ Data Conversion
+ +++++++++++++++
+ 
+-The default of ``convert_axes=True``, ``dtype=True``, and ``convert_dates=True`` will try to parse the axes, and all of the data
+-into appropriate types, including dates. If you need to override specific dtypes, pass a dict to ``dtype``. ``convert_axes`` should only
+-be set to ``False`` if you need to preserve string-like numbers (e.g. '1', '2') in an axes.
++The default of ``convert_axes=True``, ``dtype=True``, and ``convert_dates=True`` 
++will try to parse the axes, and all of the data into appropriate types, 
++including dates. If you need to override specific dtypes, pass a dict to 
++``dtype``. ``convert_axes`` should only be set to ``False`` if you need to 
++preserve string-like numbers (e.g. '1', '2') in an axes.
+ 
+ .. note::
+ 
+@@ -2175,7 +2191,7 @@ A few notes on the generated table schema:
+ 
+ - Periods are converted to timestamps before serialization, and so have the
+   same behavior of being converted to UTC. In addition, periods will contain
+-  and additional field ``freq`` with the period's frequency, e.g. ``'A-DEC'``
++  and additional field ``freq`` with the period's frequency, e.g. ``'A-DEC'``.
+ 
+   .. ipython:: python
+ 
+@@ -2184,7 +2200,7 @@ A few notes on the generated table schema:
+      build_table_schema(s_per)
+ 
+ - Categoricals use the ``any`` type and an ``enum`` constraint listing
+-  the set of possible values. Additionally, an ``ordered`` field is included
++  the set of possible values. Additionally, an ``ordered`` field is included:
+ 
+   .. ipython:: python
+ 
+@@ -2212,7 +2228,7 @@ A few notes on the generated table schema:
+ 
+   + For series, the ``object.name`` is used. If that's none, then the
+     name is ``values``
+-  + For DataFrames, the stringified version of the column name is used
++  + For ``DataFrames``, the stringified version of the column name is used
+   + For ``Index`` (not ``MultiIndex``), ``index.name`` is used, with a
+     fallback to ``index`` if that is None.
+   + For ``MultiIndex``, ``mi.names`` is used. If any level has no name,
+@@ -2268,15 +2284,15 @@ Reading HTML Content
+    below regarding the issues surrounding the BeautifulSoup4/html5lib/lxml parsers.
+ 
+ The top-level :func:`~pandas.io.html.read_html` function can accept an HTML
+-string/file/URL and will parse HTML tables into list of pandas DataFrames.
++string/file/URL and will parse HTML tables into list of pandas ``DataFrames``.
+ Let's look at a few examples.
+ 
+ .. note::
+ 
+    ``read_html`` returns a ``list`` of ``DataFrame`` objects, even if there is
+-   only a single table contained in the HTML content
++   only a single table contained in the HTML content.
+ 
+-Read a URL with no options
++Read a URL with no options:
+ 
+ .. ipython:: python
+ 
+@@ -2290,7 +2306,7 @@ Read a URL with no options
+    and the data below may be slightly different.
+ 
+ Read in the content of the file from the above URL and pass it to ``read_html``
+-as a string
++as a string:
+ 
+ .. ipython:: python
+    :suppress:
+@@ -2304,7 +2320,7 @@ as a string
+        dfs = pd.read_html(f.read())
+    dfs
+ 
+-You can even pass in an instance of ``StringIO`` if you so desire
++You can even pass in an instance of ``StringIO`` if you so desire:
+ 
+ .. ipython:: python
+ 
+@@ -2323,7 +2339,7 @@ You can even pass in an instance of ``StringIO`` if you so desire
+    <http://www.github.com/pandas-dev/pandas/issues>`__.
+ 
+ 
+-Read a URL and match a table that contains specific text
++Read a URL and match a table that contains specific text:
+ 
+ .. code-block:: python
+ 
+@@ -2339,26 +2355,26 @@ from the data minus the parsed header elements (``<th>`` elements).
+ 
+    dfs = pd.read_html(url, header=0)
+ 
+-Specify an index column
++Specify an index column:
+ 
+ .. code-block:: python
+ 
+    dfs = pd.read_html(url, index_col=0)
+ 
+-Specify a number of rows to skip
++Specify a number of rows to skip:
+ 
+ .. code-block:: python
+ 
+    dfs = pd.read_html(url, skiprows=0)
+ 
+ Specify a number of rows to skip using a list (``xrange`` (Python 2 only) works
+-as well)
++as well):
+ 
+ .. code-block:: python
+ 
+    dfs = pd.read_html(url, skiprows=range(2))
+ 
+-Specify an HTML attribute
++Specify an HTML attribute:
+ 
+ .. code-block:: python
+ 
+@@ -2366,7 +2382,7 @@ Specify an HTML attribute
+    dfs2 = pd.read_html(url, attrs={'class': 'sortable'})
+    print(np.array_equal(dfs1[0], dfs2[0]))  # Should be True
+ 
+-Specify values that should be converted to NaN
++Specify values that should be converted to NaN:
+ 
+ .. code-block:: python
+ 
+@@ -2374,7 +2390,7 @@ Specify values that should be converted to NaN
+ 
+ .. versionadded:: 0.19
+ 
+-Specify whether to keep the default set of NaN values
++Specify whether to keep the default set of NaN values:
+ 
+ .. code-block:: python
+ 
+@@ -2384,7 +2400,7 @@ Specify whether to keep the default set of NaN values
+ 
+ Specify converters for columns. This is useful for numerical text data that has
+ leading zeros.  By default columns that are numerical are cast to numeric
+-types and the leading zeros are lost.  To avoid this, we can convert these
++types and the leading zeros are lost. To avoid this, we can convert these
+ columns to strings.
+ 
+ .. code-block:: python
+@@ -2395,13 +2411,13 @@ columns to strings.
+ 
+ .. versionadded:: 0.19
+ 
+-Use some combination of the above
++Use some combination of the above:
+ 
+ .. code-block:: python
+ 
+    dfs = pd.read_html(url, match='Metcalf Bank', index_col=0)
+ 
+-Read in pandas ``to_html`` output (with some loss of floating point precision)
++Read in pandas ``to_html`` output (with some loss of floating point precision):
+ 
+ .. code-block:: python
+ 
+@@ -2410,15 +2426,15 @@ Read in pandas ``to_html`` output (with some loss of floating point precision)
+    dfin = pd.read_html(s, index_col=0)
+ 
+ The ``lxml`` backend will raise an error on a failed parse if that is the only
+-parser you provide (if you only have a single parser you can provide just a
++parser you provide. If you only have a single parser you can provide just a
+ string, but it is considered good practice to pass a list with one string if,
+-for example, the function expects a sequence of strings)
++for example, the function expects a sequence of strings. You may use:
+ 
+ .. code-block:: python
+ 
+    dfs = pd.read_html(url, 'Metcalf Bank', index_col=0, flavor=['lxml'])
+ 
+-or
++Or you could pass ``flavor='lxml'`` without a list:
+ 
+ .. code-block:: python
+ 
+@@ -2472,7 +2488,7 @@ HTML:
+ .. raw:: html
+    :file: _static/basic.html
+ 
+-The ``columns`` argument will limit the columns shown
++The ``columns`` argument will limit the columns shown:
+ 
+ .. ipython:: python
+ 
+@@ -2489,7 +2505,7 @@ HTML:
+    :file: _static/columns.html
+ 
+ ``float_format`` takes a Python callable to control the precision of floating
+-point values
++point values:
+ 
+ .. ipython:: python
+ 
+@@ -2506,7 +2522,7 @@ HTML:
+    :file: _static/float_format.html
+ 
+ ``bold_rows`` will make the row labels bold by default, but you can turn that
+-off
++off:
+ 
+ .. ipython:: python
+ 
+@@ -2579,7 +2595,7 @@ parse HTML tables in the top-level pandas io function ``read_html``.
+ 
+    * Benefits
+ 
+-     * |lxml|_ is very fast
++     * |lxml|_ is very fast.
+ 
+      * |lxml|_ requires Cython to install correctly.
+ 
+@@ -2652,8 +2668,8 @@ The :func:`~pandas.read_excel` method can read Excel 2003 (``.xls``) and
+ Excel 2007+ (``.xlsx``) files using the ``xlrd`` Python
+ module.  The :meth:`~DataFrame.to_excel` instance method is used for
+ saving a ``DataFrame`` to Excel.  Generally the semantics are
+-similar to working with :ref:`csv<io.read_csv_table>` data.  See the :ref:`cookbook<cookbook.excel>` for some
+-advanced strategies
++similar to working with :ref:`csv<io.read_csv_table>` data.  
++See the :ref:`cookbook<cookbook.excel>` for some advanced strategies.
+ 
+ .. _io.excel_reader:
+ 
+@@ -2696,7 +2712,7 @@ The ``sheet_names`` property will generate
+ a list of the sheet names in the file.
+ 
+ The primary use-case for an ``ExcelFile`` is parsing multiple sheets with
+-different parameters
++different parameters:
+ 
+ .. code-block:: python
+ 
+@@ -2725,7 +2741,7 @@ of sheet names can simply be passed to ``read_excel`` with no loss in performanc
+ Specifying Sheets
+ +++++++++++++++++
+ 
+-.. note :: The second argument is ``sheet_name``, not to be confused with ``ExcelFile.sheet_names``
++.. note :: The second argument is ``sheet_name``, not to be confused with ``ExcelFile.sheet_names``.
+ 
+ .. note :: An ExcelFile's attribute ``sheet_names`` provides access to a list of sheets.
+ 
+@@ -2802,12 +2818,12 @@ parameters.
+ 
+    df.index = df.index.set_names(['lvl1', 'lvl2'])
+    df.to_excel('path_to_file.xlsx')
+-   df = pd.read_excel('path_to_file.xlsx', index_col=[0,1])
++   df = pd.read_excel('path_to_file.xlsx', index_col=[0, 1])
+    df
+ 
+ 
+ If the source file has both ``MultiIndex`` index and columns, lists specifying each
+-should be passed to ``index_col`` and ``header``
++should be passed to ``index_col`` and ``header``:
+ 
+ .. ipython:: python
+ 
+@@ -2828,10 +2844,10 @@ Parsing Specific Columns
+ ++++++++++++++++++++++++
+ 
+ It is often the case that users will insert columns to do temporary computations
+-in Excel and you may not want to read in those columns. `read_excel` takes
+-a `usecols` keyword to allow you to specify a subset of columns to parse.
++in Excel and you may not want to read in those columns. ``read_excel`` takes
++a ``usecols`` keyword to allow you to specify a subset of columns to parse.
+ 
+-If `usecols` is an integer, then it is assumed to indicate the last column
++If ``usecols`` is an integer, then it is assumed to indicate the last column
+ to be parsed.
+ 
+ .. code-block:: python
+@@ -2840,11 +2856,12 @@ to be parsed.
+ 
+ If `usecols` is a list of integers, then it is assumed to be the file column
+ indices to be parsed.
++
+ .. code-block:: python
+ 
+    read_excel('path_to_file.xls', 'Sheet1', usecols=[0, 2, 3])
+ 
+-Element order is ignored, so usecols=[0,1] is the same as [1,0].
++Element order is ignored, so ``usecols=[0,1]`` is the same as ``[1,0]``.
+ 
+ Parsing Dates
+ +++++++++++++
+@@ -2852,7 +2869,7 @@ Parsing Dates
+ Datetime-like values are normally automatically converted to the appropriate
+ dtype when reading the excel file. But if you have a column of strings that
+ *look* like dates (but are not actually formatted as dates in excel), you can
+-use the `parse_dates` keyword to parse those strings to datetimes:
++use the ``parse_dates`` keyword to parse those strings to datetimes:
+ 
+ .. code-block:: python
+ 
+@@ -2862,7 +2879,7 @@ use the `parse_dates` keyword to parse those strings to datetimes:
+ Cell Converters
+ +++++++++++++++
+ 
+-It is possible to transform the contents of Excel cells via the `converters`
++It is possible to transform the contents of Excel cells via the ``converters``
+ option. For instance, to convert a column to boolean:
+ 
+ .. code-block:: python
+@@ -2903,11 +2920,11 @@ Writing Excel Files
+ Writing Excel Files to Disk
+ +++++++++++++++++++++++++++
+ 
+-To write a DataFrame object to a sheet of an Excel file, you can use the
++To write a ``DataFrame`` object to a sheet of an Excel file, you can use the
+ ``to_excel`` instance method.  The arguments are largely the same as ``to_csv``
+ described above, the first argument being the name of the excel file, and the
+-optional second argument the name of the sheet to which the DataFrame should be
+-written.  For example:
++optional second argument the name of the sheet to which the ``DataFrame`` should be
++written. For example:
+ 
+ .. code-block:: python
+ 
+@@ -2917,7 +2934,7 @@ Files with a ``.xls`` extension will be written using ``xlwt`` and those with a
+ ``.xlsx`` extension will be written using ``xlsxwriter`` (if available) or
+ ``openpyxl``.
+ 
+-The DataFrame will be written in a way that tries to mimic the REPL output.
++The ``DataFrame`` will be written in a way that tries to mimic the REPL output.
+ The ``index_label`` will be placed in the second
+ row instead of the first. You can place it in the first row by setting the
+ ``merge_cells`` option in ``to_excel()`` to ``False``:
+@@ -2926,10 +2943,7 @@ row instead of the first. You can place it in the first row by setting the
+ 
+    df.to_excel('path_to_file.xlsx', index_label='label', merge_cells=False)
+ 
+-The Panel class also has a ``to_excel`` instance method,
+-which writes each DataFrame in the Panel to a separate sheet.
+-
+-In order to write separate DataFrames to separate sheets in a single Excel file,
++In order to write separate ``DataFrames`` to separate sheets in a single Excel file,
+ one can pass an :class:`~pandas.io.excel.ExcelWriter`.
+ 
+ .. code-block:: python
+@@ -2990,13 +3004,13 @@ Pandas supports writing Excel files to buffer-like objects such as ``StringIO``
+ Excel writer engines
+ ''''''''''''''''''''
+ 
+-``pandas`` chooses an Excel writer via two methods:
++Pandas chooses an Excel writer via two methods:
+ 
+ 1. the ``engine`` keyword argument
+ 2. the filename extension (via the default specified in config options)
+ 
+-By default, ``pandas`` uses the `XlsxWriter`_  for ``.xlsx`` and `openpyxl`_
+-for ``.xlsm`` files and `xlwt`_ for ``.xls`` files.  If you have multiple
++By default, pandas uses the `XlsxWriter`_  for ``.xlsx``, `openpyxl`_
++for ``.xlsm``, and `xlwt`_ for ``.xls`` files. If you have multiple
+ engines installed, you can set the default engine through :ref:`setting the
+ config options <options>` ``io.excel.xlsx.writer`` and
+ ``io.excel.xls.writer``. pandas will fall back on `openpyxl`_ for ``.xlsx``
+@@ -3034,8 +3048,8 @@ Style and Formatting
+ 
+ The look and feel of Excel worksheets created from pandas can be modified using the following parameters on the ``DataFrame``'s ``to_excel`` method.
+ 
+-- ``float_format`` : Format string for floating point numbers (default None)
+-- ``freeze_panes`` : A tuple of two integers representing the bottommost row and rightmost column to freeze. Each of these parameters is one-based, so (1, 1) will freeze the first row and first column (default None)
++- ``float_format`` : Format string for floating point numbers (default ``None``).
++- ``freeze_panes`` : A tuple of two integers representing the bottommost row and rightmost column to freeze. Each of these parameters is one-based, so (1, 1) will freeze the first row and first column (default ``None``).
+ 
+ 
+ 
+@@ -3044,10 +3058,10 @@ The look and feel of Excel worksheets created from pandas can be modified using
+ Clipboard
+ ---------
+ 
+-A handy way to grab data is to use the ``read_clipboard`` method, which takes
+-the contents of the clipboard buffer and passes them to the ``read_table``
+-method. For instance, you can copy the following
+-text to the clipboard (CTRL-C on many operating systems):
++A handy way to grab data is to use the :meth:`~DataFrame.read_clipboard` method, 
++which takes the contents of the clipboard buffer and passes them to the 
++``read_table`` method. For instance, you can copy the following text to the 
++clipboard (CTRL-C on many operating systems):
+ 
+ .. code-block:: python
+ 
+@@ -3056,7 +3070,7 @@ text to the clipboard (CTRL-C on many operating systems):
+    y 2 5 q
+    z 3 6 r
+ 
+-And then import the data directly to a DataFrame by calling:
++And then import the data directly to a ``DataFrame`` by calling:
+ 
+ .. code-block:: python
+ 
+@@ -3066,10 +3080,11 @@ And then import the data directly to a DataFrame by calling:
+ 
+    clipdf
+ 
+-The ``to_clipboard`` method can be used to write the contents of a DataFrame to
++
++The ``to_clipboard`` method can be used to write the contents of a ``DataFrame`` to
+ the clipboard. Following which you can paste the clipboard contents into other
+ applications (CTRL-V on many operating systems). Here we illustrate writing a
+-DataFrame into clipboard and reading it back.
++``DataFrame`` into clipboard and reading it back.
+ 
+ .. ipython:: python
+ 
+@@ -3121,7 +3136,7 @@ any pickled pandas object (or any other pickled object) from file:
+ 
+    Several internal refactorings have been done while still preserving
+    compatibility with pickles created with older versions of pandas. However,
+-   for such cases, pickled dataframes, series etc, must be read with
++   for such cases, pickled ``DataFrames``, ``Series`` etc, must be read with
+    ``pd.read_pickle``, rather than ``pickle.load``.
+ 
+    See `here <http://pandas.pydata.org/pandas-docs/stable/whatsnew.html#whatsnew-0130-refactoring>`__
+@@ -3139,8 +3154,8 @@ Compressed pickle files
+ 
+ :func:`read_pickle`, :meth:`DataFrame.to_pickle` and :meth:`Series.to_pickle` can read
+ and write compressed pickle files. The compression types of ``gzip``, ``bz2``, ``xz`` are supported for reading and writing.
+-`zip`` file supports read only and must contain only one data file
+-to be read in.
++The ``zip`` file format only supports reading and must contain only one data file
++to be read.
+ 
+ The compression type can be an explicit parameter or be inferred from the file extension.
+ If 'infer', then use ``gzip``, ``bz2``, ``zip``, or ``xz`` if filename ends in ``'.gz'``, ``'.bz2'``, ``'.zip'``, or
+@@ -3154,7 +3169,7 @@ If 'infer', then use ``gzip``, ``bz2``, ``zip``, or ``xz`` if filename ends in `
+        'C': pd.date_range('20130101', periods=1000, freq='s')})
+    df
+ 
+-Using an explicit compression type
++Using an explicit compression type:
+ 
+ .. ipython:: python
+ 
+@@ -3162,7 +3177,7 @@ Using an explicit compression type
+    rt = pd.read_pickle("data.pkl.compress", compression="gzip")
+    rt
+ 
+-Inferring compression type from the extension
++Inferring compression type from the extension:
+ 
+ .. ipython:: python
+ 
+@@ -3170,7 +3185,7 @@ Inferring compression type from the extension
+    rt = pd.read_pickle("data.pkl.xz", compression="infer")
+    rt
+ 
+-The default is to 'infer
++The default is to 'infer':
+ 
+ .. ipython:: python
+ 
+@@ -3221,14 +3236,14 @@ You can pass a list of objects and you will receive them back on deserialization
+    pd.to_msgpack('foo.msg', df, 'foo', np.array([1,2,3]), s)
+    pd.read_msgpack('foo.msg')
+ 
+-You can pass ``iterator=True`` to iterate over the unpacked results
++You can pass ``iterator=True`` to iterate over the unpacked results:
+ 
+ .. ipython:: python
+ 
+    for o in pd.read_msgpack('foo.msg',iterator=True):
+        print(o)
+ 
+-You can pass ``append=True`` to the writer to append to an existing pack
++You can pass ``append=True`` to the writer to append to an existing pack:
+ 
+ .. ipython:: python
+ 
+@@ -3331,7 +3346,7 @@ In a current or later Python session, you can retrieve stored objects:
+    # dotted (attribute) access provides get as well
+    store.df
+ 
+-Deletion of the object specified by the key
++Deletion of the object specified by the key:
+ 
+ .. ipython:: python
+ 
+@@ -3340,7 +3355,7 @@ Deletion of the object specified by the key
+ 
+    store
+ 
+-Closing a Store, Context Manager
++Closing a Store and using a context manager:
+ 
+ .. ipython:: python
+ 
+@@ -3348,8 +3363,7 @@ Closing a Store, Context Manager
+    store
+    store.is_open
+ 
+-   # Working with, and automatically closing the store with the context
+-   # manager
++   # Working with, and automatically closing the store using a context manager
+    with pd.HDFStore('store.h5') as store:
+        store.keys()
+ 
+@@ -3449,17 +3463,17 @@ the ``fixed`` format. These types of stores are **not** appendable once written
+ remove them and rewrite). Nor are they **queryable**; they must be
+ retrieved in their entirety. They also do not support dataframes with non-unique column names.
+ The ``fixed`` format stores offer very fast writing and slightly faster reading than ``table`` stores.
+-This format is specified by default when using ``put`` or ``to_hdf`` or by ``format='fixed'`` or ``format='f'``
++This format is specified by default when using ``put`` or ``to_hdf`` or by ``format='fixed'`` or ``format='f'``.
+ 
+ .. warning::
+ 
+-   A ``fixed`` format will raise a ``TypeError`` if you try to retrieve using a ``where`` .
++   A ``fixed`` format will raise a ``TypeError`` if you try to retrieve using a ``where``:
+ 
+    .. code-block:: python
+ 
+-       pd.DataFrame(randn(10,2)).to_hdf('test_fixed.h5','df')
++       pd.DataFrame(randn(10, 2)).to_hdf('test_fixed.h5', 'df')
+ 
+-       pd.read_hdf('test_fixed.h5','df',where='index>5')
++       pd.read_hdf('test_fixed.h5', 'df', where='index>5')
+        TypeError: cannot pass a where specification when reading a fixed format.
+                   this store must be selected in its entirety
+ 
+@@ -3472,9 +3486,9 @@ Table Format
+ ``HDFStore`` supports another ``PyTables`` format on disk, the ``table``
+ format. Conceptually a ``table`` is shaped very much like a DataFrame,
+ with rows and columns. A ``table`` may be appended to in the same or
+-other sessions.  In addition, delete & query type operations are
++other sessions.  In addition, delete and query type operations are
+ supported. This format is specified by ``format='table'`` or ``format='t'``
+-to ``append`` or ``put`` or ``to_hdf``
++to ``append`` or ``put`` or ``to_hdf``.
+ 
+ This format can be set as an option as well ``pd.set_option('io.hdf.default_format','table')`` to
+ enable ``put/append/to_hdf`` to by default store in the ``table`` format.
+@@ -3514,9 +3528,9 @@ Hierarchical Keys
+ Keys to a store can be specified as a string. These can be in a
+ hierarchical path-name like format (e.g. ``foo/bar/bah``), which will
+ generate a hierarchy of sub-stores (or ``Groups`` in PyTables
+-parlance). Keys can be specified with out the leading '/' and are ALWAYS
++parlance). Keys can be specified with out the leading '/' and are **always**
+ absolute (e.g. 'foo' refers to '/foo'). Removal operations can remove
+-everything in the sub-store and BELOW, so be *careful*.
++everything in the sub-store and **below**, so be *careful*.
+ 
+ .. ipython:: python
+ 
+@@ -3547,7 +3561,7 @@ everything in the sub-store and BELOW, so be *careful*.
+        /foo/bar/bah (Group) ''
+          children := ['block0_items' (Array), 'block0_values' (Array), 'axis0' (Array), 'axis1' (Array)]
+ 
+-    Instead, use explicit string based keys
++    Instead, use explicit string based keys:
+ 
+     .. ipython:: python
+ 
+@@ -3596,8 +3610,8 @@ defaults to `nan`.
+ Storing Multi-Index DataFrames
+ ++++++++++++++++++++++++++++++
+ 
+-Storing multi-index dataframes as tables is very similar to
+-storing/selecting from homogeneous index DataFrames.
++Storing multi-index ``DataFrames`` as tables is very similar to
++storing/selecting from homogeneous index ``DataFrames``.
+ 
+ .. ipython:: python
+ 
+@@ -3632,10 +3646,10 @@ data.
+ 
+ A query is specified using the ``Term`` class under the hood, as a boolean expression.
+ 
+-- ``index`` and ``columns`` are supported indexers of a DataFrame
++- ``index`` and ``columns`` are supported indexers of a ``DataFrames``.
+ - ``major_axis``, ``minor_axis``, and ``items`` are supported indexers of
+-  the Panel
+-- if ``data_columns`` are specified, these can be used as additional indexers
++  the Panel.
++- if ``data_columns`` are specified, these can be used as additional indexers.
+ 
+ Valid comparison operators are:
+ 
+@@ -3849,7 +3863,7 @@ to perform queries (other than the `indexable` columns, which you can
+ always query). For instance say you want to perform this common
+ operation, on-disk, and return just the frame that matches this
+ query. You can specify ``data_columns = True`` to force all columns to
+-be data_columns
++be ``data_columns``.
+ 
+ .. ipython:: python
+ 
+@@ -3879,7 +3893,7 @@ There is some performance degradation by making lots of columns into
+ `data columns`, so it is up to the user to designate these. In addition,
+ you cannot change data columns (nor indexables) after the first
+ append/put operation (Of course you can simply read in the data and
+-create a new table!)
++create a new table!).
+ 
+ Iterator
+ ++++++++
+@@ -3912,7 +3926,7 @@ chunks.
+ 
+ .. ipython:: python
+ 
+-   dfeq = pd.DataFrame({'number': np.arange(1,11)})
++   dfeq = pd.DataFrame({'number': np.arange(1, 11)})
+    dfeq
+ 
+    store.append('dfeq', dfeq, data_columns=['number'])
+@@ -3921,9 +3935,9 @@ chunks.
+         return [l[i:i+n] for i in range(0, len(l), n)]
+ 
+    evens = [2,4,6,8,10]
+-   coordinates = store.select_as_coordinates('dfeq','number=evens')
++   coordinates = store.select_as_coordinates('dfeq', 'number=evens')
+    for c in chunks(coordinates, 2):
+-        print(store.select('dfeq',where=c))
++        print(store.select('dfeq', where=c))
+ 
+ Advanced Queries
+ ++++++++++++++++
+@@ -4005,7 +4019,7 @@ table names to a list of 'columns' you want in that table. If `None`
+ is used in place of a list, that table will have the remaining
+ unspecified columns of the given DataFrame. The argument ``selector``
+ defines which table is the selector table (which you can make queries from).
+-The argument ``dropna`` will drop rows from the input DataFrame to ensure
++The argument ``dropna`` will drop rows from the input ``DataFrame`` to ensure
+ tables are synchronized.  This means that if a row for one of the tables
+ being written to is entirely ``np.NaN``, that row will be dropped from all tables.
+ 
+@@ -4081,7 +4095,7 @@ the table using a ``where`` that selects all but the missing data.
+    automatically. Thus, repeatedly deleting (or removing nodes) and adding
+    again, **WILL TEND TO INCREASE THE FILE SIZE**.
+ 
+-   To *repack and clean* the file, use :ref:`ptrepack <io.hdf5-ptrepack>`
++   To *repack and clean* the file, use :ref:`ptrepack <io.hdf5-ptrepack>`.
+ 
+ .. _io.hdf5-notes:
+ 
+@@ -4464,7 +4478,7 @@ Several caveats.
+ - Non supported types include ``Period`` and actual Python object types. These will raise a helpful error message
+   on an attempt at serialization.
+ 
+-See the `Full Documentation <https://github.com/wesm/feather>`__
++See the `Full Documentation <https://github.com/wesm/feather>`__.
+ 
+ .. ipython:: python
+ 
+@@ -4522,8 +4536,8 @@ dtypes, including extension dtypes such as datetime with tz.
+ 
+ Several caveats.
+ 
+-- Duplicate column names and non-string columns names are not supported
+-- Index level names, if specified, must be strings
++- Duplicate column names and non-string columns names are not supported.
++- Index level names, if specified, must be strings.
+ - Categorical dtypes can be serialized to parquet, but will de-serialize as ``object`` dtype.
+ - Non supported types include ``Period`` and actual Python object types. These will raise a helpful error message
+   on an attempt at serialization.
+@@ -4532,7 +4546,7 @@ You can specify an ``engine`` to direct the serialization. This can be one of ``
+ If the engine is NOT specified, then the ``pd.options.io.parquet.engine`` option is checked; if this is also ``auto``, 
+ then ``pyarrow`` is tried, and falling back to ``fastparquet``.
+ 
+-See the documentation for `pyarrow <http://arrow.apache.org/docs/python/>`__ and `fastparquet <https://fastparquet.readthedocs.io/en/latest/>`__
++See the documentation for `pyarrow <http://arrow.apache.org/docs/python/>`__ and `fastparquet <https://fastparquet.readthedocs.io/en/latest/>`__.
+ 
+ .. note::
+ 
+@@ -4652,7 +4666,7 @@ If you want to manage your own connections you can pass one of those instead:
+ Writing DataFrames
+ ''''''''''''''''''
+ 
+-Assuming the following data is in a DataFrame ``data``, we can insert it into
++Assuming the following data is in a ``DataFrame`` ``data``, we can insert it into
+ the database using :func:`~pandas.DataFrame.to_sql`.
+ 
+ +-----+------------+-------+-------+-------+
+@@ -4738,7 +4752,7 @@ table name and optionally a subset of columns to read.
+ 
+    pd.read_sql_table('data', engine)
+ 
+-You can also specify the name of the column as the DataFrame index,
++You can also specify the name of the column as the ``DataFrame`` index,
+ and specify a subset of columns to be read.
+ 
+ .. ipython:: python
+@@ -4807,7 +4821,7 @@ Specifying this will return an iterator through chunks of the query result:
+     for chunk in pd.read_sql_query("SELECT * FROM data_chunks", engine, chunksize=5):
+         print(chunk)
+ 
+-You can also run a plain query without creating a dataframe with
++You can also run a plain query without creating a ``DataFrame`` with
+ :func:`~pandas.io.sql.execute`. This is useful for queries that don't return values,
+ such as INSERT. This is functionally equivalent to calling ``execute`` on the
+ SQLAlchemy engine or db connection object. Again, you must use the SQL syntax
+@@ -4923,7 +4937,7 @@ pandas integrates with this external package. if ``pandas-gbq`` is installed, yo
+ use the pandas methods ``pd.read_gbq`` and ``DataFrame.to_gbq``, which will call the
+ respective functions from ``pandas-gbq``.
+ 
+-Full documentation can be found `here <https://pandas-gbq.readthedocs.io/>`__
++Full documentation can be found `here <https://pandas-gbq.readthedocs.io/>`__.
+ 
+ .. _io.stata:
+ 
+@@ -4986,7 +5000,7 @@ Reading from Stata format
+ '''''''''''''''''''''''''
+ 
+ The top-level function ``read_stata`` will read a dta file and return
+-either a DataFrame or a :class:`~pandas.io.stata.StataReader` that can
++either a ``DataFrame`` or a :class:`~pandas.io.stata.StataReader` that can
+ be used to read the file incrementally.
+ 
+ .. ipython:: python
+@@ -5084,7 +5098,7 @@ whether imported ``Categorical`` variables are ordered.
+ 
+ .. note::
+ 
+-    *Stata* supports partially labeled series.  These series have value labels for
++    *Stata* supports partially labeled series. These series have value labels for
+     some but not all data values. Importing a partially labeled series will produce
+     a ``Categorical`` with string categories for the values that are labeled and
+     numeric categories for values with no label.
+@@ -5144,7 +5158,7 @@ into and from pandas, we recommend these packages from the broader community.
+ netCDF
+ ''''''
+ 
+-xarray_ provides data structures inspired by the pandas DataFrame for working
++xarray_ provides data structures inspired by the pandas ``DataFrame`` for working
+ with multi-dimensional datasets, with a focus on the netCDF file format and
+ easy conversion to and from pandas.
+ 
+@@ -5173,7 +5187,8 @@ ignored.
+    dtypes: float64(1), int64(1)
+    memory usage: 15.3 MB
+ 
+-Writing
++When writing, the top-three functions in terms of speed are are 
++``test_pickle_write``, ``test_feather_write`` and ``test_hdf_fixed_write_compress``.
+ 
+ .. code-block:: ipython
+ 
+@@ -5204,7 +5219,8 @@ Writing
+    In [32]: %timeit test_pickle_write_compress(df)
+    3.33 s ± 55.2 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
+ 
+-Reading
++When reading, the top three are ``test_feather_read``, ``test_pickle_read`` and
++``test_hdf_fixed_read``.
+ 
+ .. code-block:: ipython
+ 
+@@ -5249,7 +5265,7 @@ Space on disk (in bytes)
+     16000848 Aug 21 18:00 test.pkl
+      7554108 Aug 21 18:00 test.pkl.compress
+ 
+-And here's the code
++And here's the code:
+ 
+ .. code-block:: python
+ 
+diff --git a/doc/source/whatsnew/v0.23.0.txt b/doc/source/whatsnew/v0.23.0.txt
+index 72f63a4da..932618ba1 100644
+--- a/doc/source/whatsnew/v0.23.0.txt
++++ b/doc/source/whatsnew/v0.23.0.txt
+@@ -645,6 +645,7 @@ Performance Improvements
+ - Improved performance of :func:`MultiIndex.get_loc` for large indexes, at the cost of a reduction in performance for small ones (:issue:`18519`)
+ - Improved performance of pairwise ``.rolling()`` and ``.expanding()`` with ``.cov()`` and ``.corr()`` operations (:issue:`17917`)
+ - Improved performance of :func:`DataFrameGroupBy.rank` (:issue:`15779`)
++- Improved performance of variable ``.rolling()`` on ``.min()`` and ``.max()`` (:issue:`19521`)
+ 
+ .. _whatsnew_0230.docs:
+ 
+@@ -729,6 +730,7 @@ Timezones
+ - Bug in :func:`DatetimeIndex.insert` where inserting ``NaT`` into a timezone-aware index incorrectly raised (:issue:`16357`)
+ - Bug in the :class:`DataFrame` constructor, where tz-aware Datetimeindex and a given column name will result in an empty ``DataFrame`` (:issue:`19157`)
+ - Bug in :func:`Timestamp.tz_localize` where localizing a timestamp near the minimum or maximum valid values could overflow and return a timestamp with an incorrect nanosecond value (:issue:`12677`)
++- Bug when iterating over :class:`DatetimeIndex` that was localized with fixed timezone offset that rounded nanosecond precision to microseconds (:issue:`19603`)
+ 
+ Offsets
+ ^^^^^^^
+@@ -840,6 +842,7 @@ Reshaping
+ - Bug in :func:`concat` when concatting sparse and dense series it returns only a ``SparseDataFrame``. Should be a ``DataFrame``. (:issue:`18914`, :issue:`18686`, and :issue:`16874`)
+ - Improved error message for :func:`DataFrame.merge` when there is no common merge key (:issue:`19427`)
+ - Bug in :func:`DataFrame.join` which does an *outer* instead of a *left* join when being called with multiple DataFrames and some have non-unique indices (:issue:`19624`)
++- :func:`Series.rename` now accepts ``axis`` as a kwarg (:issue:`18589`)
+ 
+ Other
+ ^^^^^
+diff --git a/pandas/_libs/groupby_helper.pxi.in b/pandas/_libs/groupby_helper.pxi.in
+index 48dac7bf1..1d77a373b 100644
+--- a/pandas/_libs/groupby_helper.pxi.in
++++ b/pandas/_libs/groupby_helper.pxi.in
+@@ -531,7 +531,7 @@ def group_rank_{{name}}(ndarray[float64_t, ndim=2] out,
+     # each label corresponds to a different group value,
+     # the mask helps you differentiate missing values before
+     # performing sort on the actual values
+-    _as = np.lexsort(order)
++    _as = np.lexsort(order).view(dtype=np.int64)
+ 
+     if not ascending:
+         _as = _as[::-1]
+diff --git a/pandas/_libs/src/headers/cmath b/pandas/_libs/src/headers/cmath
+new file mode 100644
+index 000000000..d8e223940
+--- /dev/null
++++ b/pandas/_libs/src/headers/cmath
+@@ -0,0 +1,15 @@
++#ifndef _PANDAS_MATH_H_
++#define _PANDAS_MATH_H_
++
++// In older versions of Visual Studio there wasn't a std::signbit defined
++// This defines it using _copysign
++#if defined(_MSC_VER) && (_MSC_VER < 1800)
++#include <cmath>
++namespace std {
++  __inline int signbit(double num) { return _copysign(1.0, num) < 0; }
++}
++#else
++#include <cmath>
++#endif
++
++#endif
+diff --git a/pandas/_libs/src/headers/math.h b/pandas/_libs/src/headers/math.h
+deleted file mode 100644
+index 34ad9f24a..000000000
+--- a/pandas/_libs/src/headers/math.h
++++ /dev/null
+@@ -1,11 +0,0 @@
+-#ifndef _PANDAS_MATH_H_
+-#define _PANDAS_MATH_H_
+-
+-#if defined(_MSC_VER) && (_MSC_VER < 1800)
+-#include <math.h>
+-__inline int signbit(double num) { return _copysign(1.0, num) < 0; }
+-#else
+-#include <math.h>
+-#endif
+-
+-#endif
+diff --git a/pandas/_libs/tslib.pyx b/pandas/_libs/tslib.pyx
+index 85e667521..fec7f21d6 100644
+--- a/pandas/_libs/tslib.pyx
++++ b/pandas/_libs/tslib.pyx
+@@ -46,7 +46,8 @@ from tslibs.timezones cimport (is_utc, is_tzlocal, is_fixed_offset,
+                                treat_tz_as_pytz, get_dst_info)
+ from tslibs.conversion cimport (tz_convert_single, _TSObject,
+                                 convert_datetime_to_tsobject,
+-                                get_datetime64_nanos)
++                                get_datetime64_nanos,
++                                tz_convert_utc_to_tzlocal)
+ from tslibs.conversion import tz_convert_single
+ 
+ from tslibs.nattype import NaT, nat_strings, iNaT
+@@ -144,12 +145,12 @@ def ints_to_pydatetime(ndarray[int64_t] arr, tz=None, freq=None,
+                 if value == NPY_NAT:
+                     result[i] = NaT
+                 else:
+-                    dt64_to_dtstruct(value, &dts)
+-                    dt = create_datetime_from_ts(value, dts, tz, freq)
+-                    dt = dt + tz.utcoffset(dt)
+-                    if box:
+-                        dt = Timestamp(dt)
+-                    result[i] = dt
++                    # Python datetime objects do not support nanosecond
++                    # resolution (yet, PEP 564). Need to compute new value
++                    # using the i8 representation.
++                    local_value = tz_convert_utc_to_tzlocal(value, tz)
++                    dt64_to_dtstruct(local_value, &dts)
++                    result[i] = func_create(value, dts, tz, freq)
+         else:
+             trans, deltas, typ = get_dst_info(tz)
+ 
+diff --git a/pandas/_libs/window.pyx b/pandas/_libs/window.pyx
+index cacb073da..aa13f03d8 100644
+--- a/pandas/_libs/window.pyx
++++ b/pandas/_libs/window.pyx
+@@ -3,6 +3,7 @@
+ 
+ cimport cython
+ from cython cimport Py_ssize_t
++from libcpp.deque cimport deque
+ 
+ from libc.stdlib cimport malloc, free
+ 
+@@ -12,7 +13,7 @@ from numpy cimport ndarray, double_t, int64_t, float64_t
+ cnp.import_array()
+ 
+ 
+-cdef extern from "../src/headers/math.h":
++cdef extern from "../src/headers/cmath" namespace "std":
+     int signbit(double) nogil
+     double sqrt(double x) nogil
+ 
+@@ -1222,8 +1223,9 @@ cdef _roll_min_max(ndarray[numeric] input, int64_t win, int64_t minp,
+     cdef:
+         numeric ai
+         bint is_variable, should_replace
+-        int64_t s, e, N, i, j, removed
++        int64_t N, i, removed, window_i
+         Py_ssize_t nobs = 0
++        deque Q[int64_t]
+         ndarray[int64_t] starti, endi
+         ndarray[numeric, ndim=1] output
+     cdef:
+@@ -1242,32 +1244,48 @@ cdef _roll_min_max(ndarray[numeric] input, int64_t win, int64_t minp,
+ 
+     output = np.empty(N, dtype=input.dtype)
+ 
++    Q = deque[int64_t]()
++
+     if is_variable:
+ 
+         with nogil:
+ 
+-            for i in range(N):
+-                s = starti[i]
+-                e = endi[i]
++            # This is using a modified version of the C++ code in this
++            # SO post: http://bit.ly/2nOoHlY
++            # The original impl didn't deal with variable window sizes
++            # So the code was optimized for that
+ 
+-                r = input[s]
+-                nobs = 0
+-                for j in range(s, e):
++            for i from starti[0] <= i < endi[0]:
++                ai = init_mm(input[i], &nobs, is_max)
+ 
+-                    # adds, death at the i offset
+-                    ai = init_mm(input[j], &nobs, is_max)
++                if is_max:
++                    while not Q.empty() and ai >= input[Q.back()]:
++                        Q.pop_back()
++                else:
++                    while not Q.empty() and ai <= input[Q.back()]:
++                        Q.pop_back()
++                Q.push_back(i)
+ 
+-                    if is_max:
+-                        if ai > r:
+-                            r = ai
+-                    else:
+-                        if ai < r:
+-                            r = ai
++            for i from endi[0] <= i < N:
++                output[i-1] = calc_mm(minp, nobs, input[Q.front()])
+ 
+-                output[i] = calc_mm(minp, nobs, r)
++                ai = init_mm(input[i], &nobs, is_max)
+ 
+-    else:
++                if is_max:
++                    while not Q.empty() and ai >= input[Q.back()]:
++                        Q.pop_back()
++                else:
++                    while not Q.empty() and ai <= input[Q.back()]:
++                        Q.pop_back()
+ 
++                while not Q.empty() and Q.front() <= i - (endi[i] - starti[i]):
++                    Q.pop_front()
++
++                Q.push_back(i)
++
++            output[N-1] = calc_mm(minp, nobs, input[Q.front()])
++
++    else:
+         # setup the rings of death!
+         ring = <numeric *>malloc(win * sizeof(numeric))
+         death = <int64_t *>malloc(win * sizeof(int64_t))
+diff --git a/pandas/conftest.py b/pandas/conftest.py
+index 4fe66d4cf..37f0a2f81 100644
+--- a/pandas/conftest.py
++++ b/pandas/conftest.py
+@@ -93,3 +93,9 @@ def compression_no_zip(request):
+     except zip
+     """
+     return request.param
++
++
++@pytest.fixture(scope='module')
++def datetime_tz_utc():
++    from datetime import timezone
++    return timezone.utc
 diff --git a/pandas/core/algorithms.py b/pandas/core/algorithms.py
 index c754c063f..427ec5af2 100644
 --- a/pandas/core/algorithms.py
@@ -243,7 +2067,7 @@ index c754c063f..427ec5af2 100644
              # handle Categorical and sparse,
              result = Series(values).values.value_counts(dropna=dropna)
 diff --git a/pandas/core/arrays/base.py b/pandas/core/arrays/base.py
-index 553e1e0ac..3646a045f 100644
+index 553e1e0ac..e9d56a0e9 100644
 --- a/pandas/core/arrays/base.py
 +++ b/pandas/core/arrays/base.py
 @@ -25,14 +25,14 @@ class ExtensionArray(object):
@@ -329,20 +2153,56 @@ index 553e1e0ac..3646a045f 100644
      # ------------------------------------------------------------------------
      # Required attributes
      # ------------------------------------------------------------------------
-@@ -198,9 +235,9 @@ class ExtensionArray(object):
+@@ -167,6 +204,25 @@ class ExtensionArray(object):
+         """
+         raise AbstractMethodError(self)
+ 
++    def value_counts(self, dropna=True):
++        """Compute a histogram of the counts of non-null values.
++
++        Parameters
++        ----------
++        dropna : bool, default True
++            Don't include counts of NaN
++
++        Returns
++        -------
++        value_counts : Series
++        """
++        from pandas import value_counts
++
++        if dropna:
++            self = self[~self.isna()]
++
++        return value_counts(np.array(self))
++
+     # ------------------------------------------------------------------------
+     # Indexing methods
+     # ------------------------------------------------------------------------
+@@ -198,9 +254,8 @@ class ExtensionArray(object):
  
          Examples
          --------
 -        Suppose the extension array somehow backed by a NumPy structured array
 -        and that the underlying structured array is stored as ``self.data``.
 -        Then ``take`` may be written as
-+        Suppose the extension array somehow backed by a NumPy array and that
-+        the underlying structured array is stored as ``self.data``. Then
-+        ``take`` may be written as
++        Suppose the extension array is backed by a NumPy array stored as
++        ``self.data``. Then ``take`` may be written as
  
          .. code-block:: python
  
-@@ -240,7 +277,7 @@ class ExtensionArray(object):
+@@ -209,6 +264,10 @@ class ExtensionArray(object):
+                result = self.data.take(indexer)
+                result[mask] = self._fill_value
+                return type(self)(result)
++
++        See Also
++        --------
++        numpy.take
+         """
+         raise AbstractMethodError(self)
+ 
+@@ -240,7 +299,7 @@ class ExtensionArray(object):
          # type: () -> np.ndarray
          # At the moment, this has to be an array since we use result.dtype
          """An array of values to be printed in, e.g. the Series repr"""
@@ -351,7 +2211,7 @@ index 553e1e0ac..3646a045f 100644
  
      @classmethod
      def _concat_same_type(cls, to_concat):
-@@ -257,6 +294,7 @@ class ExtensionArray(object):
+@@ -257,6 +316,7 @@ class ExtensionArray(object):
          """
          raise AbstractMethodError(cls)
  
@@ -359,18 +2219,10 @@ index 553e1e0ac..3646a045f 100644
      def _can_hold_na(self):
          # type: () -> bool
          """Whether your array can hold missing values. True by default.
-@@ -266,3 +304,23 @@ class ExtensionArray(object):
+@@ -266,3 +326,15 @@ class ExtensionArray(object):
          Setting this to false will optimize some operations like fillna.
          """
          return True
-+
-+    def value_counts(self, dropna=True):
-+        from pandas import value_counts
-+
-+        if dropna:
-+            self = self[~self.isna()]
-+
-+        return value_counts(np.array(self))
 +
 +    @property
 +    def _ndarray_values(self):
@@ -384,7 +2236,7 @@ index 553e1e0ac..3646a045f 100644
 +        """
 +        return np.array(self)
 diff --git a/pandas/core/arrays/categorical.py b/pandas/core/arrays/categorical.py
-index 62c6a6b16..397a255be 100644
+index 93250bdbb..d1b231b21 100644
 --- a/pandas/core/arrays/categorical.py
 +++ b/pandas/core/arrays/categorical.py
 @@ -410,6 +410,10 @@ class Categorical(ExtensionArray, PandasObject):
@@ -410,30 +2262,20 @@ index 62c6a6b16..397a255be 100644
      def _concat_same_type(self, to_concat):
          from pandas.core.dtypes.concat import _concat_categorical
 diff --git a/pandas/core/base.py b/pandas/core/base.py
-index 3d8f5f265..8081e20fa 100644
+index 3d8f5f265..0ca029ffd 100644
 --- a/pandas/core/base.py
 +++ b/pandas/core/base.py
-@@ -13,7 +13,9 @@ from pandas.core.dtypes.common import (
+@@ -13,7 +13,8 @@ from pandas.core.dtypes.common import (
      is_list_like,
      is_scalar,
      is_datetimelike,
 -    is_extension_type)
-+    is_categorical_dtype,
 +    is_extension_type,
 +    is_extension_array_dtype)
  
  from pandas.util._validators import validate_bool_kwarg
  
-@@ -710,7 +712,7 @@ class IndexOpsMixin(object):
-     @property
-     def shape(self):
-         """ return a tuple of the shape of the underlying data """
--        return self._values.shape
-+        return self._ndarray_values.shape
- 
-     @property
-     def ndim(self):
-@@ -738,22 +740,22 @@ class IndexOpsMixin(object):
+@@ -738,7 +739,7 @@ class IndexOpsMixin(object):
      @property
      def itemsize(self):
          """ return the size of the dtype of the item of the underlying data """
@@ -442,10 +2284,7 @@ index 3d8f5f265..8081e20fa 100644
  
      @property
      def nbytes(self):
-         """ return the number of bytes in the underlying data """
--        return self._values.nbytes
-+        return self.values.nbytes
- 
+@@ -748,7 +749,7 @@ class IndexOpsMixin(object):
      @property
      def strides(self):
          """ return the strides of the underlying data """
@@ -454,13 +2293,7 @@ index 3d8f5f265..8081e20fa 100644
  
      @property
      def size(self):
-         """ return the number of elements in the underlying data """
--        return self._values.size
-+        return self._ndarray_values.size
- 
-     @property
-     def flags(self):
-@@ -768,8 +770,17 @@ class IndexOpsMixin(object):
+@@ -768,8 +769,17 @@ class IndexOpsMixin(object):
          return self.values.base
  
      @property
@@ -480,11 +2313,9 @@ index 3d8f5f265..8081e20fa 100644
          return self.values
  
      @property
-@@ -978,7 +989,9 @@ class IndexOpsMixin(object):
-     def unique(self):
+@@ -979,6 +989,7 @@ class IndexOpsMixin(object):
          values = self._values
  
-+        # TODO: Make unique part of the ExtensionArray interface.
          if hasattr(values, 'unique'):
 +
              result = values.unique()
@@ -649,7 +2480,7 @@ index ffac70247..002839af6 100644
 +    else:
 +        return arr[notna(lib.values_from_object(arr))]
 diff --git a/pandas/core/frame.py b/pandas/core/frame.py
-index 6d8dcb8a1..e91a93827 100644
+index 2782ee7b9..86b6405a2 100644
 --- a/pandas/core/frame.py
 +++ b/pandas/core/frame.py
 @@ -39,6 +39,7 @@ from pandas.core.dtypes.common import (
@@ -678,7 +2509,16 @@ index 6d8dcb8a1..e91a93827 100644
              # GH19157
              if columns is None:
                  columns = [0]
-@@ -2802,7 +2803,7 @@ class DataFrame(NDFrame):
+@@ -1059,7 +1060,7 @@ class DataFrame(NDFrame):
+         private_key : str (optional)
+             Service account private key in JSON format. Can be file path
+             or string contents. This is useful for remote server
+-            authentication (eg. jupyter iPython notebook on remote host)
++            authentication (eg. Jupyter/IPython notebook on remote host)
+         """
+ 
+         from pandas.io import gbq
+@@ -2819,7 +2820,7 @@ class DataFrame(NDFrame):
              # now align rows
              value = reindexer(value).T
  
@@ -687,7 +2527,7 @@ index 6d8dcb8a1..e91a93827 100644
              value = value.copy()
  
          elif isinstance(value, Index) or is_sequence(value):
-@@ -2810,7 +2811,7 @@ class DataFrame(NDFrame):
+@@ -2827,7 +2828,7 @@ class DataFrame(NDFrame):
  
              # turn me into an ndarray
              value = _sanitize_index(value, self.index, copy=False)
@@ -696,7 +2536,7 @@ index 6d8dcb8a1..e91a93827 100644
                  if isinstance(value, list) and len(value) > 0:
                      value = maybe_convert_platform(value)
                  else:
-@@ -2832,7 +2833,7 @@ class DataFrame(NDFrame):
+@@ -2849,7 +2850,7 @@ class DataFrame(NDFrame):
              value = maybe_cast_to_datetime(value, value.dtype)
  
          # return internal types directly
@@ -705,7 +2545,7 @@ index 6d8dcb8a1..e91a93827 100644
              return value
  
          # broadcast across multiple columns if necessary
-@@ -3369,12 +3370,8 @@ class DataFrame(NDFrame):
+@@ -3386,12 +3387,8 @@ class DataFrame(NDFrame):
              new_obj = self.copy()
  
          def _maybe_casted_values(index, labels=None):
@@ -720,7 +2560,7 @@ index 6d8dcb8a1..e91a93827 100644
                  if values.dtype == np.object_:
                      values = lib.maybe_convert_objects(values)
  
-@@ -5634,7 +5631,7 @@ class DataFrame(NDFrame):
+@@ -5640,7 +5637,7 @@ class DataFrame(NDFrame):
          if len(frame._get_axis(axis)) == 0:
              result = Series(0, index=frame._get_agg_axis(axis))
          else:
@@ -729,8 +2569,22 @@ index 6d8dcb8a1..e91a93827 100644
                  result = notna(frame).sum(axis=axis)
              else:
                  counts = notna(frame.values).sum(axis=axis)
+diff --git a/pandas/core/generic.py b/pandas/core/generic.py
+index 35f866c9e..297450417 100644
+--- a/pandas/core/generic.py
++++ b/pandas/core/generic.py
+@@ -863,6 +863,9 @@ class NDFrame(PandasObject, SelectionMixin):
+         copy = kwargs.pop('copy', True)
+         inplace = kwargs.pop('inplace', False)
+         level = kwargs.pop('level', None)
++        axis = kwargs.pop('axis', None)
++        if axis is not None:
++            axis = self._get_axis_number(axis)
+ 
+         if kwargs:
+             raise TypeError('rename() got an unexpected keyword '
 diff --git a/pandas/core/indexes/base.py b/pandas/core/indexes/base.py
-index 15df77bf7..7db7a9748 100644
+index 15df77bf7..281618ffe 100644
 --- a/pandas/core/indexes/base.py
 +++ b/pandas/core/indexes/base.py
 @@ -13,6 +13,7 @@ from pandas.compat.numpy import function as nv
@@ -765,14 +2619,14 @@ index 15df77bf7..7db7a9748 100644
  
          result = object.__new__(cls)
          result._data = values
-@@ -594,6 +597,39 @@ class Index(IndexOpsMixin, PandasObject):
+@@ -594,6 +597,40 @@ class Index(IndexOpsMixin, PandasObject):
          """ return the underlying data as an ndarray """
          return self._data.view(np.ndarray)
  
 +    @property
 +    def _values(self):
 +        # type: () -> Union[ExtensionArray, Index]
-+        # TODO: remove index types as they become is extension arrays
++        # TODO(EA): remove index types as they become extension arrays
 +        """The best array representation.
 +
 +        This is an ndarray, ExtensionArray, or Index subclass. This differs
@@ -788,12 +2642,13 @@ index 15df77bf7..7db7a9748 100644
 +        CategoricalIndex  | Categorical     | Categorical | codes           |
 +        DatetimeIndex[tz] | ndarray[M8ns]   | DTI[tz]     | ndarray[M8ns]   |
 +
-+        In the near-future, we'll implement two more.
++        For the following, the ``._values`` is currently ``ndarray[object]``,
++        but will soon be an ``ExtensionArray``
 +
-+        index             | values          | _values     | _ndarray_values |
-+        ----------------- | --------------- | ----------- | --------------- |
-+        PeriodIndex       | ndarray[object] | PeriodArray | ndarray[int]    |
-+        IntervalIndex     | ndarray[object] | PeriodArray | ndarray[object] |
++        index             | values          | _values      | _ndarray_values |
++        ----------------- | --------------- | ------------ | --------------- |
++        PeriodIndex       | ndarray[object] | ndarray[obj] | ndarray[int]    |
++        IntervalIndex     | ndarray[object] | ndarray[obj] | ndarray[object] |
 +
 +        See Also
 +        --------
@@ -805,7 +2660,7 @@ index 15df77bf7..7db7a9748 100644
      def get_values(self):
          """ return the underlying data as an ndarray """
          return self.values
-@@ -664,7 +700,7 @@ class Index(IndexOpsMixin, PandasObject):
+@@ -664,7 +701,7 @@ class Index(IndexOpsMixin, PandasObject):
          --------
          numpy.ndarray.ravel
          """
@@ -814,7 +2669,7 @@ index 15df77bf7..7db7a9748 100644
  
      # construction helpers
      @classmethod
-@@ -1597,7 +1633,7 @@ class Index(IndexOpsMixin, PandasObject):
+@@ -1597,7 +1634,7 @@ class Index(IndexOpsMixin, PandasObject):
      @cache_readonly
      def _engine(self):
          # property, for now, slow to look up
@@ -823,24 +2678,19 @@ index 15df77bf7..7db7a9748 100644
  
      def _validate_index_level(self, level):
          """
-@@ -1966,6 +2002,12 @@ class Index(IndexOpsMixin, PandasObject):
+@@ -1966,6 +2003,7 @@ class Index(IndexOpsMixin, PandasObject):
  
          if is_categorical_dtype(values.dtype):
              values = np.array(values)
 +
-+        elif isinstance(values, ExtensionArray):
-+            # This is still un-exercised within pandas, since all our
-+            # extension dtypes have custom indexes.
-+            values = values._formatting_values()
-+
          elif is_object_dtype(values.dtype):
              values = lib.maybe_convert_objects(values, safe=1)
  
-@@ -2228,27 +2270,37 @@ class Index(IndexOpsMixin, PandasObject):
+@@ -2228,27 +2266,37 @@ class Index(IndexOpsMixin, PandasObject):
              other = other.astype('O')
              return this.union(other)
  
-+        # TODO: setops-refactor, clean all this up
++        # TODO(EA): setops-refactor, clean all this up
 +        if is_period_dtype(self) or is_datetime64tz_dtype(self):
 +            lvals = self._ndarray_values
 +        else:
@@ -881,7 +2731,7 @@ index 15df77bf7..7db7a9748 100644
                  except TypeError as e:
                      warnings.warn("%s, sort order is undefined for "
                                    "incomparable objects" % e, RuntimeWarning,
-@@ -2260,7 +2312,7 @@ class Index(IndexOpsMixin, PandasObject):
+@@ -2260,7 +2308,7 @@ class Index(IndexOpsMixin, PandasObject):
                          result.sort()
  
              else:
@@ -890,11 +2740,11 @@ index 15df77bf7..7db7a9748 100644
  
                  try:
                      result = np.sort(result)
-@@ -2311,20 +2363,30 @@ class Index(IndexOpsMixin, PandasObject):
+@@ -2311,20 +2359,30 @@ class Index(IndexOpsMixin, PandasObject):
              other = other.astype('O')
              return this.intersection(other)
  
-+        # TODO: setops-refactor, clean all this up
++        # TODO(EA): setops-refactor, clean all this up
 +        if is_period_dtype(self):
 +            lvals = self._ndarray_values
 +        else:
@@ -917,15 +2767,14 @@ index 15df77bf7..7db7a9748 100644
 +            indexer = Index(rvals).get_indexer(lvals)
              indexer = indexer.take((indexer != -1).nonzero()[0])
          except Exception:
--            # duplicates
-+            # duplicateters
+             # duplicates
              indexer = algos.unique1d(
 -                Index(other._values).get_indexer_non_unique(self._values)[0])
 +                Index(rvals).get_indexer_non_unique(lvals)[0])
              indexer = indexer[indexer != -1]
  
          taken = other.take(indexer)
-@@ -2545,7 +2607,7 @@ class Index(IndexOpsMixin, PandasObject):
+@@ -2545,7 +2603,7 @@ class Index(IndexOpsMixin, PandasObject):
          # if we have something that is Index-like, then
          # use this, e.g. DatetimeIndex
          s = getattr(series, '_values', None)
@@ -934,7 +2783,7 @@ index 15df77bf7..7db7a9748 100644
              try:
                  return s[key]
              except (IndexError, ValueError):
-@@ -2700,7 +2762,7 @@ class Index(IndexOpsMixin, PandasObject):
+@@ -2700,7 +2758,7 @@ class Index(IndexOpsMixin, PandasObject):
                  raise ValueError('limit argument only valid if doing pad, '
                                   'backfill or nearest reindexing')
  
@@ -943,7 +2792,7 @@ index 15df77bf7..7db7a9748 100644
  
          return _ensure_platform_int(indexer)
  
-@@ -2716,12 +2778,13 @@ class Index(IndexOpsMixin, PandasObject):
+@@ -2716,12 +2774,13 @@ class Index(IndexOpsMixin, PandasObject):
          if self.is_monotonic_increasing and target.is_monotonic_increasing:
              method = (self._engine.get_pad_indexer if method == 'pad' else
                        self._engine.get_backfill_indexer)
@@ -959,7 +2808,7 @@ index 15df77bf7..7db7a9748 100644
                                                       tolerance)
          return indexer
  
-@@ -2812,7 +2875,7 @@ class Index(IndexOpsMixin, PandasObject):
+@@ -2812,7 +2871,7 @@ class Index(IndexOpsMixin, PandasObject):
              self = Index(self.asi8)
              tgt_values = target.asi8
          else:
@@ -968,7 +2817,7 @@ index 15df77bf7..7db7a9748 100644
  
          indexer, missing = self._engine.get_indexer_non_unique(tgt_values)
          return _ensure_platform_int(indexer), missing
-@@ -3247,16 +3310,17 @@ class Index(IndexOpsMixin, PandasObject):
+@@ -3247,16 +3306,17 @@ class Index(IndexOpsMixin, PandasObject):
      def _join_non_unique(self, other, how='left', return_indexers=False):
          from pandas.core.reshape.merge import _get_join_indexers
  
@@ -990,7 +2839,7 @@ index 15df77bf7..7db7a9748 100644
  
          join_index = self._wrap_joined_index(join_index, other)
  
-@@ -3403,8 +3467,8 @@ class Index(IndexOpsMixin, PandasObject):
+@@ -3403,8 +3463,8 @@ class Index(IndexOpsMixin, PandasObject):
              else:
                  return ret_index
  
@@ -1001,7 +2850,7 @@ index 15df77bf7..7db7a9748 100644
  
          if self.is_unique and other.is_unique:
              # We can perform much better than the general case
-@@ -3756,7 +3820,7 @@ class Index(IndexOpsMixin, PandasObject):
+@@ -3756,7 +3816,7 @@ class Index(IndexOpsMixin, PandasObject):
              item = self._na_value
  
          _self = np.asarray(self)
@@ -1011,7 +2860,7 @@ index 15df77bf7..7db7a9748 100644
          return self._shallow_copy_with_infer(idx)
  
 diff --git a/pandas/core/indexes/category.py b/pandas/core/indexes/category.py
-index b36bc1df2..7d4a864b4 100644
+index 60f555257..a4d0f787c 100644
 --- a/pandas/core/indexes/category.py
 +++ b/pandas/core/indexes/category.py
 @@ -293,6 +293,11 @@ class CategoricalIndex(Index, accessor.PandasDelegate):
@@ -1051,7 +2900,7 @@ index 4a526955d..c98f8ceea 100644
              freq = attribs['freq']
  
 diff --git a/pandas/core/indexes/datetimes.py b/pandas/core/indexes/datetimes.py
-index 61c941c3d..22ce690b3 100644
+index 61c941c3d..cc9ce1f3f 100644
 --- a/pandas/core/indexes/datetimes.py
 +++ b/pandas/core/indexes/datetimes.py
 @@ -678,6 +678,15 @@ class DatetimeIndex(DatelikeOps, TimelikeOps, DatetimeIndexOpsMixin,
@@ -1070,7 +2919,35 @@ index 61c941c3d..22ce690b3 100644
      @property
      def tzinfo(self):
          """
-@@ -1086,6 +1095,19 @@ class DatetimeIndex(DatelikeOps, TimelikeOps, DatetimeIndexOpsMixin,
+@@ -685,6 +694,27 @@ class DatetimeIndex(DatelikeOps, TimelikeOps, DatetimeIndexOpsMixin,
+         """
+         return self.tz
+ 
++    @property
++    def size(self):
++        # TODO: Remove this when we have a DatetimeTZArray
++        # Necessary to avoid recursion error since DTI._values is a DTI
++        # for TZ-aware
++        return self._ndarray_values.size
++
++    @property
++    def shape(self):
++        # TODO: Remove this when we have a DatetimeTZArray
++        # Necessary to avoid recursion error since DTI._values is a DTI
++        # for TZ-aware
++        return self._ndarray_values.shape
++
++    @property
++    def nbytes(self):
++        # TODO: Remove this when we have a DatetimeTZArray
++        # Necessary to avoid recursion error since DTI._values is a DTI
++        # for TZ-aware
++        return self._ndarray_values.nbytes
++
+     @cache_readonly
+     def _timezone(self):
+         """ Comparable timezone both for pytz / dateutil"""
+@@ -1086,6 +1116,19 @@ class DatetimeIndex(DatelikeOps, TimelikeOps, DatetimeIndexOpsMixin,
          # we know it conforms; skip check
          return DatetimeIndex(snapped, freq=freq, verify_integrity=False)
  
@@ -1090,6 +2967,27 @@ index 61c941c3d..22ce690b3 100644
      def union(self, other):
          """
          Specialized union for DatetimeIndex objects. If combine
+diff --git a/pandas/core/indexes/interval.py b/pandas/core/indexes/interval.py
+index 3bf783b5a..d431ea1e5 100644
+--- a/pandas/core/indexes/interval.py
++++ b/pandas/core/indexes/interval.py
+@@ -680,6 +680,16 @@ class IntervalIndex(IntervalMixin, Index):
+                    'e.g. Intervals with string endpoints')
+             raise TypeError(msg)
+ 
++    @property
++    def size(self):
++        # Avoid materializing self.values
++        return self.left.size
++
++    @property
++    def shape(self):
++        # Avoid materializing self.values
++        return self.left.shape
++
+     def __len__(self):
+         return len(self.left)
+ 
 diff --git a/pandas/core/indexes/multi.py b/pandas/core/indexes/multi.py
 index 510f7245c..94dbd8b88 100644
 --- a/pandas/core/indexes/multi.py
@@ -1221,7 +3119,7 @@ index b02aee049..a4558116b 100644
          except (TypeError, ValueError):
              return False
 diff --git a/pandas/core/indexes/period.py b/pandas/core/indexes/period.py
-index 1f8542ed5..e90d3827f 100644
+index 1f8542ed5..8f2d7d382 100644
 --- a/pandas/core/indexes/period.py
 +++ b/pandas/core/indexes/period.py
 @@ -54,7 +54,7 @@ _index_doc_kwargs.update(
@@ -1308,7 +3206,24 @@ index 1f8542ed5..e90d3827f 100644
          return self._data
  
      def __array__(self, dtype=None):
-@@ -489,13 +491,15 @@ class PeriodIndex(DatelikeOps, DatetimeIndexOpsMixin, Int64Index):
+@@ -475,6 +477,16 @@ class PeriodIndex(DatelikeOps, DatetimeIndexOpsMixin, Int64Index):
+ 
+         return self.astype(object).values
+ 
++    @property
++    def size(self):
++        # Avoid materializing self._values
++        return self._ndarray_values.size
++
++    @property
++    def shape(self):
++        # Avoid materializing self._values
++        return self._ndarray_values.shape
++
+     @property
+     def _formatter_func(self):
+         return lambda x: "'%s'" % x
+@@ -489,13 +501,15 @@ class PeriodIndex(DatelikeOps, DatetimeIndexOpsMixin, Int64Index):
          if isinstance(where_idx, DatetimeIndex):
              where_idx = PeriodIndex(where_idx.values, freq=self.freq)
  
@@ -1326,7 +3241,7 @@ index 1f8542ed5..e90d3827f 100644
  
          return result
  
-@@ -523,7 +527,8 @@ class PeriodIndex(DatelikeOps, DatetimeIndexOpsMixin, Int64Index):
+@@ -523,7 +537,8 @@ class PeriodIndex(DatelikeOps, DatetimeIndexOpsMixin, Int64Index):
          elif isinstance(value, compat.string_types):
              value = Period(value, freq=self.freq).ordinal
  
@@ -1336,7 +3251,7 @@ index 1f8542ed5..e90d3827f 100644
  
      @property
      def is_all_dates(self):
-@@ -664,7 +669,7 @@ class PeriodIndex(DatelikeOps, DatetimeIndexOpsMixin, Int64Index):
+@@ -664,7 +679,7 @@ class PeriodIndex(DatelikeOps, DatetimeIndexOpsMixin, Int64Index):
          base, mult = _gfc(freq)
          new_data = self.asfreq(freq, how)
  
@@ -1345,7 +3260,7 @@ index 1f8542ed5..e90d3827f 100644
          return DatetimeIndex(new_data, freq='infer', name=self.name)
  
      def _maybe_convert_timedelta(self, other):
-@@ -744,7 +749,7 @@ class PeriodIndex(DatelikeOps, DatetimeIndexOpsMixin, Int64Index):
+@@ -744,7 +759,7 @@ class PeriodIndex(DatelikeOps, DatetimeIndexOpsMixin, Int64Index):
          -------
          shifted : PeriodIndex
          """
@@ -1354,7 +3269,7 @@ index 1f8542ed5..e90d3827f 100644
          if self.hasnans:
              values[self._isnan] = tslib.iNaT
          return self._shallow_copy(values=values)
-@@ -775,7 +780,7 @@ class PeriodIndex(DatelikeOps, DatetimeIndexOpsMixin, Int64Index):
+@@ -775,7 +790,7 @@ class PeriodIndex(DatelikeOps, DatetimeIndexOpsMixin, Int64Index):
                  grp = resolution.Resolution.get_freq_group(reso)
                  freqn = resolution.get_freq_group(self.freq)
  
@@ -1363,7 +3278,7 @@ index 1f8542ed5..e90d3827f 100644
  
                  # if our data is higher resolution than requested key, slice
                  if grp < freqn:
-@@ -786,7 +791,7 @@ class PeriodIndex(DatelikeOps, DatetimeIndexOpsMixin, Int64Index):
+@@ -786,7 +801,7 @@ class PeriodIndex(DatelikeOps, DatetimeIndexOpsMixin, Int64Index):
                      if ord2 < vals[0] or ord1 > vals[-1]:
                          raise KeyError(key)
  
@@ -1373,21 +3288,21 @@ index 1f8542ed5..e90d3827f 100644
                      return series[key]
                  elif grp == freqn:
 diff --git a/pandas/core/indexing.py b/pandas/core/indexing.py
-index 352ce921d..1d07900a4 100755
+index 352ce921d..50f3c7a6b 100755
 --- a/pandas/core/indexing.py
 +++ b/pandas/core/indexing.py
 @@ -618,6 +618,9 @@ class _NDFrameIndexer(_NDFrameIndexerBase):
                      return
  
              if isinstance(value, (ABCSeries, dict)):
-+                # TODO: ExtensionBlock.setitem this causes issues with setting
-+                # for extensionarrays that store dicts. Need to decide if it's
-+                # worth supporting that or now
++                # TODO(EA): ExtensionBlock.setitem this causes issues with
++                # setting for extensionarrays that store dicts. Need to decide
++                # if it's worth supporting that.
                  value = self._align_series(indexer, Series(value))
  
              elif isinstance(value, ABCDataFrame):
 diff --git a/pandas/core/internals.py b/pandas/core/internals.py
-index f553e1a02..fffbe18d3 100644
+index f553e1a02..b42138343 100644
 --- a/pandas/core/internals.py
 +++ b/pandas/core/internals.py
 @@ -56,7 +56,10 @@ from pandas.core.dtypes.missing import (
@@ -1444,7 +3359,7 @@ index f553e1a02..fffbe18d3 100644
          else:
              align_keys = []
  
-+        # TODO: may interfere with ExtensionBlock.setitem for blocks
++        # TODO(EA): may interfere with ExtensionBlock.setitem for blocks
 +        # with a .values attribute.
          aligned_args = dict((k, kwargs[k])
                              for k in align_keys
@@ -1461,7 +3376,7 @@ index f553e1a02..fffbe18d3 100644
      @property
      def is_view(self):
          """ return a boolean if we are a single block and are a view """
-@@ -4834,13 +4863,10 @@ def form_blocks(arrays, names, axes):
+@@ -4834,14 +4863,11 @@ def form_blocks(arrays, names, axes):
      if len(items_dict['ExtensionBlock']):
  
          external_blocks = []
@@ -1473,10 +3388,12 @@ index f553e1a02..fffbe18d3 100644
 -            block_type = getattr(array, '_block_type', ExtensionBlock)
              external_blocks.append(
 -                make_block(array, klass=block_type,
+-                           fastpath=True, placement=[i]))
 +                make_block(array, klass=ExtensionBlock,
-                            fastpath=True, placement=[i]))
++                           placement=[i]))
          blocks.extend(external_blocks)
  
+     if len(extra_locs):
 @@ -5673,6 +5699,8 @@ class JoinUnit(object):
              if not values._null_fill_value and values.sp_index.ngaps > 0:
                  return False
@@ -1487,7 +3404,7 @@ index f553e1a02..fffbe18d3 100644
              values_flat = values.ravel(order='K')
          total_len = values_flat.shape[0]
 diff --git a/pandas/core/series.py b/pandas/core/series.py
-index e4b8979d6..7884794c6 100644
+index 655eaa537..9e36b95c9 100644
 --- a/pandas/core/series.py
 +++ b/pandas/core/series.py
 @@ -14,6 +14,7 @@ import numpy as np
@@ -1528,7 +3445,7 @@ index e4b8979d6..7884794c6 100644
              else:
                  data = _sanitize_array(data, index, dtype, copy,
                                         raise_cast_failure=True)
-@@ -2570,7 +2579,11 @@ class Series(base.IndexOpsMixin, generic.NDFrame):
+@@ -2559,7 +2568,11 @@ class Series(base.IndexOpsMixin, generic.NDFrame):
              return self
  
          # be subclass-friendly
@@ -1541,7 +3458,7 @@ index e4b8979d6..7884794c6 100644
          return self._constructor(new_values, index=new_index)
  
      def _needs_reindex_multi(self, axes, method, level):
-@@ -3126,10 +3139,9 @@ def _sanitize_index(data, index, copy=False):
+@@ -3115,10 +3128,9 @@ def _sanitize_index(data, index, copy=False):
  
      if isinstance(data, ABCIndexClass) and not copy:
          pass
@@ -1555,7 +3472,7 @@ index e4b8979d6..7884794c6 100644
      elif isinstance(data, np.ndarray):
  
          # coerce datetimelike types
-@@ -3202,7 +3214,7 @@ def _sanitize_array(data, index, dtype=None, copy=False,
+@@ -3191,7 +3203,7 @@ def _sanitize_array(data, index, dtype=None, copy=False,
              # we will try to copy be-definition here
              subarr = _try_cast(data, True)
  
@@ -1564,6 +3481,19 @@ index e4b8979d6..7884794c6 100644
          subarr = data
  
          if copy:
+diff --git a/pandas/io/gbq.py b/pandas/io/gbq.py
+index b452b0cf5..f9bc6ae1a 100644
+--- a/pandas/io/gbq.py
++++ b/pandas/io/gbq.py
+@@ -65,7 +65,7 @@ def read_gbq(query, project_id=None, index_col=None, col_order=None,
+     private_key : str (optional)
+         Service account private key in JSON format. Can be file path
+         or string contents. This is useful for remote server
+-        authentication (eg. jupyter iPython notebook on remote host)
++        authentication (eg. Jupyter/IPython notebook on remote host)
+ 
+     dialect : {'legacy', 'standard'}, default 'legacy'
+         'legacy' : Use BigQuery's legacy SQL dialect.
 diff --git a/pandas/io/pytables.py b/pandas/io/pytables.py
 index 0d8338076..2437b7d39 100644
 --- a/pandas/io/pytables.py
@@ -1606,10 +3536,10 @@ index 07163615c..9ca064752 100644
      # .. and set some shortcuts
 diff --git a/pandas/tests/extension/base.py b/pandas/tests/extension/base.py
 new file mode 100644
-index 000000000..dc9bca653
+index 000000000..51d9da1fe
 --- /dev/null
 +++ b/pandas/tests/extension/base.py
-@@ -0,0 +1,460 @@
+@@ -0,0 +1,455 @@
 +import operator
 +
 +import numpy as np
@@ -2010,17 +3940,12 @@ index 000000000..dc9bca653
 +        expected = pd.Series(expected)
 +        tm.assert_series_equal(result, expected)
 +
-+    def test_dropna(self, data_missing):
-+        result = pd.Series(data_missing).dropna()
-+        expected = pd.Series(data_missing).iloc[[1]]
-+        tm.assert_series_equal(result, expected)
-+
 +    def test_align(self, data):
 +        a = data[:3]
 +        b = data[2:5]
 +        r1, r2 = pd.Series(a).align(pd.Series(b, index=[1, 2, 3]))
 +
-+        # TODO: assumes that the ctor can take a list of scalars of the type
++        # Assumes that the ctor can take a list of scalars of the type
 +        e1 = pd.Series(type(data)(list(a) + [data._fill_value]))
 +        e2 = pd.Series(type(data)([data._fill_value] + list(b)))
 +        tm.assert_series_equal(r1, e1)
@@ -2072,10 +3997,10 @@ index 000000000..dc9bca653
 +        tm.assert_frame_equal(result, expected)
 diff --git a/pandas/tests/extension/test_categorical.py b/pandas/tests/extension/test_categorical.py
 new file mode 100644
-index 000000000..237963bc3
+index 000000000..402c53706
 --- /dev/null
 +++ b/pandas/tests/extension/test_categorical.py
-@@ -0,0 +1,63 @@
+@@ -0,0 +1,62 @@
 +import string
 +
 +import pytest
@@ -2128,7 +4053,6 @@ index 000000000..237963bc3
 +        b = data[2:5]
 +        r1, r2 = pd.Series(a).align(pd.Series(b, index=[1, 2, 3]))
 +
-+        # TODO: assumes that the ctor can take a list of scalars of the type
 +        e1 = pd.Series(type(data)(list(a) + [data._fill_value],
 +                                  dtype=data.dtype))
 +        e2 = pd.Series(type(data)([data._fill_value] + list(b),
@@ -2290,10 +4214,10 @@ index 000000000..687e64582
 +        tm.assert_series_equal(result, expected)
 diff --git a/pandas/tests/extension/test_json.py b/pandas/tests/extension/test_json.py
 new file mode 100644
-index 000000000..515272a48
+index 000000000..6d2d227a7
 --- /dev/null
 +++ b/pandas/tests/extension/test_json.py
-@@ -0,0 +1,175 @@
+@@ -0,0 +1,135 @@
 +import collections
 +import itertools
 +import numbers
@@ -2429,46 +4353,6 @@ index 000000000..515272a48
 +    @pytest.mark.skip(reason="Unhashable")
 +    def test_value_counts(self, all_data, dropna):
 +        pass
-+
-+    # @pytest.mark.xfail(reason="Difficulty setting sized objects.")
-+    # def test_set_scalar(self):
-+    #     pass
-+    #
-+
-+    @pytest.mark.xfail(reason="Difficulty setting sized objects.")
-+    def test_set_loc_scalar_mixed(self):
-+        # This fails on an np.ndarary(dict) call in _setitem_with_indexer
-+        pass
-+
-+    # @pytest.mark.xfail(reason="Difficulty setting sized objects.")
-+    # def test_set_loc_scalar_single(self):
-+    #     pass
-+    #
-+
-+    @pytest.mark.xfail(reason="Difficulty setting sized objects.")
-+    def test_set_loc_scalar_multiple_homogoneous(self):
-+        # This fails in _setitem_with_indexer with a
-+        # ValueError: Must have equal len keys and value when setting with
-+        # and iterable
-+        pass
-+
-+    @pytest.mark.xfail(reason="Difficulty setting sized objects.")
-+    def test_set_iloc_scalar_mixed(self):
-+        # This fails in _setitem_with_indexer with a
-+        # ValueError: Must have equal len keys and value when setting with an
-+        # iterable
-+        pass
-+
-+    # @pytest.mark.xfail(reason="Difficulty setting sized objects.")
-+    # def test_set_iloc_scalar_single(self):
-+    #     pass
-+    #
-+    @pytest.mark.xfail(reason="Difficulty setting sized objects.")
-+    def test_set_iloc_scalar_multiple_homogoneous(self):
-+        # this fails in _setitem_with_indexer with a
-+        # ValueError: Must have equal len keys and value when setting with an
-+        # iterable
-+        pass
 diff --git a/pandas/tests/indexes/common.py b/pandas/tests/indexes/common.py
 index 8948c5f79..2d8d70aa2 100644
 --- a/pandas/tests/indexes/common.py
@@ -2510,6 +4394,37 @@ index a75ace293..05678b0c8 100644
 +    def test_unique(self, arr, expected):
 +        result = arr.unique()
 +        tm.assert_index_equal(result, expected)
+diff --git a/pandas/tests/indexes/datetimes/test_timezones.py b/pandas/tests/indexes/datetimes/test_timezones.py
+index 075d239df..62854676d 100644
+--- a/pandas/tests/indexes/datetimes/test_timezones.py
++++ b/pandas/tests/indexes/datetimes/test_timezones.py
+@@ -17,7 +17,7 @@ import pandas.util._test_decorators as td
+ import pandas as pd
+ from pandas._libs import tslib
+ from pandas._libs.tslibs import timezones
+-from pandas.compat import lrange, zip
++from pandas.compat import lrange, zip, PY3
+ from pandas import (DatetimeIndex, date_range, bdate_range,
+                     Timestamp, isna, to_datetime, Index)
+ 
+@@ -949,6 +949,17 @@ class TestDatetimeIndexTimezones(object):
+         result = rng.union(rng2)
+         assert result.tz.zone == 'UTC'
+ 
++    @pytest.mark.parametrize('tz', [None, 'UTC', "US/Central",
++                                    dateutil.tz.tzoffset(None, -28800)])
++    @pytest.mark.usefixtures("datetime_tz_utc")
++    @pytest.mark.skipif(not PY3, reason="datetime.timezone not in PY2")
++    def test_iteration_preserves_nanoseconds(self, tz):
++        # GH 19603
++        index = DatetimeIndex(["2018-02-08 15:00:00.168456358",
++                               "2018-02-08 15:00:00.168456359"], tz=tz)
++        for i, ts in enumerate(index):
++            assert ts == index[i]
++
+ 
+ class TestDateRange(object):
+     """Tests for date_range with timezones"""
 diff --git a/pandas/tests/indexes/period/test_construction.py b/pandas/tests/indexes/period/test_construction.py
 index 639a9272c..eca80d17b 100644
 --- a/pandas/tests/indexes/period/test_construction.py
@@ -2526,7 +4441,7 @@ index 639a9272c..eca80d17b 100644
                        data=Period('2007', freq='A'))
  
 diff --git a/pandas/tests/indexes/period/test_period.py b/pandas/tests/indexes/period/test_period.py
-index 6fc7fa548..e3b1256fa 100644
+index f3469b829..b3f059018 100644
 --- a/pandas/tests/indexes/period/test_period.py
 +++ b/pandas/tests/indexes/period/test_period.py
 @@ -205,7 +205,7 @@ class TestPeriodIndex(DatetimeLike):
@@ -2557,10 +4472,10 @@ index 6fc7fa548..e3b1256fa 100644
      def test_period_index_length(self):
          pi = PeriodIndex(freq='A', start='1/1/2001', end='12/1/2009')
 diff --git a/pandas/tests/indexes/period/test_tools.py b/pandas/tests/indexes/period/test_tools.py
-index 0e72cadb5..f5a62371a 100644
+index f5e7c8269..97500f2f5 100644
 --- a/pandas/tests/indexes/period/test_tools.py
 +++ b/pandas/tests/indexes/period/test_tools.py
-@@ -22,7 +22,7 @@ class TestPeriodRepresentation(object):
+@@ -20,7 +20,7 @@ class TestPeriodRepresentation(object):
      def _check_freq(self, freq, base_date):
          rng = PeriodIndex(start=base_date, periods=10, freq=freq)
          exp = np.arange(10, dtype=np.int64)
@@ -2665,6 +4580,96 @@ index 2487363df..991da4116 100644
  
      _holder = np.ndarray
  
+diff --git a/pandas/tests/io/test_parquet.py b/pandas/tests/io/test_parquet.py
+index 11cbea8ce..69b651839 100644
+--- a/pandas/tests/io/test_parquet.py
++++ b/pandas/tests/io/test_parquet.py
+@@ -154,10 +154,46 @@ def check_round_trip(df, engine=None, path=None,
+         write_kwargs['engine'] = engine
+         read_kwargs['engine'] = engine
+ 
++    fastparquet_make_block_dtype = (
++        # Use of deprecated `dtype` in `make_block` that's hit only for
++        # bool dtypes with no Nones.
++        engine == 'fastparquet' and
++        LooseVersion(fastparquet.__version__) == LooseVersion("0.1.4") and
++        any(pd.api.types.is_bool_dtype(df[col]) for col in df.columns)
++    )
++
++    if (engine == 'pyarrow' and
++            LooseVersion(pyarrow.__version__) <= LooseVersion("0.8.0") and
++            any(pd.api.types.is_datetime64tz_dtype(dtype)
++                for dtype in df.dtypes)):
++        # Use of deprecated fastpath in make_block
++        # Deprecated in pandas 0.23 and removed in pyarrow 0.9
++        # Remove this when all pyarrow builds >= 0.9
++        warning_type = DeprecationWarning
++    # elif (engine == 'fastparquet' and
++    #         LooseVersion(fastparquet.__version__) == LooseVersion('0.1.3')):
++    #     warning_type = DeprecationWarning
++    elif (engine == 'fastparquet' and
++          LooseVersion(fastparquet.__version__) <= LooseVersion("0.1.4") and
++          LooseVersion(np.__version__) >= LooseVersion("1.14.0") and
++          df.select_dtypes(['bool', 'object'])
++            .isin([True, False]).any().any()):
++        # use of deprecated np.fromstring for boolean columns
++        # Deprecated in numpy 1.14
++        # Used in fastparquet <= 0.1.4
++        # Remove when all fastparquet builds >= 0.1.5
++        # https://github.com/dask/fastparquet/issues/302
++        warning_type = DeprecationWarning
++    elif fastparquet_make_block_dtype:
++        warning_type = DeprecationWarning
++    else:
++        warning_type = None
++
+     def compare(repeat):
+         for _ in range(repeat):
+             df.to_parquet(path, **write_kwargs)
+-            with catch_warnings(record=True):
++            with tm.assert_produces_warning(warning_type,
++                                            check_stacklevel=False):
+                 actual = read_parquet(path, **read_kwargs)
+             tm.assert_frame_equal(expected, actual,
+                                   check_names=check_names)
+@@ -224,7 +260,17 @@ def test_cross_engine_pa_fp(df_cross_compat, pa, fp):
+     with tm.ensure_clean() as path:
+         df.to_parquet(path, engine=pa, compression=None)
+ 
+-        result = read_parquet(path, engine=fp)
++        if (LooseVersion(fastparquet.__version__) <= LooseVersion('0.1.4') and
++                LooseVersion(np.__version__) >= LooseVersion('1.14.0')):
++            # fastparquet used np.fromstring, deprecated in numpy 1.14.0
++            expected_warning = DeprecationWarning
++        else:
++            expected_warning = None
++
++        with tm.assert_produces_warning(expected_warning,
++                                        check_stacklevel=False):
++            result = read_parquet(path, engine=fp)
++
+         tm.assert_frame_equal(result, df)
+ 
+         result = read_parquet(path, engine=fp, columns=['a', 'd'])
+diff --git a/pandas/tests/series/test_alter_axes.py b/pandas/tests/series/test_alter_axes.py
+index 714e43a4a..dce4e82cb 100644
+--- a/pandas/tests/series/test_alter_axes.py
++++ b/pandas/tests/series/test_alter_axes.py
+@@ -81,6 +81,14 @@ class TestSeriesAlterAxes(TestData):
+             exp = np.array(['a', 'b', 'c'], dtype=np.object_)
+             tm.assert_numpy_array_equal(s.index.values, exp)
+ 
++    def test_rename_axis_supported(self):
++        # Supporting axis for compatibility, detailed in GH-18589
++        s = Series(range(5))
++        s.rename({}, axis=0)
++        s.rename({}, axis='index')
++        with tm.assert_raises_regex(ValueError, 'No axis named 5'):
++            s.rename({}, axis=5)
++
+     def test_set_name_attribute(self):
+         s = Series([1, 2, 3])
+         s2 = Series([1, 2, 3], name='bar')
 diff --git a/pandas/tests/test_base.py b/pandas/tests/test_base.py
 index df2547fc7..4b5ad3361 100644
 --- a/pandas/tests/test_base.py
@@ -2745,6 +4750,243 @@ index df2547fc7..4b5ad3361 100644
 +    r_values = pd.Index(array)._ndarray_values
 +    tm.assert_numpy_array_equal(l_values, r_values)
 +    tm.assert_numpy_array_equal(l_values, expected)
+diff --git a/pandas/tests/tseries/test_timezones.py b/pandas/tests/tseries/test_timezones.py
+index 565e735c1..97326dc04 100644
+--- a/pandas/tests/tseries/test_timezones.py
++++ b/pandas/tests/tseries/test_timezones.py
+@@ -2,15 +2,10 @@
+ import pytest
+ 
+ import pytz
+-import dateutil
+-import numpy as np
+ 
+ from datetime import datetime
+ 
+-import pandas.util.testing as tm
+-from pandas.core.indexes.datetimes import date_range
+-from pandas._libs import tslib
+-from pandas._libs.tslibs import timezones, conversion
++from pandas._libs.tslibs import timezones
+ from pandas import Timestamp
+ 
+ 
+@@ -111,82 +106,3 @@ class TestTimeZoneSupportDateutil(TestTimeZoneSupportPytz):
+     def normalize(self, ts):
+         # no-op for dateutil
+         return ts
+-
+-    def test_tzlocal(self):
+-        # GH 13583
+-        ts = Timestamp('2011-01-01', tz=dateutil.tz.tzlocal())
+-        assert ts.tz == dateutil.tz.tzlocal()
+-        assert "tz='tzlocal()')" in repr(ts)
+-
+-        tz = timezones.maybe_get_tz('tzlocal()')
+-        assert tz == dateutil.tz.tzlocal()
+-
+-        # get offset using normal datetime for test
+-        offset = dateutil.tz.tzlocal().utcoffset(datetime(2011, 1, 1))
+-        offset = offset.total_seconds() * 1000000000
+-        assert ts.value + offset == Timestamp('2011-01-01').value
+-
+-
+-class TestTimeZoneCacheKey(object):
+-
+-    @pytest.mark.parametrize('tz_name', list(pytz.common_timezones))
+-    def test_cache_keys_are_distinct_for_pytz_vs_dateutil(self, tz_name):
+-        if tz_name == 'UTC':
+-            # skip utc as it's a special case in dateutil
+-            return
+-        tz_p = timezones.maybe_get_tz(tz_name)
+-        tz_d = timezones.maybe_get_tz('dateutil/' + tz_name)
+-        if tz_d is None:
+-            # skip timezones that dateutil doesn't know about.
+-            return
+-        assert (timezones._p_tz_cache_key(tz_p) !=
+-                timezones._p_tz_cache_key(tz_d))
+-
+-
+-class TestTslib(object):
+-
+-    def test_tslib_tz_convert(self):
+-        def compare_utc_to_local(tz_didx, utc_didx):
+-            f = lambda x: conversion.tz_convert_single(x, 'UTC', tz_didx.tz)
+-            result = conversion.tz_convert(tz_didx.asi8, 'UTC', tz_didx.tz)
+-            result_single = np.vectorize(f)(tz_didx.asi8)
+-            tm.assert_numpy_array_equal(result, result_single)
+-
+-        def compare_local_to_utc(tz_didx, utc_didx):
+-            f = lambda x: conversion.tz_convert_single(x, tz_didx.tz, 'UTC')
+-            result = conversion.tz_convert(utc_didx.asi8, tz_didx.tz, 'UTC')
+-            result_single = np.vectorize(f)(utc_didx.asi8)
+-            tm.assert_numpy_array_equal(result, result_single)
+-
+-        for tz in ['UTC', 'Asia/Tokyo', 'US/Eastern', 'Europe/Moscow']:
+-            # US: 2014-03-09 - 2014-11-11
+-            # MOSCOW: 2014-10-26  /  2014-12-31
+-            tz_didx = date_range('2014-03-01', '2015-01-10', freq='H', tz=tz)
+-            utc_didx = date_range('2014-03-01', '2015-01-10', freq='H')
+-            compare_utc_to_local(tz_didx, utc_didx)
+-            # local tz to UTC can be differ in hourly (or higher) freqs because
+-            # of DST
+-            compare_local_to_utc(tz_didx, utc_didx)
+-
+-            tz_didx = date_range('2000-01-01', '2020-01-01', freq='D', tz=tz)
+-            utc_didx = date_range('2000-01-01', '2020-01-01', freq='D')
+-            compare_utc_to_local(tz_didx, utc_didx)
+-            compare_local_to_utc(tz_didx, utc_didx)
+-
+-            tz_didx = date_range('2000-01-01', '2100-01-01', freq='A', tz=tz)
+-            utc_didx = date_range('2000-01-01', '2100-01-01', freq='A')
+-            compare_utc_to_local(tz_didx, utc_didx)
+-            compare_local_to_utc(tz_didx, utc_didx)
+-
+-        # Check empty array
+-        result = conversion.tz_convert(np.array([], dtype=np.int64),
+-                                       timezones.maybe_get_tz('US/Eastern'),
+-                                       timezones.maybe_get_tz('Asia/Tokyo'))
+-        tm.assert_numpy_array_equal(result, np.array([], dtype=np.int64))
+-
+-        # Check all-NaT array
+-        result = conversion.tz_convert(np.array([tslib.iNaT], dtype=np.int64),
+-                                       timezones.maybe_get_tz('US/Eastern'),
+-                                       timezones.maybe_get_tz('Asia/Tokyo'))
+-        tm.assert_numpy_array_equal(result, np.array(
+-            [tslib.iNaT], dtype=np.int64))
+diff --git a/pandas/tests/tslibs/test_conversion.py b/pandas/tests/tslibs/test_conversion.py
+new file mode 100644
+index 000000000..76038136c
+--- /dev/null
++++ b/pandas/tests/tslibs/test_conversion.py
+@@ -0,0 +1,57 @@
++# -*- coding: utf-8 -*-
++
++import numpy as np
++import pytest
++
++import pandas.util.testing as tm
++from pandas import date_range
++from pandas._libs.tslib import iNaT
++from pandas._libs.tslibs import conversion, timezones
++
++
++def compare_utc_to_local(tz_didx, utc_didx):
++    f = lambda x: conversion.tz_convert_single(x, 'UTC', tz_didx.tz)
++    result = conversion.tz_convert(tz_didx.asi8, 'UTC', tz_didx.tz)
++    result_single = np.vectorize(f)(tz_didx.asi8)
++    tm.assert_numpy_array_equal(result, result_single)
++
++
++def compare_local_to_utc(tz_didx, utc_didx):
++    f = lambda x: conversion.tz_convert_single(x, tz_didx.tz, 'UTC')
++    result = conversion.tz_convert(utc_didx.asi8, tz_didx.tz, 'UTC')
++    result_single = np.vectorize(f)(utc_didx.asi8)
++    tm.assert_numpy_array_equal(result, result_single)
++
++
++class TestTZConvert(object):
++
++    @pytest.mark.parametrize('tz', ['UTC', 'Asia/Tokyo',
++                                    'US/Eastern', 'Europe/Moscow'])
++    def test_tz_convert_single_matches_tz_convert_hourly(self, tz):
++        # US: 2014-03-09 - 2014-11-11
++        # MOSCOW: 2014-10-26  /  2014-12-31
++        tz_didx = date_range('2014-03-01', '2015-01-10', freq='H', tz=tz)
++        utc_didx = date_range('2014-03-01', '2015-01-10', freq='H')
++        compare_utc_to_local(tz_didx, utc_didx)
++
++        # local tz to UTC can be differ in hourly (or higher) freqs because
++        # of DST
++        compare_local_to_utc(tz_didx, utc_didx)
++
++    @pytest.mark.parametrize('tz', ['UTC', 'Asia/Tokyo',
++                                    'US/Eastern', 'Europe/Moscow'])
++    @pytest.mark.parametrize('freq', ['D', 'A'])
++    def test_tz_convert_single_matches_tz_convert(self, tz, freq):
++        tz_didx = date_range('2000-01-01', '2020-01-01', freq=freq, tz=tz)
++        utc_didx = date_range('2000-01-01', '2020-01-01', freq=freq)
++        compare_utc_to_local(tz_didx, utc_didx)
++        compare_local_to_utc(tz_didx, utc_didx)
++
++    @pytest.mark.parametrize('arr', [
++        pytest.param(np.array([], dtype=np.int64), id='empty'),
++        pytest.param(np.array([iNaT], dtype=np.int64), id='all_nat')])
++    def test_tz_convert_corner(self, arr):
++        result = conversion.tz_convert(arr,
++                                       timezones.maybe_get_tz('US/Eastern'),
++                                       timezones.maybe_get_tz('Asia/Tokyo'))
++        tm.assert_numpy_array_equal(result, arr)
+diff --git a/pandas/tests/tslibs/test_timezones.py b/pandas/tests/tslibs/test_timezones.py
+new file mode 100644
+index 000000000..603c5e3fe
+--- /dev/null
++++ b/pandas/tests/tslibs/test_timezones.py
+@@ -0,0 +1,37 @@
++# -*- coding: utf-8 -*-
++from datetime import datetime
++
++import pytest
++import pytz
++import dateutil.tz
++
++from pandas._libs.tslibs import timezones
++from pandas import Timestamp
++
++
++@pytest.mark.parametrize('tz_name', list(pytz.common_timezones))
++def test_cache_keys_are_distinct_for_pytz_vs_dateutil(tz_name):
++    if tz_name == 'UTC':
++        # skip utc as it's a special case in dateutil
++        return
++    tz_p = timezones.maybe_get_tz(tz_name)
++    tz_d = timezones.maybe_get_tz('dateutil/' + tz_name)
++    if tz_d is None:
++        # skip timezones that dateutil doesn't know about.
++        return
++    assert timezones._p_tz_cache_key(tz_p) != timezones._p_tz_cache_key(tz_d)
++
++
++def test_tzlocal():
++    # GH#13583
++    ts = Timestamp('2011-01-01', tz=dateutil.tz.tzlocal())
++    assert ts.tz == dateutil.tz.tzlocal()
++    assert "tz='tzlocal()')" in repr(ts)
++
++    tz = timezones.maybe_get_tz('tzlocal()')
++    assert tz == dateutil.tz.tzlocal()
++
++    # get offset using normal datetime for test
++    offset = dateutil.tz.tzlocal().utcoffset(datetime(2011, 1, 1))
++    offset = offset.total_seconds() * 1000000000
++    assert ts.value + offset == Timestamp('2011-01-01').value
+diff --git a/setup.py b/setup.py
+index 2332503e5..c66979dd1 100755
+--- a/setup.py
++++ b/setup.py
+@@ -617,7 +617,8 @@ ext_data = {
+         'pyxfile': '_libs/testing'},
+     '_libs.window': {
+         'pyxfile': '_libs/window',
+-        'pxdfiles': ['_libs/skiplist', '_libs/src/util']},
++        'pxdfiles': ['_libs/skiplist', '_libs/src/util'],
++        'language': 'c++'},
+     '_libs.writers': {
+         'pyxfile': '_libs/writers',
+         'pxdfiles': ['_libs/src/util']},
+@@ -640,11 +641,11 @@ for name, data in ext_data.items():
+                     sources=sources,
+                     depends=data.get('depends', []),
+                     include_dirs=include,
++                    language=data.get('language', 'c'),
+                     extra_compile_args=extra_compile_args)
+ 
+     extensions.append(obj)
+ 
+-
+ # ----------------------------------------------------------------------
+ # msgpack
+ 
 -- 
 2.16.1
 
