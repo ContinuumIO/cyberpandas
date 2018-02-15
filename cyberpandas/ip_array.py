@@ -47,7 +47,7 @@ class IPType(ExtensionDtype):
 # -----------------------------------------------------------------------------
 
 
-class IPAddress(ExtensionArray):
+class IPArray(ExtensionArray):
     """Holder for things"""
     # A note on the internal data layout. IPv6 addresses require 128 bits,
     # which is more than a uint64 can store. So we use a NumPy structured array
@@ -141,7 +141,7 @@ class IPAddress(ExtensionArray):
 
     def __repr__(self):
         formatted = self._format_values()
-        return "IPAddress({!r})".format(formatted)
+        return "IPArray({!r})".format(formatted)
 
     def _format_values(self):
         formatted = []
@@ -166,12 +166,12 @@ class IPAddress(ExtensionArray):
         return self.data.tolist()
 
     @classmethod
-    def from_pyints(cls, values: T.Sequence[int]) -> 'IPAddress':
+    def from_pyints(cls, values: T.Sequence[int]) -> 'IPArray':
         return cls(_to_ipaddress_pyint(values))
 
     def __eq__(self, other):
         # TDOO: scalar ipaddress
-        if not isinstance(other, IPAddress):
+        if not isinstance(other, IPArray):
             return NotImplemented
         mask = self.isna() | other.isna()
         result = self.data == other.data
@@ -180,7 +180,7 @@ class IPAddress(ExtensionArray):
 
     def __lt__(self, other):
         # TDOO: scalar ipaddress
-        if not isinstance(other, IPAddress):
+        if not isinstance(other, IPArray):
             return NotImplemented
         mask = self.isna() | other.isna()
         result = ((self.data['hi'] <= other.data['hi']) &
@@ -189,7 +189,7 @@ class IPAddress(ExtensionArray):
         return result
 
     def __le__(self, other):
-        if not isinstance(other, IPAddress):
+        if not isinstance(other, IPArray):
             return NotImplemented
         mask = self.isna() | other.isna()
         result = ((self.data['hi'] <= other.data['hi']) &
@@ -198,18 +198,18 @@ class IPAddress(ExtensionArray):
         return result
 
     def __gt__(self, other):
-        if not isinstance(other, IPAddress):
+        if not isinstance(other, IPArray):
             return NotImplemented
         return other < self
 
     def __ge__(self, other):
-        if not isinstance(other, IPAddress):
+        if not isinstance(other, IPArray):
             return NotImplemented
         return other <= self
 
     def equals(self, other):
-        if not isinstance(other, IPAddress):
-            raise TypeError("Cannot compare 'IPAddress' "
+        if not isinstance(other, IPArray):
+            raise TypeError("Cannot compare 'IPArray' "
                             "to type '{}'".format(type(other)))
         # TODO: missing
         return (self.data == other.data).all()
@@ -283,7 +283,7 @@ class IPAddress(ExtensionArray):
 
         Examples
         --------
-        >>> s = IPAddress(['192.168.1.1', '255.255.255.255'])
+        >>> s = IPArray(['192.168.1.1', '255.255.255.255'])
         >>> s.isin('192.168.1.0/24')
         array([ True, False])
         """
@@ -353,7 +353,7 @@ class IPAddress(ExtensionArray):
 class IPAddressIndex(pd.Index):
     _typ = 'ipaddressindex'
     _attributes = ['name']
-    _holder = IPAddress
+    _holder = IPArray
 
     def __new__(cls, data=None, name=None):
         from .parser import _to_ip_array

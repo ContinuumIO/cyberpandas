@@ -7,11 +7,11 @@ import cyberpandas as ip
 class TestIP(BaseArrayTests):
     @pytest.fixture
     def data(self):
-        return ip.IPAddress(list(range(100)))
+        return ip.IPArray(list(range(100)))
 
     @pytest.fixture
     def data_missing(self):
-        return ip.IPAddress([0, 1])
+        return ip.IPArray([0, 1])
 
     @pytest.fixture
     def na_cmp(self):

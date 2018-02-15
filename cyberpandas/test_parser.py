@@ -1,6 +1,6 @@
 import pytest
 
-from cyberpandas import parser, IPAddress
+from cyberpandas import parser, IPArray
 
 
 @pytest.mark.parametrize('values', [
@@ -13,7 +13,7 @@ from cyberpandas import parser, IPAddress
 ])
 def test_to_ipaddress(values):
     result = parser.to_ipaddress(values)
-    expected = IPAddress.from_pyints([
+    expected = IPArray.from_pyints([
         3232235777,
         42540766452641154071740215577757643572
     ])

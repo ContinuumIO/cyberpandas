@@ -49,9 +49,9 @@ details.
 
 The proposal is to add
 
-1.  A type and container for IPAddress and MACAddress (similar to
+1.  A type and container for IPArray and MACAddress (similar to
     `CategoricalDtype` and `Categorical`).
-2.  A block for IPAddress and MACAddress (similar to `CategoricalBlock`).
+2.  A block for IPArray and MACAddress (similar to `CategoricalBlock`).
 3.  A new accessor for Series and Indexes, `.ip`, for operating on IP
     addresses and MAC addresses (similar to `.cat`).
 
@@ -97,19 +97,19 @@ See [here](https://tools.ietf.org/html/rfc2373.html#section-2.5.2).
 
 ### Methods
 
-The new user-facing `IPAddress` (analogous to a `Categorical`) will have
+The new user-facing `IPArray` (analogous to a `Categorical`) will have
 a few methods for easily constructing arrays of IP addresses.
 
 ```python
-IPAddress.from_pyints(cls, values: Sequence[int]) -> 'IPAddress':
-    """Construct an IPAddress array from a sequence of python integers.
+IPArray.from_pyints(cls, values: Sequence[int]) -> 'IPArray':
+    """Construct an IPArray array from a sequence of python integers.
 
-    >>> IPAddress.from_pyints([10, 18446744073709551616])
-    <IPAddress(['0.0.0.10', '::1'])>
+    >>> IPArray.from_pyints([10, 18446744073709551616])
+    <IPArray(['0.0.0.10', '::1'])>
     """
 
-IPAddress.from_str(cls, values: Sequence[str]) -> 'IPAddress':
-    """Construct an IPAddress from a sequence of strings."""
+IPArray.from_str(cls, values: Sequence[str]) -> 'IPArray':
+    """Construct an IPArray from a sequence of strings."""
 ```
 
 The methods in the new `.ip` namespace should follow the standard
@@ -159,14 +159,14 @@ In [1]: import pandas as pd
 
 In [2]: import cyberpandas as ip
 
-In [3]: arr = ip.IPAddress.from_pyints([1, 2])
+In [3]: arr = ip.IPArray.from_pyints([1, 2])
 
 In [4]: arr
-Out[4]: <IPAddress(['0.0.0.1', '0.0.0.2'])>
+Out[4]: <IPArray(['0.0.0.1', '0.0.0.2'])>
 
 In [5]: pd.Series(arr)
 Out[5]:
-0    <IPAddress(['0.0.0.1', '0.0.0.2'])>
+0    <IPArray(['0.0.0.1', '0.0.0.2'])>
 dtype: object
 ```
 

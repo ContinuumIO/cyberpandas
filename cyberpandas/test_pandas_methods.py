@@ -10,14 +10,14 @@ import cyberpandas as ip
 
 @pytest.fixture
 def series():
-    return pd.Series(ip.IPAddress.from_pyints([0, 1, 2]))
+    return pd.Series(ip.IPArray.from_pyints([0, 1, 2]))
 
 
 @pytest.fixture
 def frame():
-    return pd.DataFrame({"A": ip.IPAddress.from_pyints([0, 1, 2]),
+    return pd.DataFrame({"A": ip.IPArray.from_pyints([0, 1, 2]),
                          "B": [0, 1, 2],
-                         "C": ip.IPAddress.from_pyints([0, 1, 2])})
+                         "C": ip.IPArray.from_pyints([0, 1, 2])})
 
 
 @pytest.fixture(params=['series', 'frame'])
@@ -100,9 +100,9 @@ def test_loc_frame(frame):
 
 def test_reindex(frame):
     result = frame.reindex([0, 10])
-    expected = pd.DataFrame({"A": ip.IPAddress.from_pyints([0, 0]),
+    expected = pd.DataFrame({"A": ip.IPArray.from_pyints([0, 0]),
                              "B": [0, np.nan],
-                             "C": ip.IPAddress.from_pyints([0, 0])},
+                             "C": ip.IPArray.from_pyints([0, 0])},
                             index=[0, 10])
     tm.assert_frame_equal(result, expected)
 
@@ -127,16 +127,16 @@ def test_isna_frame(frame):
 
 @pytest.mark.xfail(reason="Not implemented")
 def test_fillna():
-    result = pd.Series(ip.IPAddress([1, 0])).fillna(method='ffill')
-    expected = pd.Series(ip.IPAddress([1, 1]))
+    result = pd.Series(ip.IPArray([1, 0])).fillna(method='ffill')
+    expected = pd.Series(ip.IPArray([1, 1]))
     tm.assert_series_equal(result, expected)
 
 
 @pytest.mark.xfail(reason="Not implemented")
 def test_dropna():
-    missing = pd.Series(ip.IPAddress([1, 0]))
+    missing = pd.Series(ip.IPArray([1, 0]))
     result = missing.dropna()
-    expected = pd.Series(ip.IPAddress([1]))
+    expected = pd.Series(ip.IPArray([1]))
     tm.assert_series_equal(result, expected)
 
     result = missing.to_frame().dropna()
