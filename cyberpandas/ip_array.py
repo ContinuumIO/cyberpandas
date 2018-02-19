@@ -35,7 +35,7 @@ class IPType(ExtensionDtype):
     type = IPv4v6Base
     kind = 'O'
     mybase = np.dtype([('hi', '>u8'), ('lo', '>u8')])
-    fill_value = ipaddress.IPv4Address(0)
+    na_value = ipaddress.IPv4Address(0)
 
     @classmethod
     def construct_from_string(cls, string):
@@ -59,7 +59,6 @@ class IPArray(ExtensionArray):
     # all IP traffic is big-endian.
     __array_priority__ = 1000
     _dtype = IPType()
-    _typ = 'ip'
     ndim = 1
     can_hold_na = True
 
@@ -90,7 +89,7 @@ class IPArray(ExtensionArray):
     def take(self, indexer, allow_fill=True, fill_value=None):
         mask = indexer == -1
         result = self.data.take(indexer)
-        result[mask] = unpack(pack(int(self._fill_value)))
+        result[mask] = unpack(pack(int(self.na_value)))
         return type(self)(result)
 
     def _formatting_values(self):
@@ -132,8 +131,8 @@ class IPArray(ExtensionArray):
         return iter(self.to_pyipaddress())
 
     @property
-    def _fill_value(self):
-        return self.dtype.fill_value
+    def na_value(self):
+        return self.dtype.na_value
 
     def to_pyipaddress(self):
         import ipaddress

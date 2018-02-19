@@ -1,25 +1,73 @@
 import pytest
-from pandas.tests.extension.base import BaseArrayTests
+from pandas.tests.extension import base
 
 import cyberpandas as ip
 
 
-class TestIP(BaseArrayTests):
-    @pytest.fixture
-    def data(self):
-        return ip.IPArray(list(range(100)))
+@pytest.fixture
+def dtype():
+    return ip.IPType()
 
-    @pytest.fixture
-    def data_missing(self):
-        return ip.IPArray([0, 1])
 
-    @pytest.fixture
-    def na_cmp(self):
-        """Binary operator for comparing NA values.
+@pytest.fixture
+def data():
+    return ip.IPArray(list(range(100)))
 
-        Should return a function of two arguments that returns
-        True if both arguments are (scalar) NA for your type.
 
-        By defult, uses ``operator.or``
-        """
-        return lambda x, y: int(x) == int(y) == 0
+@pytest.fixture
+def data_missing():
+    return ip.IPArray([0, 1])
+
+
+@pytest.fixture(params=['data', 'data_missing'])
+def all_data(request, data, data_missing):
+    """Parametrized fixture giving 'data' and 'data_missing'"""
+    if request.param == 'data':
+        return data
+    elif request.param == 'data_missing':
+        return data_missing
+
+
+@pytest.fixture
+def na_cmp():
+    """Binary operator for comparing NA values.
+
+    Should return a function of two arguments that returns
+    True if both arguments are (scalar) NA for your type.
+
+    By defult, uses ``operator.or``
+    """
+    return lambda x, y: int(x) == int(y) == 0
+
+
+@pytest.fixture
+def na_value():
+    return ip.IPType.na_value
+
+
+class TestDtype(base.BaseDtypeTests):
+    pass
+
+
+class TestInterface(base.BaseInterfaceTests):
+    pass
+
+
+class TestConstructors(base.BaseConstructorsTests):
+    pass
+
+
+class TestReshaping(base.BaseReshapingTests):
+    pass
+
+
+class TestGetitem(base.BaseGetitemTests):
+    pass
+
+
+class TestMissing(base.BaseMissingTests):
+    pass
+
+
+class TestMethods(base.BaseMethodsTests):
+    pass
