@@ -3,7 +3,7 @@
 all: build-pandas build-cyberpandas
 
 build-pandas-%:
-	LDFLAGS="-headerpad_max_install_name" conda build conda-recipes/pandas $(patsubst build-pandas-%,--python=%,$@)
+	LDFLAGS="-headerpad_max_install_name" conda build conda-recipes/pandas $(patsubst build-pandas-%,--python=%,$@) -u intake
 
-build-cyberpandas:
-	LDFLAGS="-headerpad_max_install_name" conda build conda-recipes/cyberpandas
+build-cyberpandas-%:
+	LDFLAGS="-headerpad_max_install_name" conda build conda-recipes/cyberpandas $(patsubst build-cyberpandas-%,--python=%,$@) -u intake
