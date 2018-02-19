@@ -220,7 +220,7 @@ class IPArray(ExtensionArray):
 
     def isna(self):
         ips = self.data
-        return ips['lo'] - ips['hi'] == 0
+        return (ips['lo'] == 0) & (ips['lo'] - ips['hi'] == 0)
 
     @property
     def is_ipv4(self):

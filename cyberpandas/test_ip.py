@@ -36,10 +36,10 @@ def test_repr_works():
 
 
 def test_isna():
-    v = ip.IPArray.from_pyints([0, 2, 3])
+    v = ip.IPArray.from_pyints([0, 2, 2 ** 64, 2 ** 64 + 1, 2 ** 64 + 2])
     r1 = v.isna()
     r2 = pd.isna(v)
-    expected = np.array([True, False, False])
+    expected = np.array([True, False, False, False, False])
 
     np.testing.assert_array_equal(r1, expected)
     np.testing.assert_array_equal(r2, expected)
