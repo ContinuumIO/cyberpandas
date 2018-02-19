@@ -2,6 +2,7 @@ import ipaddress
 import operator
 
 import pytest
+import six
 from hypothesis.strategies import integers, lists, tuples
 from hypothesis import given, example
 
@@ -25,8 +26,12 @@ def test_make_container():
 def test_repr_works():
     values = ip.IPArray.from_pyints([0, 1, 2, 3, 2**32, 2**64 + 1])
     result = repr(values)
-    expected = ("IPArray(['0.0.0.0', '0.0.0.1', '0.0.0.2', '0.0.0.3', "
-                "'::1:0:0', '::1:0:0:0:1'])")
+    if six.PY2:
+        expected = ("IPArray([u'0.0.0.0', u'0.0.0.1', u'0.0.0.2', u'0.0.0.3', "
+                    "u'::1:0:0', u'::1:0:0:0:1'])")
+    else:
+        expected = ("IPArray(['0.0.0.0', '0.0.0.1', '0.0.0.2', '0.0.0.3', "
+                    "'::1:0:0', '::1:0:0:0:1'])")
     assert result == expected
 
 
@@ -71,8 +76,8 @@ def test_to_pyipaddress():
 
 def test_isip():
     v = ip.to_ipaddress([
-        '192.168.1.1',
-        '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
+        u'192.168.1.1',
+        u'2001:0db8:85a3:0000:0000:8a2e:0370:7334',
     ])
     result = v.is_ipv4
     expected = np.array([True, False])
@@ -85,15 +90,15 @@ def test_isip():
 
 def test_equality():
     v1 = ip.to_ipaddress([
-        '192.168.1.1',
-        '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
+        u'192.168.1.1',
+        u'2001:0db8:85a3:0000:0000:8a2e:0370:7334',
     ])
     assert np.all(v1 == v1)
     assert v1.equals(v1)
 
     v2 = ip.to_ipaddress([
-        '192.168.1.2',
-        '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
+        u'192.168.1.2',
+        u'2001:0db8:85a3:0000:0000:8a2e:0370:7334',
     ])
     result = v1 == v2
     expected = np.array([False, True])
@@ -112,6 +117,7 @@ def test_equality():
     operator.ge,
     operator.gt,
 ])
+@pytest.mark.skipif(six.PY2, reason="Flexible comparisons")
 def test_comparison_raises(op):
     arr = ip.IPArray([0, 1, 2])
     with pytest.raises(TypeError):
@@ -188,8 +194,8 @@ def test_attributes(prop):
 
 
 def test_isin():
-    s = ip.IPArray(['192.168.1.1', '255.255.255.255'])
-    result = s.isin(['192.168.1.0/24'])
+    s = ip.IPArray([u'192.168.1.1', u'255.255.255.255'])
+    result = s.isin([u'192.168.1.0/24'])
     expected = np.array([True, False])
     tm.assert_numpy_array_equal(result, expected)
 
@@ -208,7 +214,7 @@ def test_getitem_slice():
 
 
 @pytest.mark.parametrize('value', [
-    '0.0.0.10',
+    u'0.0.0.10',
     10,
     ipaddress.ip_address(10),
 ])
