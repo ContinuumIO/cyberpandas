@@ -1,691 +1,8 @@
-From aa53475b3843febd0eaa79410dd9ed43dddcbe30 Mon Sep 17 00:00:00 2001
-From: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date: Thu, 15 Feb 2018 12:58:58 -0600
-Subject: [PATCH] Squashed commit of the following:
-
-commit f09c86334493cfe57b994547f3fdacb2afbc9f4c
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Thu Feb 15 10:37:44 2018 -0600
-
-    Don't use fastpath for ExtensionBlock make_block
-
-commit f8eac55e3f1ece94bc4a173cd84874faeb73fc5a
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Thu Feb 15 08:27:22 2018 -0600
-
-    Exact bound for FP
-
-commit 78834f1c165a2a7ffec5a06abc8972bb5631390c
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Thu Feb 15 06:58:51 2018 -0600
-
-    Lower bound on FP
-
-commit 412c951c6e9e2af49866da2ce5f3cf9015bf88a7
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Wed Feb 14 16:55:31 2018 -0600
-
-    No stacklevel
-
-commit 905d72e475850578fef9b69c4e82f716459e7d06
-Merge: 29d252827 11de13140
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Wed Feb 14 16:32:18 2018 -0600
-
-    Merge remote-tracking branch 'upstream/master' into pandas-array-upstream+fu1
-
-commit 29d252827514f5c14433f8b874a5a41d5a22372f
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Wed Feb 14 14:55:54 2018 -0600
-
-    More parquet test catching
-
-commit d34d9cadd8526adf06dda9ff53b2104a13530d4e
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Wed Feb 14 13:33:10 2018 -0600
-
-    Restore circle env var
-
-commit 4599db453346e09ffdb84c5289e343d79213aed0
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Wed Feb 14 06:31:45 2018 -0600
-
-    Unicode literals strikes again.
-
-    Only catch fp warning for newer numpy
-
-commit 9e17037cfb914f715a136df19995e98aa4449ede
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Tue Feb 13 17:08:50 2018 -0600
-
-    fastparquet warnings
-
-commit 02c3d401771a308b88b1b5d98827c1bb489f223b
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Tue Feb 13 16:31:18 2018 -0600
-
-    Explicitly catch warnings or not
-
-commit 758689feb26851a0cdddef61f7b0227c4b23ad20
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Tue Feb 13 15:44:20 2018 -0600
-
-    Revert "Always set PANDAS_TESTING_MODE"
-
-    This reverts commit a312ba5c59c2e96854a286bde74d7fd4562afbf8.
-
-commit a312ba5c59c2e96854a286bde74d7fd4562afbf8
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Tue Feb 13 11:10:22 2018 -0600
-
-    Always set PANDAS_TESTING_MODE
-
-commit c4dab88c29b72a4efb3a4cee7df210cdf9555361
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Tue Feb 13 08:56:33 2018 -0600
-
-    Test cleanpu
-
-commit 1436d1dc1e395f030f9d9e0e0d54e64ea37ba391
-Merge: 0f5e4f064 df38f66b4
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Tue Feb 13 08:51:25 2018 -0600
-
-    Merge remote-tracking branch 'upstream/master' into pandas-array-upstream+fu1
-
-commit 0f5e4f06478a1ed5a956a33220a2114399551377
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Tue Feb 13 06:49:35 2018 -0600
-
-    Docs
-
-commit 1e8e87e7ed20d07f422fd7b518b33f3c0fbc0512
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Tue Feb 13 06:42:01 2018 -0600
-
-    Remove unused change
-
-commit 3a5118b6df4066aa3016f9f4550cbd2edfa507b8
-Merge: b4de5c4ce 3af8a21ea
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Tue Feb 13 06:03:44 2018 -0600
-
-    Merge branch 'index-values' into pandas-array-upstream+fu1
-
-commit 3af8a21ea0e13ba5fc73db464f6e327552c71b0e
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Tue Feb 13 05:54:27 2018 -0600
-
-    Override nbytes
-
-commit d6e8051d1ebab7cf99bd7ac23eea348d0e3a0d4c
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Mon Feb 12 20:55:19 2018 -0600
-
-    Cleanup
-
-commit c233c28d638f78a12a1cec41bfec0fd7c9c407b5
-Merge: 34a6a22e2 d9551c8ee
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Mon Feb 12 18:24:49 2018 -0600
-
-    Merge remote-tracking branch 'upstream/master' into index-values
-
-commit b4de5c4ce88231910bb3c0dccd8179b029226386
-Merge: 4d0821867 34a6a22e2
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Mon Feb 12 13:20:07 2018 -0600
-
-    Merge branch 'index-values' into pandas-array-upstream+fu1
-
-commit 34a6a22e2255eb11e5c6b6c5478350fb84ce656e
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Mon Feb 12 13:11:00 2018 -0600
-
-    PERF: Avoid materializing values for PeriodIndex shape, size
-
-commit 8fcdb7040345e1d0017367695354d9c858c71e09
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Mon Feb 12 13:09:13 2018 -0600
-
-    PERF: Implement size, shape for IntervalIndex
-
-commit 0cd9faa5b42df01c96a8dddb7f7a73cea32d0a91
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Mon Feb 12 13:04:50 2018 -0600
-
-    REF: Use _values for size and shape
-
-commit f8e29b918f7b4cc306ff7b18efa549e17aedbbe9
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Mon Feb 12 09:53:55 2018 -0600
-
-    lint
-
-commit 4d0821867b72f52f22e0ff1ca29cdf5a393adf22
-Merge: 0ec6958ca 8104ee5d8
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Mon Feb 12 09:47:08 2018 -0600
-
-    Merge branch 'index-values' into pandas-array-upstream+fu1
-
-commit 8104ee5d8a887454fec6869eb1f4e63fe74d72e6
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Mon Feb 12 08:40:56 2018 -0600
-
-    REF: Update per comments
-
-commit 0ec6958ca555ca8949d65f81348aa3468d4702a1
-Merge: cb740ed96 d74c5c960
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Mon Feb 12 07:01:15 2018 -0600
-
-    Merge branch 'index-values' into pandas-array-upstream+fu1
-
-commit d74c5c96040882378e3598e0df27e59aff57de51
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Mon Feb 12 06:33:05 2018 -0600
-
-    Fixed test
-
-commit f368c29d6a45832f95181a8a6e8b7411d87763c7
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Sun Feb 11 14:33:46 2018 -0600
-
-    Move test locations
-
-commit a727b217f42e959f9ebb355e911f3ec641db0b49
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Sun Feb 11 14:27:46 2018 -0600
-
-    Clean up tolist
-
-commit 815d202e96e910a64a292f6815737447ffdc1847
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Sun Feb 11 14:13:50 2018 -0600
-
-    Push _ndarray_values to ExtensionArray
-
-    Now IndexOpsMixin._ndarray_values will dispatch all the way down to the EA.
-    Subclasses like Categorical can override it as they see fit.
-
-commit d9e8dd63e6d428aa5d54372d1a08f3fcf4a3bfe1
-Merge: 402620f3c 6485a3648
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Fri Feb 9 15:06:57 2018 -0600
-
-    Merge remote-tracking branch 'upstream/master' into index-values
-
-commit cb740ed960d99e3b9e687ba0dfc2013857e6338a
-Merge: d671259c2 6485a3648
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Fri Feb 9 14:58:16 2018 -0600
-
-    Merge remote-tracking branch 'upstream/master' into pandas-array-upstream+fu1
-
-commit d671259c25413d849ae015e13d9db195aa467876
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Fri Feb 9 13:47:22 2018 -0600
-
-    Move to extension
-
-commit 268aabcb88f8fcb803693bd5796b0cfcf244fab2
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Fri Feb 9 13:42:26 2018 -0600
-
-    Linting
-
-commit b556f83052c087545e0d0ee98025dd0d132bf514
-Merge: 0b112f21a 402620f3c
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Fri Feb 9 13:40:55 2018 -0600
-
-    Merge branch 'index-values' into pandas-array-upstream+fu1
-
-commit 402620f3ca75d14dd203f809226ec528113ae54c
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Fri Feb 9 13:35:24 2018 -0600
-
-    Precision in tests
-
-commit 170d0c7959a54276fff730b002195f46ec64de63
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Fri Feb 9 13:33:49 2018 -0600
-
-    Linting
-
-commit 0b112f21a80818d3ad9e7bb6f00c351edd9d1713
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Fri Feb 9 13:26:52 2018 -0600
-
-    cleanup
-
-commit c5db5da365e1b2ed439d56304d829a85ca6e7290
-Merge: 6abe9da01 512fb89e1
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Fri Feb 9 12:48:39 2018 -0600
-
-    Merge branch 'index-values' into pandas-array-upstream+fu1
-
-commit 512fb89e1a373718ee6b39e1970959c8b4f032c9
-Merge: 242562108 a214915e2
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Fri Feb 9 11:47:40 2018 -0600
-
-    Merge remote-tracking branch 'upstream/master' into index-values
-
-commit 6abe9da01ee0be4bb2d87f649b2c6066d4ea3835
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Fri Feb 9 10:59:22 2018 -0600
-
-    cleanup
-
-    (cherry picked from commit 242562108b099b4e7a205541ee15b9272dcb5265)
-
-commit fc337de283dab1e98fe2f62d488eac1cd5293399
-Merge: 829788865 a214915e2
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Fri Feb 9 11:39:30 2018 -0600
-
-    Merge remote-tracking branch 'upstream/master' into pandas-array-upstream+fu1
-
-commit 242562108b099b4e7a205541ee15b9272dcb5265
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Fri Feb 9 10:59:22 2018 -0600
-
-    cleanup
-
-commit f53652abd3c70e4ed81a118fa14fbaf4043133fa
-Merge: a9882e23d 7dcc86443
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Fri Feb 9 10:10:49 2018 -0600
-
-    Merge remote-tracking branch 'upstream/master' into index-values
-
-commit a9882e23defc47272f941932c4ce53af9b5ba0e6
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Fri Feb 9 10:10:34 2018 -0600
-
-    Update dev docs
-
-commit 32ee0eff6893bd02ed1469330054b0c37914306e
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Fri Feb 9 10:10:15 2018 -0600
-
-    Use base _values for CategoricalIndex
-
-commit 66b936f00b72e3152df807e6e5913f1111084cef
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Fri Feb 9 09:42:37 2018 -0600
-
-    NumPy compat
-
-commit b0dbffd72376d88bfc1dd8d4d89c890978686d4e
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Fri Feb 9 09:34:39 2018 -0600
-
-    cleanup
-
-commit 7b89f1b3dc80c23d02c8b57c9c5d94cd491082c8
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Fri Feb 9 08:36:44 2018 -0600
-
-    clean
-
-commit d7d31eecc1411f9d68755bd86f80b2a97a34776e
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Fri Feb 9 08:21:51 2018 -0600
-
-    Moved dtypes
-
-    (cherry picked from commit d1362271bca8a7b183f3241e5c2f040c422118b8)
-
-commit d49e6aa649a0b02ce612b9d18b663668ade6485a
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Thu Feb 8 17:05:46 2018 -0600
-
-    linting
-
-commit b012c1967b6de548b999514fe4b560ba9b7ee635
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Thu Feb 8 17:03:15 2018 -0600
-
-    tolist
-
-commit 5612cda29f77b5865df92bb97c6e7a2abde6bcb6
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Thu Feb 8 16:46:02 2018 -0600
-
-    better docstrings
-
-commit 2c4445a365d19979b400295ce6a7c671396cb0da
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Thu Feb 8 16:30:11 2018 -0600
-
-    Set-ops ugliness
-
-commit 46a0a49352a1242077e616056f802b0ce35eb8d9
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Thu Feb 8 15:46:36 2018 -0600
-
-    Py2 compat
-
-    (cherry picked from commit b20e12cae68dd86ff51597464045656763d369f7)
-
-commit fbbbc8a08b9bfe66cbe06621795163d65dbd3c77
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Thu Feb 8 15:22:43 2018 -0600
-
-    Simplify concat_as_object
-
-commit 0e637086e1e89ed7c580e5b731b030d524431a34
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Thu Feb 8 15:01:28 2018 -0600
-
-    API: Default ExtensionArray.astype
-
-    (cherry picked from commit 943a915562b72bed147c857de927afa0daf31c1a)
-    (cherry picked from commit fbf0a0672380e210d3cb3c527fa8045a204d81be)
-
-commit 55305dc197cf7444aa50eab3ba426d5b7244672a
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Thu Feb 8 14:29:08 2018 -0600
-
-    ndarray_values
-
-commit 9fbac2959dc34f64133b44fa8274189abcc07655
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Thu Feb 8 13:55:34 2018 -0600
-
-    More tests
-
-commit 9b8d2a51857a4d8c78ce09c6e54097ab9eddbb08
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Thu Feb 8 08:54:19 2018 -0600
-
-    Additional testing
-
-commit 7accb672b37e64cedd26fee0c64869a40887eabe
-Merge: 659073f8a b83512773
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Thu Feb 8 08:40:33 2018 -0600
-
-    Merge remote-tracking branch 'upstream/master' into index-values
-
-commit 82978886564fb299462b4a5752ff9ca9a47a48c3
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Thu Feb 8 08:34:55 2018 -0600
-
-    TST: Skip JSON tests on py2
-
-commit 340d11be7b4415238a7a89fea539abee7c07e338
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Thu Feb 8 08:30:20 2018 -0600
-
-    Xfail setitem tests
-
-commit 8ef34a96c359e2b1798803f83f1193f243d51328
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Thu Feb 8 08:16:09 2018 -0600
-
-    Test Categorical
-
-commit 8358fb10de6bc49d7f435e1332aabe9d5a31b85b
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Thu Feb 8 08:15:50 2018 -0600
-
-    Restore xfail test
-
-commit 27ab045e3d83871a9b28d532c8d44b0adc238fff
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Wed Feb 7 22:15:01 2018 -0600
-
-    Dropna works.
-
-commit 349ac1ab06bfb0f51793a75f9270737139001a4f
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Wed Feb 7 21:45:07 2018 -0600
-
-    better setitem
-
-commit 88b8f4fea5b588b7fb1c76abd3b599e100b4a8c3
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Wed Feb 7 16:54:17 2018 -0600
-
-    remove bad test
-
-commit b15ecac9a4aaaa0b7fbc4d4df0644affc25a5f20
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Wed Feb 7 16:52:38 2018 -0600
-
-    More failing tests
-
-commit 659073f8a67e513267048d467da715c60d885c51
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Wed Feb 7 15:14:32 2018 -0600
-
-    hmm
-
-commit b15ee5a000003e42bf65389308c7277b6461fd05
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Wed Feb 7 14:38:58 2018 -0600
-
-    Use values for intersection
-
-    I think eventually we'll want to ndarray_values for this, but it'll
-    require a bit more work to support. Currently, using ndarary_values
-    causes occasional failures on categorical.
-
-commit 476f75d3b8cf07fb9965a1fa96dcdf932a01bde8
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Wed Feb 7 14:29:02 2018 -0600
-
-    Simplify object concat
-
-commit 5a59591b63628459b56092f7ec37f9e2d6ca4167
-Merge: 3185f4e08 50528421a
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Wed Feb 7 14:12:00 2018 -0600
-
-    Merge remote-tracking branch 'upstream/master' into index-values
-
-commit ffa888a1dfe3db0e7569bb85d58ae7b81e221854
-Merge: 0a9d9fd94 50528421a
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Wed Feb 7 13:23:13 2018 -0600
-
-    Merge remote-tracking branch 'upstream/master' into pandas-array-upstream+fu1
-
-commit 3185f4e08fdde6736a02edb52da2647cae8d599c
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Wed Feb 7 13:17:40 2018 -0600
-
-    Cleanup unique handling
-
-commit 0a9d9fd94988245317852c9712cb856b85f85f36
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Wed Feb 7 09:25:58 2018 -0600
-
-    TST: Removed ops tests
-
-commit cd5f1eb37d8fc46b959d032becb21789f897bbdd
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Wed Feb 7 08:44:41 2018 -0600
-
-    Clarify binop tests
-
-    Make it clearer which bit might raise
-
-commit 10af4b6b934234a23c2ba35fce02e3af23546a2c
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Wed Feb 7 08:09:24 2018 -0600
-
-    Fixed extension block tests.
-
-    The only "API change" was that you can't just inherit from
-    NonConsolidatableMixin, which is OK since
-
-    1. it's a mixin
-    2. geopandas also inherits from Block
-
-commit 8b1e7d61bd8411b641c63b27f8e444b8b49dc51b
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Wed Feb 7 06:30:33 2018 -0600
-
-    Compat
-
-commit 82fd0c6ae185755e2e7f8c06b31155d4c2cefbf7
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Wed Feb 7 06:14:59 2018 -0600
-
-    Setitem tests, decimal example
-
-commit 05eb9f3e553fd3e1b4a62a65e68359293d5683a1
-Merge: a6ae340b4 93c86aa13
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Tue Feb 6 14:47:13 2018 -0600
-
-    Merge remote-tracking branch 'upstream/master' into pandas-array-upstream+fu1
-
-commit 29cfd7c22dd0b5b67c44144f1520f0bce8bf0e74
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Tue Feb 6 14:34:22 2018 -0600
-
-    Move to index base
-
-commit 41f09d899c4eaa726f0f0f7ffbc55d924a5dcab7
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Sat Feb 3 14:13:57 2018 -0600
-
-    REF/Clean: Internal / External values
-
-commit a6ae340b409cb018852fe7d1263f1e1d3742d08d
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Tue Feb 6 06:37:34 2018 -0600
-
-    Started setitem
-
-commit d356f191a569b0b3d8bdb15c63e2eb81889a4ecf
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Mon Feb 5 20:45:39 2018 -0600
-
-    Test fixups
-
-commit e6d06e2f0eb669e36f5d21645b3fb3e158ba7de7
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Mon Feb 5 15:37:48 2018 -0600
-
-    Fixed dropna
-
-commit 52e21802054d2801ac59003bda87319df04673b2
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Mon Feb 5 10:51:16 2018 -0600
-
-    Py2 compat
-
-commit 1608e3d3ace66ba4ef066c241a919131c6b0e416
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Mon Feb 5 10:31:02 2018 -0600
-
-    Implement value_counts
-
-commit 00d6bb33174f9c0d2d188e8d787894088bbe4fab
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Mon Feb 5 10:29:14 2018 -0600
-
-    Tests for value_counts
-
-commit b1db4e8d39d1193fe54c5b2435fb156b6d899be1
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Mon Feb 5 08:00:41 2018 -0600
-
-    Default __iter__
-
-commit 9f4ad42734f679d5e9a4bf38fa975e1a176dae12
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Mon Feb 5 07:00:46 2018 -0600
-
-    linting
-
-commit 5d4a68617ebafa1f3fdef8c209cf1d55709b0ab6
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Mon Feb 5 06:56:27 2018 -0600
-
-    Add a test array
-
-commit ca004d8219a43a7da21a44030be03a78e077194b
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Sat Feb 3 16:03:16 2018 -0600
-
-    32-bit compat
-
-commit 80f83a6d78652d76955535407cbc410a860e5907
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Sat Feb 3 13:41:34 2018 -0600
-
-    Consistent boxing / unboxing
-
-    NumPy compat
-
-commit 9211bbdbde9537b2dffc51697afd0985f8ba2648
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Sat Feb 3 07:00:33 2018 -0600
-
-    BUG: Use original object for extension array
-
-commit 9cd92c73eb35c4ba38866d77cfabdc1a8341e9dd
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Sat Feb 3 07:00:20 2018 -0600
-
-    COMPAT: py2 Super
-
-commit b7069efa4c1a074a7adcb37ed810774bae94ef5e
-Author: Tom Augspurger <tom.w.augspurger@gmail.com>
-Date:   Fri Feb 2 15:29:55 2018 -0600
-
-    ENH: non-interval changes
----
- circle.yml                                    |   1 +
- pandas/core/algorithms.py                     |   3 +-
- pandas/core/arrays/base.py                    |  80 ++++-
- pandas/core/arrays/categorical.py             |   4 +
- pandas/core/dtypes/base.py                    |  12 +-
- pandas/core/dtypes/common.py                  |   2 +-
- pandas/core/dtypes/missing.py                 |  30 +-
- pandas/core/frame.py                          |  21 +-
- pandas/core/indexes/base.py                   |   4 +-
- pandas/core/indexing.py                       |   3 +
- pandas/core/internals.py                      |  42 ++-
- pandas/core/series.py                         |  28 +-
- pandas/tests/extension/base.py                | 455 ++++++++++++++++++++++++++
- pandas/tests/extension/test_categorical.py    |  62 ++++
- pandas/tests/extension/test_decimal.py        | 143 ++++++++
- pandas/tests/extension/test_json.py           | 135 ++++++++
- pandas/tests/internals/test_external_block.py |   4 +-
- pandas/tests/io/test_parquet.py               |  50 ++-
- 18 files changed, 1021 insertions(+), 58 deletions(-)
- create mode 100644 pandas/tests/extension/base.py
- create mode 100644 pandas/tests/extension/test_categorical.py
- create mode 100644 pandas/tests/extension/test_decimal.py
- create mode 100644 pandas/tests/extension/test_json.py
-
-diff --git a/circle.yml b/circle.yml
-index 9d49145af..dd322c80d 100644
---- a/circle.yml
-+++ b/circle.yml
-@@ -2,6 +2,7 @@ machine:
-   environment:
-     # these are globally set
-     MINICONDA_DIR: /home/ubuntu/miniconda3
-+    PANDAS_TESTING_MODE: deprecate
- 
- 
- database:
 diff --git a/pandas/core/algorithms.py b/pandas/core/algorithms.py
-index c754c063f..427ec5af2 100644
+index c754c063f..d22fe1e3b 100644
 --- a/pandas/core/algorithms.py
 +++ b/pandas/core/algorithms.py
-@@ -15,6 +15,7 @@ from pandas.core.dtypes.common import (
+@@ -15,11 +15,12 @@ from pandas.core.dtypes.common import (
      is_unsigned_integer_dtype, is_signed_integer_dtype,
      is_integer_dtype, is_complex_dtype,
      is_object_dtype,
@@ -693,7 +10,13 @@ index c754c063f..427ec5af2 100644
      is_categorical_dtype, is_sparse,
      is_period_dtype,
      is_numeric_dtype, is_float_dtype,
-@@ -542,7 +543,7 @@ def value_counts(values, sort=True, ascending=False, normalize=False,
+     is_bool_dtype, needs_i8_conversion,
+-    is_categorical, is_datetimetz,
++    is_datetimetz,
+     is_datetime64_any_dtype, is_datetime64tz_dtype,
+     is_timedelta64_dtype, is_interval_dtype,
+     is_scalar, is_list_like,
+@@ -542,10 +543,10 @@ def value_counts(values, sort=True, ascending=False, normalize=False,
  
      else:
  
@@ -701,29 +24,70 @@ index c754c063f..427ec5af2 100644
 +        if is_extension_array_dtype(values) or is_sparse(values):
  
              # handle Categorical and sparse,
-             result = Series(values).values.value_counts(dropna=dropna)
+-            result = Series(values).values.value_counts(dropna=dropna)
++            result = Series(values)._values.value_counts(dropna=dropna)
+             result.name = name
+             counts = result.values
+ 
+@@ -1290,10 +1291,13 @@ def take_nd(arr, indexer, axis=0, out=None, fill_value=np.nan, mask_info=None,
+     """
+     Specialized Cython take which sets NaN values in one pass
+ 
++    This dispatches to ``take`` defined on ExtensionArrays. It does not
++    currently dispatch to ``SparseArray.take`` for sparse ``arr``.
++
+     Parameters
+     ----------
+-    arr : ndarray
+-        Input array
++    arr : ndarray, ExtensionArray, DatetimeIndex, IntervalIndex, SparseArray
++        Input array.
+     indexer : ndarray
+         1-D array of indices to take, subarrays corresponding to -1 value
+         indicies are filed with fill_value
+@@ -1313,12 +1317,17 @@ def take_nd(arr, indexer, axis=0, out=None, fill_value=np.nan, mask_info=None,
+         If False, indexer is assumed to contain no -1 values so no filling
+         will be done.  This short-circuits computation of a mask.  Result is
+         undefined if allow_fill == False and -1 is present in indexer.
++
++    Returns
++    -------
++    subarray : object
++        May be the same type as the input, or cast to an ndarray.
+     """
+ 
++    # TODO(EA): Remove these if / elifs as datetimeTZ, interval, become EAs
+     # dispatch to internal type takes
+-    if is_categorical(arr):
+-        return arr.take_nd(indexer, fill_value=fill_value,
+-                           allow_fill=allow_fill)
++    if is_extension_array_dtype(arr):
++        return arr.take(indexer, fill_value=fill_value, allow_fill=allow_fill)
+     elif is_datetimetz(arr):
+         return arr.take(indexer, fill_value=fill_value, allow_fill=allow_fill)
+     elif is_interval_dtype(arr):
 diff --git a/pandas/core/arrays/base.py b/pandas/core/arrays/base.py
-index e618dc6b6..e9d56a0e9 100644
+index e618dc6b6..887326625 100644
 --- a/pandas/core/arrays/base.py
 +++ b/pandas/core/arrays/base.py
-@@ -25,14 +25,14 @@ class ExtensionArray(object):
+@@ -25,14 +25,13 @@ class ExtensionArray(object):
      * isna
      * take
      * copy
 -    * _formatting_values
      * _concat_same_type
  
-     Some additional methods are required to satisfy pandas' internal, private
+-    Some additional methods are required to satisfy pandas' internal, private
++    Some additional methods are available to satisfy pandas' internal, private
      block API.
  
 -    * _concat_same_type
      * _can_hold_na
 +    * _formatting_values
-+    * _fill_value
  
      This class does not inherit from 'abc.ABCMeta' for performance reasons.
      Methods and properties required by the interface raise
-@@ -53,9 +53,6 @@ class ExtensionArray(object):
+@@ -53,13 +52,14 @@ class ExtensionArray(object):
      Extension arrays should be able to be constructed with instances of
      the class, i.e. ``ExtensionArray(extension_array)`` should return
      an instance, not error.
@@ -731,9 +95,17 @@ index e618dc6b6..e9d56a0e9 100644
 -    Additionally, certain methods and interfaces are required for proper
 -    this array to be properly stored inside a ``DataFrame`` or ``Series``.
      """
++    # '_typ' is for pandas.core.dtypes.generic.ABCExtensionArray.
++    # Don't override this.
++    _typ = 'extension'
      # ------------------------------------------------------------------------
      # Must be a Sequence
-@@ -92,7 +89,37 @@ class ExtensionArray(object):
+     # ------------------------------------------------------------------------
++
+     def __getitem__(self, item):
+         # type (Any) -> Any
+         """Select a subset of self.
+@@ -92,7 +92,41 @@ class ExtensionArray(object):
          raise AbstractMethodError(self)
  
      def __setitem__(self, key, value):
@@ -744,19 +116,26 @@ index e618dc6b6..e9d56a0e9 100644
 +        Parameters
 +        ----------
 +        key : int or ndarray
-+            When called from, e.g. ``Series.__setitem__``, ``key`` will
-+            always be an ndarray of integers.
++            When called from, e.g. ``Series.__setitem__``, ``key`` will be
++            one of
++
++            * scalar int
++            * ndarray of integers.
++            * boolean ndarray
++            * slice object
++
 +        value : ExtensionDtype.type, Sequence[ExtensionDtype.type], or object
-+            ExtensionArrays may
++            value or values to be set of ``key``.
 +
 +        Notes
 +        -----
 +        This method is not required to satisfy the interface. If an
 +        ExtensionArray chooses to implement __setitem__, then some semantics
-+        should be observed.
++        should be observed:
 +
 +        * Setting multiple values : ExtensionArrays should support setting
-+          multiple values at once, ``key`` will be a sequence of integers.
++          multiple values at once, ``key`` will be a sequence of integers and
++          ``value`` will be a same-length sequence.
 +
 +        * Broadcasting : For a sequence ``key`` and a scalar ``value``,
 +          each position in ``key`` should be set to ``value``.
@@ -765,14 +144,11 @@ index e618dc6b6..e9d56a0e9 100644
 +          example, a string like ``'2018-01-01'`` is coerced to a datetime
 +          when setting on a datetime64ns array. In general, if the
 +        ``__init__`` method coerces that value, then so should ``__setitem__``.
-+
-+        When called from, e.g. ``Series.__setitem__``, ``key`` will always
-+        be an ndarray of positions.
 +        """
          raise NotImplementedError(_not_implemented_message.format(
              type(self), '__setitem__')
          )
-@@ -107,6 +134,16 @@ class ExtensionArray(object):
+@@ -107,6 +141,16 @@ class ExtensionArray(object):
          # type: () -> int
          raise AbstractMethodError(self)
  
@@ -789,7 +165,7 @@ index e618dc6b6..e9d56a0e9 100644
      # ------------------------------------------------------------------------
      # Required attributes
      # ------------------------------------------------------------------------
-@@ -167,6 +204,25 @@ class ExtensionArray(object):
+@@ -167,6 +211,25 @@ class ExtensionArray(object):
          """
          raise AbstractMethodError(self)
  
@@ -815,7 +191,18 @@ index e618dc6b6..e9d56a0e9 100644
      # ------------------------------------------------------------------------
      # Indexing methods
      # ------------------------------------------------------------------------
-@@ -198,9 +254,8 @@ class ExtensionArray(object):
+@@ -184,8 +247,8 @@ class ExtensionArray(object):
+             will be done. This short-circuits computation of a mask. Result is
+             undefined if allow_fill == False and -1 is present in indexer.
+         fill_value : any, default None
+-            Fill value to replace -1 values with. By default, this uses
+-            the missing value sentinel for this type, ``self._fill_value``.
++            Fill value to replace -1 values with. If applicable, this should
++            use the sentinel missing value for this type.
+ 
+         Notes
+         -----
+@@ -198,17 +261,20 @@ class ExtensionArray(object):
  
          Examples
          --------
@@ -827,9 +214,11 @@ index e618dc6b6..e9d56a0e9 100644
  
          .. code-block:: python
  
-@@ -209,6 +264,10 @@ class ExtensionArray(object):
+            def take(self, indexer, allow_fill=True, fill_value=None):
+                mask = indexer == -1
                 result = self.data.take(indexer)
-                result[mask] = self._fill_value
+-               result[mask] = self._fill_value
++               result[mask] = np.nan  # NA for this type
                 return type(self)(result)
 +
 +        See Also
@@ -838,7 +227,17 @@ index e618dc6b6..e9d56a0e9 100644
          """
          raise AbstractMethodError(self)
  
-@@ -240,7 +299,7 @@ class ExtensionArray(object):
+@@ -230,17 +296,12 @@ class ExtensionArray(object):
+     # ------------------------------------------------------------------------
+     # Block-related methods
+     # ------------------------------------------------------------------------
+-    @property
+-    def _fill_value(self):
+-        # type: () -> Any
+-        """The missing value for this type, e.g. np.nan"""
+-        return None
+ 
+     def _formatting_values(self):
          # type: () -> np.ndarray
          # At the moment, this has to be an array since we use result.dtype
          """An array of values to be printed in, e.g. the Series repr"""
@@ -847,7 +246,7 @@ index e618dc6b6..e9d56a0e9 100644
  
      @classmethod
      def _concat_same_type(cls, to_concat):
-@@ -257,6 +316,7 @@ class ExtensionArray(object):
+@@ -257,6 +318,7 @@ class ExtensionArray(object):
          """
          raise AbstractMethodError(cls)
  
@@ -855,23 +254,8 @@ index e618dc6b6..e9d56a0e9 100644
      def _can_hold_na(self):
          # type: () -> bool
          """Whether your array can hold missing values. True by default.
-diff --git a/pandas/core/arrays/categorical.py b/pandas/core/arrays/categorical.py
-index bcf9cb764..d1b231b21 100644
---- a/pandas/core/arrays/categorical.py
-+++ b/pandas/core/arrays/categorical.py
-@@ -2141,6 +2141,10 @@ class Categorical(ExtensionArray, PandasObject):
-     def _can_hold_na(self):
-         return True
- 
-+    @property
-+    def _fill_value(self):
-+        return np.nan
-+
-     @classmethod
-     def _concat_same_type(self, to_concat):
-         from pandas.core.dtypes.concat import _concat_categorical
 diff --git a/pandas/core/dtypes/base.py b/pandas/core/dtypes/base.py
-index c7c537880..2f071a3b3 100644
+index c7c537880..17d375e67 100644
 --- a/pandas/core/dtypes/base.py
 +++ b/pandas/core/dtypes/base.py
 @@ -1,4 +1,6 @@
@@ -897,7 +281,7 @@ index c7c537880..2f071a3b3 100644
             of ``cls``.
 -        2. 'dtype' is ``cls`` or a subclass of ``cls``.
 +        2. ``dtype`` is an object and is an instance of ``cls``
-+        3. 'dtype' is a class and is ``cls`` or a subclass of ``cls``.
++        3. ``dtype`` is a class and is ``cls`` or a subclass of ``cls``.
          """
          if isinstance(dtype, str):
              try:
@@ -924,11 +308,31 @@ index c2b71bc31..197b35de8 100644
      return isinstance(arr_or_dtype, (ExtensionDtype, ExtensionArray))
  
  
+diff --git a/pandas/core/dtypes/generic.py b/pandas/core/dtypes/generic.py
+index b032cb6f1..cb54c94d2 100644
+--- a/pandas/core/dtypes/generic.py
++++ b/pandas/core/dtypes/generic.py
+@@ -57,6 +57,8 @@ ABCPeriod = create_pandas_abc_type("ABCPeriod", "_typ", ("period", ))
+ ABCDateOffset = create_pandas_abc_type("ABCDateOffset", "_typ",
+                                        ("dateoffset",))
+ ABCInterval = create_pandas_abc_type("ABCInterval", "_typ", ("interval", ))
++ABCExtensionArray = create_pandas_abc_type("ABCExtensionArray", "_typ",
++                                           ("extension", "categorical",))
+ 
+ 
+ class _ABCGeneric(type):
 diff --git a/pandas/core/dtypes/missing.py b/pandas/core/dtypes/missing.py
-index ffac70247..002839af6 100644
+index ffac70247..36dbb0ee4 100644
 --- a/pandas/core/dtypes/missing.py
 +++ b/pandas/core/dtypes/missing.py
-@@ -10,9 +10,10 @@ from .common import (is_string_dtype, is_datetimelike,
+@@ -5,14 +5,16 @@ import numpy as np
+ from pandas._libs import lib, missing as libmissing
+ from pandas._libs.tslib import NaT, iNaT
+ from .generic import (ABCMultiIndex, ABCSeries,
+-                      ABCIndexClass, ABCGeneric)
++                      ABCIndexClass, ABCGeneric,
++                      ABCExtensionArray)
+ from .common import (is_string_dtype, is_datetimelike,
                       is_datetimelike_v_numeric, is_float_dtype,
                       is_datetime64_dtype, is_datetime64tz_dtype,
                       is_timedelta64_dtype, is_interval_dtype,
@@ -940,24 +344,17 @@ index ffac70247..002839af6 100644
                       needs_i8_conversion, _ensure_object,
                       pandas_dtype,
                       is_scalar,
-@@ -52,12 +53,15 @@ isnull = isna
- 
- 
- def _isna_new(obj):
-+    from ..arrays import ExtensionArray
-+
-     if is_scalar(obj):
-         return libmissing.checknull(obj)
+@@ -57,7 +59,8 @@ def _isna_new(obj):
      # hack (for now) because MI registers as ndarray
      elif isinstance(obj, ABCMultiIndex):
          raise NotImplementedError("isna is not defined for MultiIndex")
 -    elif isinstance(obj, (ABCSeries, np.ndarray, ABCIndexClass)):
 +    elif isinstance(obj, (ABCSeries, np.ndarray, ABCIndexClass,
-+                          ExtensionArray)):
++                          ABCExtensionArray)):
          return _isna_ndarraylike(obj)
      elif isinstance(obj, ABCGeneric):
          return obj._constructor(obj._data.isna(func=isna))
-@@ -124,17 +128,18 @@ def _use_inf_as_na(key):
+@@ -124,30 +127,29 @@ def _use_inf_as_na(key):
  
  
  def _isna_ndarraylike(obj):
@@ -972,19 +369,41 @@ index ffac70247..002839af6 100644
 -                values = values.values
 -            result = values.isna()
 -        elif is_interval_dtype(values):
+-            from pandas import IntervalIndex
+-            result = IntervalIndex(obj).isna()
 +    if is_extension_array_dtype(obj):
 +        if isinstance(obj, (ABCIndexClass, ABCSeries)):
 +            values = obj._values
-+        else:
+         else:
 +            values = obj
 +        result = values.isna()
++    elif is_interval_dtype(values):
++        # TODO(IntervalArray): remove this if block
++        from pandas import IntervalIndex
++        result = IntervalIndex(obj).isna()
 +    elif is_string_dtype(dtype):
-+        if is_interval_dtype(values):
-+            # TODO(IntervalArray): remove this if block
-             from pandas import IntervalIndex
-             result = IntervalIndex(obj).isna()
-         else:
-@@ -406,4 +411,7 @@ def remove_na_arraylike(arr):
++        # Working around NumPy ticket 1542
++        shape = values.shape
+ 
+-            # Working around NumPy ticket 1542
+-            shape = values.shape
+-
+-            if is_string_like_dtype(dtype):
+-                result = np.zeros(values.shape, dtype=bool)
+-            else:
+-                result = np.empty(shape, dtype=bool)
+-                vec = libmissing.isnaobj(values.ravel())
+-                result[...] = vec.reshape(shape)
++        if is_string_like_dtype(dtype):
++            result = np.zeros(values.shape, dtype=bool)
++        else:
++            result = np.empty(shape, dtype=bool)
++            vec = libmissing.isnaobj(values.ravel())
++            result[...] = vec.reshape(shape)
+ 
+     elif needs_i8_conversion(obj):
+         # this is the NaT pattern
+@@ -406,4 +408,7 @@ def remove_na_arraylike(arr):
      """
      Return array-like containing only true/non-NaN values, possibly empty.
      """
@@ -994,7 +413,7 @@ index ffac70247..002839af6 100644
 +    else:
 +        return arr[notna(lib.values_from_object(arr))]
 diff --git a/pandas/core/frame.py b/pandas/core/frame.py
-index a001037b5..ebdb6a2ed 100644
+index b96af6af3..0efb38c97 100644
 --- a/pandas/core/frame.py
 +++ b/pandas/core/frame.py
 @@ -39,6 +39,7 @@ from pandas.core.dtypes.common import (
@@ -1065,17 +484,19 @@ index a001037b5..ebdb6a2ed 100644
                  if values.dtype == np.object_:
                      values = lib.maybe_convert_objects(values)
  
-@@ -5641,7 +5638,7 @@ class DataFrame(NDFrame):
+@@ -5597,7 +5594,9 @@ class DataFrame(NDFrame):
          if len(frame._get_axis(axis)) == 0:
              result = Series(0, index=frame._get_agg_axis(axis))
          else:
 -            if frame._is_mixed_type:
 +            if frame._is_mixed_type or frame._data.any_extension_types:
++                # the or any_extension_types is really only hit for single-
++                # column frames with an extension array
                  result = notna(frame).sum(axis=axis)
              else:
                  counts = notna(frame.values).sum(axis=axis)
 diff --git a/pandas/core/indexes/base.py b/pandas/core/indexes/base.py
-index 81b6b28d3..82f22d878 100644
+index 7dfa34bd6..ef9facbac 100644
 --- a/pandas/core/indexes/base.py
 +++ b/pandas/core/indexes/base.py
 @@ -13,6 +13,7 @@ from pandas.compat.numpy import function as nv
@@ -1086,7 +507,7 @@ index 81b6b28d3..82f22d878 100644
  from pandas.core.dtypes.generic import (
      ABCSeries, ABCDataFrame,
      ABCMultiIndex,
-@@ -2002,6 +2003,7 @@ class Index(IndexOpsMixin, PandasObject):
+@@ -1982,6 +1983,7 @@ class Index(IndexOpsMixin, PandasObject):
  
          if is_categorical_dtype(values.dtype):
              values = np.array(values)
@@ -1094,7 +515,7 @@ index 81b6b28d3..82f22d878 100644
          elif is_object_dtype(values.dtype):
              values = lib.maybe_convert_objects(values, safe=1)
  
-@@ -2601,7 +2603,7 @@ class Index(IndexOpsMixin, PandasObject):
+@@ -2581,7 +2583,7 @@ class Index(IndexOpsMixin, PandasObject):
          # if we have something that is Index-like, then
          # use this, e.g. DatetimeIndex
          s = getattr(series, '_values', None)
@@ -1118,7 +539,7 @@ index 352ce921d..50f3c7a6b 100755
  
              elif isinstance(value, ABCDataFrame):
 diff --git a/pandas/core/internals.py b/pandas/core/internals.py
-index dd5feefc4..3ab337ee8 100644
+index dd5feefc4..1dccbf2e7 100644
 --- a/pandas/core/internals.py
 +++ b/pandas/core/internals.py
 @@ -56,7 +56,10 @@ from pandas.core.dtypes.missing import (
@@ -1141,7 +562,7 @@ index dd5feefc4..3ab337ee8 100644
      _box_to_block_values = True
      _can_hold_na = False
      _can_consolidate = True
-@@ -1854,11 +1858,29 @@ class ExtensionBlock(NonConsolidatableMixIn, Block):
+@@ -1854,11 +1858,40 @@ class ExtensionBlock(NonConsolidatableMixIn, Block):
  
      ExtensionArrays are limited to 1-D.
      """
@@ -1152,10 +573,21 @@ index dd5feefc4..3ab337ee8 100644
 +        super(ExtensionBlock, self).__init__(values, placement, ndim)
 +
 +    def _maybe_coerce_values(self, values):
-+        # Unboxes Series / Index
-+        # Doesn't change any underlying dtypes.
++        """Unbox to an extension array.
++
++        This will unbox an ExtensionArray stored in an Index or Series.
++        ExtensionArrays pass through. No dtype coercion is done.
++
++        Parameters
++        ----------
++        values : Index, Series, ExtensionArray
++
++        Returns
++        -------
++        ExtensionArray
++        """
 +        if isinstance(values, (ABCIndexClass, ABCSeries)):
-+            values = values.values
++            values = values._values
 +        return values
 +
      @property
@@ -1165,13 +597,13 @@ index dd5feefc4..3ab337ee8 100644
  
 +    @property
 +    def _can_hold_na(self):
-+        # The default ExtensionBlock._can_hold_na is True
++        # The default ExtensionArray._can_hold_na is True
 +        return self._holder._can_hold_na
 +
      @property
      def is_view(self):
          """Extension arrays are never treated as views."""
-@@ -3451,6 +3473,8 @@ class BlockManager(PandasObject):
+@@ -3451,6 +3484,8 @@ class BlockManager(PandasObject):
          else:
              align_keys = []
  
@@ -1180,7 +612,7 @@ index dd5feefc4..3ab337ee8 100644
          aligned_args = dict((k, kwargs[k])
                              for k in align_keys
                              if hasattr(kwargs[k], 'values'))
-@@ -3696,6 +3720,11 @@ class BlockManager(PandasObject):
+@@ -3696,6 +3731,11 @@ class BlockManager(PandasObject):
          self._consolidate_inplace()
          return any(block.is_datelike for block in self.blocks)
  
@@ -1192,25 +624,28 @@ index dd5feefc4..3ab337ee8 100644
      @property
      def is_view(self):
          """ return a boolean if we are a single block and are a view """
-@@ -4834,14 +4863,11 @@ def form_blocks(arrays, names, axes):
+@@ -4833,15 +4873,11 @@ def form_blocks(arrays, names, axes):
+ 
      if len(items_dict['ExtensionBlock']):
  
-         external_blocks = []
-+
-         for i, _, array in items_dict['ExtensionBlock']:
+-        external_blocks = []
+-        for i, _, array in items_dict['ExtensionBlock']:
 -            if isinstance(array, ABCSeries):
 -                array = array.values
 -            # Allow our internal arrays to chose their block type.
 -            block_type = getattr(array, '_block_type', ExtensionBlock)
-             external_blocks.append(
+-            external_blocks.append(
 -                make_block(array, klass=block_type,
 -                           fastpath=True, placement=[i]))
-+                make_block(array, klass=ExtensionBlock,
-+                           placement=[i]))
++        external_blocks = [
++            make_block(array, klass=ExtensionBlock, placement=[i])
++            for i, _, array in items_dict['ExtensionBlock']
++        ]
++
          blocks.extend(external_blocks)
  
      if len(extra_locs):
-@@ -5673,6 +5699,8 @@ class JoinUnit(object):
+@@ -5673,6 +5709,8 @@ class JoinUnit(object):
              if not values._null_fill_value and values.sp_index.ngaps > 0:
                  return False
              values_flat = values.ravel(order='K')
@@ -1220,10 +655,10 @@ index dd5feefc4..3ab337ee8 100644
              values_flat = values.ravel(order='K')
          total_len = values_flat.shape[0]
 diff --git a/pandas/core/series.py b/pandas/core/series.py
-index 655eaa537..9e36b95c9 100644
+index 90dc14836..d18cd4baa 100644
 --- a/pandas/core/series.py
 +++ b/pandas/core/series.py
-@@ -14,6 +14,7 @@ import numpy as np
+@@ -14,12 +14,14 @@ import numpy as np
  import numpy.ma as ma
  
  from pandas.core.accessor import CachedAccessor
@@ -1231,7 +666,22 @@ index 655eaa537..9e36b95c9 100644
  from pandas.core.dtypes.common import (
      is_categorical_dtype,
      is_bool,
-@@ -173,12 +174,16 @@ class Series(base.IndexOpsMixin, generic.NDFrame):
+     is_integer, is_integer_dtype,
+     is_float_dtype,
+     is_extension_type,
++    is_extension_array_dtype,
+     is_datetime64tz_dtype,
+     is_timedelta64_dtype,
+     is_list_like,
+@@ -27,6 +29,7 @@ from pandas.core.dtypes.common import (
+     is_iterator,
+     is_dict_like,
+     is_scalar,
++    is_sparse,
+     _is_unorderable_exception,
+     _ensure_platform_int,
+     pandas_dtype)
+@@ -173,12 +176,16 @@ class Series(base.IndexOpsMixin, generic.NDFrame):
                  raise NotImplementedError("initializing a Series from a "
                                            "MultiIndex is not supported")
              elif isinstance(data, Index):
@@ -1250,7 +700,29 @@ index 655eaa537..9e36b95c9 100644
              elif isinstance(data, np.ndarray):
                  pass
              elif isinstance(data, Series):
-@@ -234,6 +239,10 @@ class Series(base.IndexOpsMixin, generic.NDFrame):
+@@ -203,13 +210,15 @@ class Series(base.IndexOpsMixin, generic.NDFrame):
+                                          '`data` argument and a different '
+                                          '`index` argument.  `copy` must '
+                                          'be False.')
+-            elif isinstance(data, Categorical):
++
++            elif is_extension_array_dtype(data) and dtype is not None:
+                 # GH12574: Allow dtype=category only, otherwise error
+-                if ((dtype is not None) and
+-                        not is_categorical_dtype(dtype)):
+-                    raise ValueError("cannot specify a dtype with a "
+-                                     "Categorical unless "
+-                                     "dtype='category'")
++                if not data.dtype.is_dtype(dtype):
++                    raise ValueError("Cannot specify a dtype '{}' with an "
++                                     "extension array of a different "
++                                     "dtype ('{}').".format(dtype,
++                                                            data.dtype))
++
+             elif (isinstance(data, types.GeneratorType) or
+                   (compat.PY3 and isinstance(data, map))):
+                 data = list(data)
+@@ -234,6 +243,10 @@ class Series(base.IndexOpsMixin, generic.NDFrame):
                                         copy=copy)
                  elif copy:
                      data = data.copy()
@@ -1261,20 +733,22 @@ index 655eaa537..9e36b95c9 100644
              else:
                  data = _sanitize_array(data, index, dtype, copy,
                                         raise_cast_failure=True)
-@@ -2559,7 +2568,11 @@ class Series(base.IndexOpsMixin, generic.NDFrame):
+@@ -2556,8 +2569,12 @@ class Series(base.IndexOpsMixin, generic.NDFrame):
+                 return self.copy()
              return self
  
-         # be subclass-friendly
+-        # be subclass-friendly
 -        new_values = algorithms.take_1d(self.get_values(), indexer)
-+        if isinstance(self.values, ExtensionArray):
-+            new_values = self.values.take(indexer)
++        if is_sparse(self):
++            arr = self.get_values()
 +        else:
-+            new_values = algorithms.take_1d(self.get_values(), indexer)
++            arr = self._values
 +
++        new_values = algorithms.take_1d(arr, indexer)
          return self._constructor(new_values, index=new_index)
  
      def _needs_reindex_multi(self, axes, method, level):
-@@ -3115,10 +3128,9 @@ def _sanitize_index(data, index, copy=False):
+@@ -3113,10 +3130,11 @@ def _sanitize_index(data, index, copy=False):
  
      if isinstance(data, ABCIndexClass) and not copy:
          pass
@@ -1284,11 +758,31 @@ index 655eaa537..9e36b95c9 100644
 -        data = data._to_embed(keep_tz=True)
 +    elif isinstance(data, (PeriodIndex, DatetimeIndex)):
 +        data = data._values
++        if copy:
++            data = data.copy()
 +
      elif isinstance(data, np.ndarray):
  
          # coerce datetimelike types
-@@ -3191,7 +3203,7 @@ def _sanitize_array(data, index, dtype=None, copy=False,
+@@ -3156,8 +3174,17 @@ def _sanitize_array(data, index, dtype=None, copy=False,
+                 subarr = np.array(subarr, dtype=dtype, copy=copy)
+         except (ValueError, TypeError):
+             if is_categorical_dtype(dtype):
++                # We *do* allow casting to categorical, since we know
++                # that Categorical is the only array type for 'category'.
+                 subarr = Categorical(arr, dtype.categories,
+                                      ordered=dtype.ordered)
++            elif is_extension_array_dtype(dtype):
++                # We don't allow casting to third party dtypes, since we don't
++                # know what array belongs to which type.
++                msg = ("Cannot cast data to extension dtype '{}'. "
++                       "Pass the extension array directly.".format(dtype))
++                raise ValueError(msg)
++
+             elif dtype is not None and raise_cast_failure:
+                 raise
+             else:
+@@ -3189,9 +3216,15 @@ def _sanitize_array(data, index, dtype=None, copy=False,
              # we will try to copy be-definition here
              subarr = _try_cast(data, True)
  
@@ -1296,15 +790,70 @@ index 655eaa537..9e36b95c9 100644
 +    elif isinstance(data, ExtensionArray):
          subarr = data
  
++        if dtype is not None and not data.dtype.is_dtype(dtype):
++            msg = ("Cannot coerce extension array to dtype '{typ}'. "
++                   "Do the coercion before passing to the constructor "
++                   "instead.".format(typ=dtype))
++            raise ValueError(msg)
++
          if copy:
+             subarr = data.copy()
+         return subarr
+diff --git a/pandas/tests/categorical/test_missing.py b/pandas/tests/categorical/test_missing.py
+index 79758dee5..c8ac6a6ef 100644
+--- a/pandas/tests/categorical/test_missing.py
++++ b/pandas/tests/categorical/test_missing.py
+@@ -1,9 +1,8 @@
+ # -*- coding: utf-8 -*-
+-
+ import numpy as np
+ 
+ import pandas.util.testing as tm
+-from pandas import (Categorical, Index, isna)
++from pandas import Categorical, Index, isna
+ from pandas.compat import lrange
+ from pandas.core.dtypes.dtypes import CategoricalDtype
+ 
 diff --git a/pandas/tests/extension/base.py b/pandas/tests/extension/base.py
 new file mode 100644
-index 000000000..51d9da1fe
+index 000000000..4e69123aa
 --- /dev/null
 +++ b/pandas/tests/extension/base.py
-@@ -0,0 +1,455 @@
-+import operator
+@@ -0,0 +1,385 @@
++"""Base test suite for extension arrays.
 +
++These tests are intended for third-party libraries to subclass to validate
++that their extension arrays and dtypes satisfy the interface. Moving or
++renaming the tests should not be done lightly.
++
++Libraries are expected to implement a few pytest fixtures to provide data
++for the tests. The fixtures may be located in either
++
++* The same module as your test class.
++* A ``conftest.py`` in the same directory as your test class.
++
++The full list of fixtures may be found in the ``conftest.py`` next to this
++file.
++
++.. code-block:: python
++
++   import pytest
++   from pandas.tests.extension.base import BaseDtypeTests
++
++
++   @pytest.fixture
++   def dtype():
++       return MyDtype()
++
++
++   class TestMyDtype(BaseDtypeTests):
++       pass
++
++
++Your class ``TestDtype`` will inherit all the tests defined on
++``BaseDtypeTests``. pytest's fixture discover will supply your ``dtype``
++wherever the test requires it. You're free to implement additional tests.
++"""
 +import numpy as np
 +import pytest
 +
@@ -1318,11 +867,6 @@ index 000000000..51d9da1fe
 +
 +class BaseDtypeTests(object):
 +    """Base class for ExtensionDtype classes"""
-+
-+    @pytest.fixture
-+    def dtype(self):
-+        """A fixture providing the ExtensionDtype to validate."""
-+        raise NotImplementedError
 +
 +    def test_name(self, dtype):
 +        assert isinstance(dtype.name, str)
@@ -1348,47 +892,15 @@ index 000000000..51d9da1fe
 +        result = type(dtype).is_dtype(dtype)
 +        assert result is True
 +
++    def test_is_not_string_type(self, dtype):
++        return not pd.api.types.is_string_dtype(dtype)
 +
-+class BaseArrayTests(object):
-+    """Base class for extension array classes.
++    def test_is_not_object_type(self, dtype):
++        return not pd.api.types.is_object_dtype(dtype)
 +
-+    Subclasses should implement the following fixtures
 +
-+    * data
-+    * data_missing
-+    """
-+
-+    # ------------------------------------------------------------------------
-+    # Fixtures
-+    # ------------------------------------------------------------------------
-+    @pytest.fixture
-+    def data(self):
-+        """Length-100 array for this type."""
-+        raise NotImplementedError
-+
-+    @pytest.fixture
-+    def data_missing(self):
-+        """Length-2 array with [NA, Valid]"""
-+        raise NotImplementedError
-+
-+    @pytest.fixture(params=['data', 'data_missing'])
-+    def all_data(self, request, data, data_missing):
-+        if request.param == 'data':
-+            return data
-+        elif request.param == 'data_missing':
-+            return data_missing
-+
-+    @pytest.fixture
-+    def na_cmp(self):
-+        """Binary operator for comparing NA values.
-+
-+        Should return a function of two arguments that returns
-+        True if both arguments are (scalar) NA for your type.
-+
-+        By defult, uses ``operator.or``
-+        """
-+        return operator.is_
-+
++class BaseInterfaceTests(object):
++    """Tests that the basic interface is satisfied."""
 +    # ------------------------------------------------------------------------
 +    # Interface
 +    # ------------------------------------------------------------------------
@@ -1427,9 +939,14 @@ index 000000000..51d9da1fe
 +        result = buf.getvalue()
 +        assert data.dtype.name in result
 +
-+    # ------------------------------------------------------------------------
-+    # Constructors
-+    # ------------------------------------------------------------------------
++    def test_is_extension_array_dtype(self, data):
++        assert is_extension_array_dtype(data)
++        assert is_extension_array_dtype(data.dtype)
++        assert is_extension_array_dtype(pd.Series(data))
++        assert isinstance(data.dtype, ExtensionDtype)
++
++
++class BaseConstructorsTests(object):
 +
 +    def test_series_constructor(self, data):
 +        result = pd.Series(data)
@@ -1438,12 +955,23 @@ index 000000000..51d9da1fe
 +        assert isinstance(result._data.blocks[0], ExtensionBlock)
 +        assert result._data.blocks[0].values is data
 +
++        # Series[EA] is unboxed / boxed correctly
++        result2 = pd.Series(result)
++        assert result2.dtype == data.dtype
++        assert isinstance(result2._data.blocks[0], ExtensionBlock)
++
 +    @pytest.mark.parametrize("from_series", [True, False])
-+    def dataframe_constructor(self, data, from_series):
++    def test_dataframe_constructor_from_dict(self, data, from_series):
 +        if from_series:
 +            data = pd.Series(data)
 +        result = pd.DataFrame({"A": data})
 +        assert result.dtypes['A'] == data.dtype
++        assert result.shape == (len(data), 1)
++        assert isinstance(result._data.blocks[0], ExtensionBlock)
++
++    def test_dataframe_from_series(self, data):
++        result = pd.DataFrame(pd.Series(data))
++        assert result.dtypes[0] == data.dtype
 +        assert result.shape == (len(data), 1)
 +        assert isinstance(result._data.blocks[0], ExtensionBlock)
 +
@@ -1455,22 +983,53 @@ index 000000000..51d9da1fe
 +
 +        assert m.match(msg)
 +
-+    # ------------------------------------------------------------------------
-+    # Reshaping
-+    # ------------------------------------------------------------------------
 +
-+    def test_concat(self, data):
-+        result = pd.concat([
-+            pd.Series(data),
-+            pd.Series(data),
-+        ], ignore_index=True)
++class BaseReshapingTests(object):
++    """Tests for reshaping and concatenation."""
++    @pytest.mark.parametrize('in_frame', [True, False])
++    def test_concat(self, data, in_frame):
++        wrapped = pd.Series(data)
++        if in_frame:
++            wrapped = pd.DataFrame(wrapped)
++        result = pd.concat([wrapped, wrapped], ignore_index=True)
++
 +        assert len(result) == len(data) * 2
-+        assert result.dtype == data.dtype
++
++        if in_frame:
++            dtype = result.dtypes[0]
++        else:
++            dtype = result.dtype
++
++        assert dtype == data.dtype
 +        assert isinstance(result._data.blocks[0], ExtensionBlock)
 +
-+    # ------------------------------------------------------------------------
-+    # Indexing - getting
-+    # ------------------------------------------------------------------------
++    def test_align(self, data, na_value):
++        a = data[:3]
++        b = data[2:5]
++        r1, r2 = pd.Series(a).align(pd.Series(b, index=[1, 2, 3]))
++
++        # Assumes that the ctor can take a list of scalars of the type
++        e1 = pd.Series(type(data)(list(a) + [na_value]))
++        e2 = pd.Series(type(data)([na_value] + list(b)))
++        tm.assert_series_equal(r1, e1)
++        tm.assert_series_equal(r2, e2)
++
++    def test_align_frame(self, data, na_value):
++        a = data[:3]
++        b = data[2:5]
++        r1, r2 = pd.DataFrame({'A': a}).align(
++            pd.DataFrame({'A': b}, index=[1, 2, 3])
++        )
++
++        # Assumes that the ctor can take a list of scalars of the type
++        e1 = pd.DataFrame({'A': type(data)(list(a) + [na_value])})
++        e2 = pd.DataFrame({'A': type(data)([na_value] + list(b))})
++        tm.assert_frame_equal(r1, e1)
++        tm.assert_frame_equal(r2, e2)
++
++
++class BaseGetitemTests(object):
++    """Tests for ExtensionArray.__getitem__."""
 +
 +    def test_iloc_series(self, data):
 +        ser = pd.Series(data)
@@ -1534,12 +1093,6 @@ index 000000000..51d9da1fe
 +        result = df.loc[:3, 'A']
 +        tm.assert_series_equal(result, expected)
 +
-+    def test_is_extension_array_dtype(self, data):
-+        assert is_extension_array_dtype(data)
-+        assert is_extension_array_dtype(data.dtype)
-+        assert is_extension_array_dtype(pd.Series(data))
-+        assert isinstance(data.dtype, ExtensionDtype)
-+
 +    def test_getitem_scalar(self, data):
 +        result = data[0]
 +        assert isinstance(result, data.dtype.type)
@@ -1547,9 +1100,9 @@ index 000000000..51d9da1fe
 +        result = pd.Series(data)[0]
 +        assert isinstance(result, data.dtype.type)
 +
-+    def test_getitem_scalar_na(self, data_missing, na_cmp):
++    def test_getitem_scalar_na(self, data_missing, na_cmp, na_value):
 +        result = data_missing[0]
-+        assert na_cmp(result, data_missing._fill_value)
++        assert na_cmp(result, na_value)
 +
 +    def test_getitem_mask(self, data):
 +        # Empty mask, raw array
@@ -1589,107 +1142,8 @@ index 000000000..51d9da1fe
 +        assert result.iloc[1] == data[1]
 +        assert result.iloc[2] == data[3]
 +
-+    # ------------------------------------------------------------------------
-+    # Indexing - Setting
-+    # ------------------------------------------------------------------------
 +
-+    @pytest.mark.xfail(reason="ExtensionBlock.__setitem__ not implemented.")
-+    def test_setitem_scalar(self, data):
-+        arr = pd.Series(data)
-+        arr[0] = data[1]
-+        assert arr[0] == data[1]
-+
-+    @pytest.mark.xfail(reason="ExtensionBlock.__setitem__ not implemented.")
-+    def test_setitem_sequence(self, data):
-+        arr = pd.Series(data)
-+        original = data.copy()
-+
-+        arr[[0, 1]] = [data[1], data[0]]
-+        assert arr[0] == original[1]
-+        assert arr[1] == original[0]
-+
-+    @pytest.mark.xfail(reason="ExtensionBlock.__setitem__ not implemented.")
-+    def test_setitem_sequence_broadcasts(self, data):
-+        arr = pd.Series(data)
-+
-+        arr[[0, 1]] = data[2]
-+        assert arr[0] == data[2]
-+        assert arr[1] == data[2]
-+
-+    @pytest.mark.xfail(reason="ExtensionBlock.__setitem__ not implemented.")
-+    @pytest.mark.parametrize('setter', ['loc', 'iloc'])
-+    def test_set_scalar(self, data, setter):
-+        arr = pd.Series(data)
-+        setter = getattr(arr, setter)
-+        operator.setitem(setter, 0, data[1])
-+        assert arr[0] == data[1]
-+
-+    @pytest.mark.xfail(reason="ExtensionBlock.__setitem__ not implemented.")
-+    def test_set_loc_scalar_mixed(self, data):
-+        df = pd.DataFrame({"A": np.arange(len(data)), "B": data})
-+        df.loc[0, 'B'] = data[1]
-+        assert df.loc[0, 'B'] == data[1]
-+
-+    @pytest.mark.xfail(reason="ExtensionBlock.__setitem__ not implemented.")
-+    def test_set_loc_scalar_single(self, data):
-+        df = pd.DataFrame({"B": data})
-+        df.loc[10, 'B'] = data[1]
-+        assert df.loc[10, 'B'] == data[1]
-+
-+    @pytest.mark.xfail(reason="ExtensionBlock.__setitem__ not implemented.")
-+    def test_set_loc_scalar_multiple_homogoneous(self, data):
-+        df = pd.DataFrame({"A": data, "B": data})
-+        df.loc[10, 'B'] = data[1]
-+        assert df.loc[10, 'B'] == data[1]
-+
-+    @pytest.mark.xfail(reason="ExtensionBlock.__setitem__ not implemented.")
-+    def test_set_iloc_scalar_mixed(self, data):
-+        df = pd.DataFrame({"A": np.arange(len(data)), "B": data})
-+        df.iloc[0, 1] = data[1]
-+        assert df.loc[0, 'B'] == data[1]
-+
-+    @pytest.mark.xfail(reason="ExtensionBlock.__setitem__ not implemented.")
-+    def test_set_iloc_scalar_single(self, data):
-+        df = pd.DataFrame({"B": data})
-+        df.iloc[10, 0] = data[1]
-+        assert df.loc[10, 'B'] == data[1]
-+
-+    @pytest.mark.xfail(reason="ExtensionBlock.__setitem__ not implemented.")
-+    def test_set_iloc_scalar_multiple_homogoneous(self, data):
-+        df = pd.DataFrame({"A": data, "B": data})
-+        df.iloc[10, 1] = data[1]
-+        assert df.loc[10, 'B'] == data[1]
-+
-+    @pytest.mark.xfail(reason="ExtensionBlock.__setitem__ not implemented.")
-+    def test_set_mask_aligned(self, data):
-+        ser = pd.Series(data)
-+        mask = np.zeros(len(data), dtype=bool)
-+        mask[:2] = True
-+
-+        ser[mask] = data[5:7]
-+        assert ser[0] == data[5]
-+        assert ser[1] == data[6]
-+
-+    @pytest.mark.xfail(reason="ExtensionBlock.__setitem__ not implemented.")
-+    def test_set_mask_broadcast(self, data):
-+        ser = pd.Series(data)
-+        mask = np.zeros(len(data), dtype=bool)
-+        mask[:2] = True
-+
-+        ser[mask] = data[10]
-+        assert ser[0] == data[10]
-+        assert ser[1] == data[10]
-+
-+    @pytest.mark.xfail(reason="ExtensionBlock.__setitem__ not implemented.")
-+    def test_setitem_expand_columns(self, data):
-+        df = pd.DataFrame({"A": data})
-+        df['B'] = 1
-+        assert len(df.columns) == 2
-+
-+    # ------------------------------------------------------------------------
-+    # Methods
-+    # ------------------------------------------------------------------------
-+
++class BaseMissingTests(object):
 +    def test_isna(self, data_missing):
 +        if data_missing._can_hold_na:
 +            expected = np.array([True, False])
@@ -1701,36 +1155,6 @@ index 000000000..51d9da1fe
 +
 +        result = pd.Series(data_missing).isna()
 +        expected = pd.Series(expected)
-+        tm.assert_series_equal(result, expected)
-+
-+    def test_align(self, data):
-+        a = data[:3]
-+        b = data[2:5]
-+        r1, r2 = pd.Series(a).align(pd.Series(b, index=[1, 2, 3]))
-+
-+        # Assumes that the ctor can take a list of scalars of the type
-+        e1 = pd.Series(type(data)(list(a) + [data._fill_value]))
-+        e2 = pd.Series(type(data)([data._fill_value] + list(b)))
-+        tm.assert_series_equal(r1, e1)
-+        tm.assert_series_equal(r2, e2)
-+
-+    @pytest.mark.parametrize('dropna', [True, False])
-+    def test_value_counts(self, all_data, dropna):
-+        all_data = all_data[:10]
-+        if dropna:
-+            other = np.array(all_data[~all_data.isna()])
-+        else:
-+            other = all_data
-+
-+        result = pd.Series(all_data).value_counts(dropna=dropna).sort_index()
-+        expected = pd.Series(other).value_counts(dropna=dropna).sort_index()
-+
-+        tm.assert_series_equal(result, expected)
-+
-+    def test_count(self, data_missing):
-+        df = pd.DataFrame({"A": data_missing})
-+        result = df.count(axis='columns')
-+        expected = pd.Series([0, 1])
 +        tm.assert_series_equal(result, expected)
 +
 +    def test_dropna_series(self, data_missing):
@@ -1758,51 +1182,151 @@ index 000000000..51d9da1fe
 +        result = df.dropna()
 +        expected = df.iloc[:0]
 +        tm.assert_frame_equal(result, expected)
++
++
++class BaseMethodsTests(object):
++    """Various Series and DataFrame methods."""
++
++    @pytest.mark.parametrize('dropna', [True, False])
++    def test_value_counts(self, all_data, dropna):
++        all_data = all_data[:10]
++        if dropna:
++            other = np.array(all_data[~all_data.isna()])
++        else:
++            other = all_data
++
++        result = pd.Series(all_data).value_counts(dropna=dropna).sort_index()
++        expected = pd.Series(other).value_counts(dropna=dropna).sort_index()
++
++        tm.assert_series_equal(result, expected)
++
++    def test_count(self, data_missing):
++        df = pd.DataFrame({"A": data_missing})
++        result = df.count(axis='columns')
++        expected = pd.Series([0, 1])
++        tm.assert_series_equal(result, expected)
+diff --git a/pandas/tests/extension/conftest.py b/pandas/tests/extension/conftest.py
+new file mode 100644
+index 000000000..f86849b9c
+--- /dev/null
++++ b/pandas/tests/extension/conftest.py
+@@ -0,0 +1,48 @@
++import operator
++
++import pytest
++
++
++@pytest.fixture
++def dtype():
++    """A fixture providing the ExtensionDtype to validate."""
++    raise NotImplementedError
++
++
++@pytest.fixture
++def data():
++    """Length-100 array for this type."""
++    raise NotImplementedError
++
++
++@pytest.fixture
++def data_missing():
++    """Length-2 array with [NA, Valid]"""
++    raise NotImplementedError
++
++
++@pytest.fixture(params=['data', 'data_missing'])
++def all_data(request, data, data_missing):
++    """Parametrized fixture giving 'data' and 'data_missing'"""
++    if request.param == 'data':
++        return data
++    elif request.param == 'data_missing':
++        return data_missing
++
++
++@pytest.fixture
++def na_cmp():
++    """Binary operator for comparing NA values.
++
++    Should return a function of two arguments that returns
++    True if both arguments are (scalar) NA for your type.
++
++    By defult, uses ``operator.or``
++    """
++    return operator.is_
++
++
++@pytest.fixture
++def na_value():
++    """The scalar missing value for this type. Default 'None'"""
++    return None
 diff --git a/pandas/tests/extension/test_categorical.py b/pandas/tests/extension/test_categorical.py
 new file mode 100644
-index 000000000..402c53706
+index 000000000..c1732653e
 --- /dev/null
 +++ b/pandas/tests/extension/test_categorical.py
-@@ -0,0 +1,62 @@
+@@ -0,0 +1,80 @@
 +import string
 +
 +import pytest
 +import numpy as np
 +
-+import pandas as pd
-+import pandas.util.testing as tm
 +from pandas.api.types import CategoricalDtype
 +from pandas import Categorical
-+from .base import BaseArrayTests, BaseDtypeTests
-+
-+
-+class TestCategoricalDtype(BaseDtypeTests):
-+    @pytest.fixture
-+    def dtype(self):
-+        return CategoricalDtype()
++from . import base
 +
 +
 +def make_data():
 +    return np.random.choice(list(string.ascii_letters), size=100)
 +
 +
-+class TestCategoricalArray(BaseArrayTests):
++@pytest.fixture
++def dtype():
++    return CategoricalDtype()
 +
-+    @pytest.fixture
-+    def data(self):
-+        """Length-100 PeriodArray for semantics test."""
-+        return Categorical(make_data())
 +
-+    @pytest.fixture
-+    def data_missing(self):
-+        """Length 2 array with [NA, Valid]"""
-+        return Categorical([np.nan, 'A'])
++@pytest.fixture
++def data():
++    """Length-100 PeriodArray for semantics test."""
++    return Categorical(make_data())
 +
++
++@pytest.fixture
++def data_missing():
++    """Length 2 array with [NA, Valid]"""
++    return Categorical([np.nan, 'A'])
++
++
++@pytest.fixture
++def na_value():
++    return np.nan
++
++
++class TestDtype(base.BaseDtypeTests):
++    pass
++
++
++class TestInterface(base.BaseInterfaceTests):
 +    @pytest.mark.skip(reason="Memory usage doesn't match")
 +    def test_memory_usage(self):
 +        # Is this deliberate?
 +        pass
 +
++
++class TestConstructors(base.BaseConstructorsTests):
++    pass
++
++
++class TestReshaping(base.BaseReshapingTests):
++    @pytest.mark.skip(reason="Unobserved categories preseved in concat.")
++    def test_align(self, data, na_value):
++        pass
++
++    @pytest.mark.skip(reason="Unobserved categories preseved in concat.")
++    def test_align_frame(self, data, na_value):
++        pass
++
++
++class TestGetitem(base.BaseGetitemTests):
 +    @pytest.mark.skip(reason="Backwards compatability")
 +    def test_getitem_scalar(self):
 +        # CategoricalDtype.type isn't "correct" since it should
@@ -1810,28 +1334,23 @@ index 000000000..402c53706
 +        # to break things by changing.
 +        pass
 +
-+    def test_align(self, data):
-+        # Override to pass through dtype
-+        a = data[:3]
-+        b = data[2:5]
-+        r1, r2 = pd.Series(a).align(pd.Series(b, index=[1, 2, 3]))
 +
-+        e1 = pd.Series(type(data)(list(a) + [data._fill_value],
-+                                  dtype=data.dtype))
-+        e2 = pd.Series(type(data)([data._fill_value] + list(b),
-+                                  dtype=data.dtype))
-+        tm.assert_series_equal(r1, e1)
-+        tm.assert_series_equal(r2, e2)
++class TestMissing(base.BaseMissingTests):
++    pass
 +
-+    @pytest.mark.skip(reason="Different value_counts semantics.")
++
++class TestMethods(base.BaseMethodsTests):
++    pass
++
++    @pytest.mark.skip(reason="Unobserved categories included")
 +    def test_value_counts(self, all_data, dropna):
 +        pass
 diff --git a/pandas/tests/extension/test_decimal.py b/pandas/tests/extension/test_decimal.py
 new file mode 100644
-index 000000000..687e64582
+index 000000000..cb0e96b59
 --- /dev/null
 +++ b/pandas/tests/extension/test_decimal.py
-@@ -0,0 +1,143 @@
+@@ -0,0 +1,229 @@
 +import decimal
 +import numbers
 +import random
@@ -1845,7 +1364,7 @@ index 000000000..687e64582
 +from pandas.core.arrays import ExtensionArray
 +from pandas.core.dtypes.base import ExtensionDtype
 +
-+from .base import BaseDtypeTests, BaseArrayTests
++from . import base
 +
 +
 +class DecimalDtype(ExtensionDtype):
@@ -1872,8 +1391,6 @@ index 000000000..687e64582
 +    def __getitem__(self, item):
 +        if isinstance(item, numbers.Integral):
 +            return self.values[item]
-+        elif isinstance(item, np.ndarray) and item.dtype == 'bool':
-+            return type(self)([x for x, m in zip(self, item) if m])
 +        else:
 +            return type(self)(self.values[item])
 +
@@ -1909,12 +1426,12 @@ index 000000000..687e64582
 +        mask = indexer == -1
 +
 +        out = self.values.take(indexer)
-+        out[mask] = self._fill_value
++        out[mask] = self._na_value
 +
 +        return type(self)(out)
 +
 +    @property
-+    def _fill_value(self):
++    def _na_value(self):
 +        return decimal.Decimal('NaN')
 +
 +    @classmethod
@@ -1926,35 +1443,55 @@ index 000000000..687e64582
 +    return [decimal.Decimal(random.random()) for _ in range(100)]
 +
 +
-+class TestDecimalDtype(BaseDtypeTests):
-+
-+    @pytest.fixture
-+    def dtype(self):
-+        return DecimalDtype()
++@pytest.fixture
++def dtype():
++    return DecimalDtype()
 +
 +
-+class TestDecimalArray(BaseArrayTests):
++@pytest.fixture
++def data():
++    return DecimalArray(make_data())
 +
-+    @pytest.fixture
-+    def data(self):
-+        return DecimalArray(make_data())
 +
-+    @pytest.fixture
-+    def data_missing(self):
-+        return DecimalArray([decimal.Decimal('NaN'), decimal.Decimal(1)])
++@pytest.fixture
++def data_missing():
++    return DecimalArray([decimal.Decimal('NaN'), decimal.Decimal(1)])
 +
-+    @pytest.fixture
-+    def na_cmp(self):
-+        return lambda x, y: x.is_nan() and y.is_nan()
 +
-+    def test_align(self, data):
++@pytest.fixture
++def na_cmp():
++    return lambda x, y: x.is_nan() and y.is_nan()
++
++
++@pytest.fixture
++def na_value():
++    return decimal.Decimal("NaN")
++
++
++class TestDtype(base.BaseDtypeTests):
++    pass
++
++
++class TestInterface(base.BaseInterfaceTests):
++    pass
++
++
++class TestConstructors(base.BaseConstructorsTests):
++    pass
++
++
++class TestReshaping(base.BaseReshapingTests):
++
++    def test_align(self, data, na_value):
++        # Have to override since assert_series_equal doesn't
++        # compare Decimal(NaN) properly.
 +        a = data[:3]
 +        b = data[2:5]
 +        r1, r2 = pd.Series(a).align(pd.Series(b, index=[1, 2, 3]))
 +
 +        # NaN handling
-+        e1 = pd.Series(type(data)(list(a) + [data._fill_value]))
-+        e2 = pd.Series(type(data)([data._fill_value] + list(b)))
++        e1 = pd.Series(type(data)(list(a) + [na_value]))
++        e2 = pd.Series(type(data)([na_value] + list(b)))
 +        tm.assert_series_equal(r1.iloc[:3], e1.iloc[:3])
 +        assert r1[3].is_nan()
 +        assert e1[3].is_nan()
@@ -1963,7 +1500,37 @@ index 000000000..687e64582
 +        assert r2[0].is_nan()
 +        assert e2[0].is_nan()
 +
-+    @pytest.mark.skip(reason="NaN Sorting")
++    def test_align_frame(self, data, na_value):
++        # Override for Decimal(NaN) comparison
++        a = data[:3]
++        b = data[2:5]
++        r1, r2 = pd.DataFrame({'A': a}).align(
++            pd.DataFrame({'A': b}, index=[1, 2, 3])
++        )
++
++        # Assumes that the ctor can take a list of scalars of the type
++        e1 = pd.DataFrame({'A': type(data)(list(a) + [na_value])})
++        e2 = pd.DataFrame({'A': type(data)([na_value] + list(b))})
++
++        tm.assert_frame_equal(r1.iloc[:3], e1.iloc[:3])
++        assert r1.loc[3, 'A'].is_nan()
++        assert e1.loc[3, 'A'].is_nan()
++
++        tm.assert_frame_equal(r2.iloc[1:], e2.iloc[1:])
++        assert r2.loc[0, 'A'].is_nan()
++        assert e2.loc[0, 'A'].is_nan()
++
++
++class TestGetitem(base.BaseGetitemTests):
++    pass
++
++
++class TestMissing(base.BaseMissingTests):
++    pass
++
++
++class TestMethods(base.BaseMethodsTests):
++    @pytest.mark.xfail(reason="NaN Sorting")
 +    def test_value_counts(self, all_data, dropna):
 +        all_data = all_data[:10]
 +        if dropna:
@@ -1975,12 +1542,50 @@ index 000000000..687e64582
 +        expected = pd.Series(other).value_counts(dropna=dropna).sort_index()
 +
 +        tm.assert_series_equal(result, expected)
++
++
++def test_series_constructor_coerce_data_to_extension_dtype_raises():
++    xpr = ("Cannot cast data to extension dtype 'decimal'. Pass the "
++           "extension array directly.")
++    with tm.assert_raises_regex(ValueError, xpr):
++        pd.Series([0, 1, 2], dtype=DecimalDtype())
++
++
++def test_series_constructor_with_same_dtype_ok():
++    arr = DecimalArray([decimal.Decimal('10.0')])
++    result = pd.Series(arr, dtype=DecimalDtype())
++    expected = pd.Series(arr)
++    tm.assert_series_equal(result, expected)
++
++
++def test_series_constructor_coerce_extension_array_to_dtype_raises():
++    arr = DecimalArray([decimal.Decimal('10.0')])
++    xpr = "Cannot specify a dtype 'int64' .* \('decimal'\)."
++
++    with tm.assert_raises_regex(ValueError, xpr):
++        pd.Series(arr, dtype='int64')
++
++
++def test_dataframe_constructor_with_same_dtype_ok():
++    arr = DecimalArray([decimal.Decimal('10.0')])
++
++    result = pd.DataFrame({"A": arr}, dtype=DecimalDtype())
++    expected = pd.DataFrame({"A": arr})
++    tm.assert_frame_equal(result, expected)
++
++
++def test_dataframe_constructor_with_different_dtype_raises():
++    arr = DecimalArray([decimal.Decimal('10.0')])
++
++    xpr = "Cannot coerce extension array to dtype 'int64'. "
++    with tm.assert_raises_regex(ValueError, xpr):
++        pd.DataFrame({"A": arr}, dtype='int64')
 diff --git a/pandas/tests/extension/test_json.py b/pandas/tests/extension/test_json.py
 new file mode 100644
-index 000000000..6d2d227a7
+index 000000000..547ed31de
 --- /dev/null
 +++ b/pandas/tests/extension/test_json.py
-@@ -0,0 +1,135 @@
+@@ -0,0 +1,164 @@
 +import collections
 +import itertools
 +import numbers
@@ -1996,8 +1601,7 @@ index 000000000..6d2d227a7
 +from pandas.core.dtypes.base import ExtensionDtype
 +from pandas.core.arrays import ExtensionArray
 +
-+from .base import BaseArrayTests, BaseDtypeTests
-+
++from . import base
 +
 +pytestmark = pytest.mark.skipif(sys.version_info[0] == 2,
 +                                reason="Py2 doesn't have a UserDict")
@@ -2064,10 +1668,10 @@ index 000000000..6d2d227a7
 +        return sys.getsizeof(self.data)
 +
 +    def isna(self):
-+        return np.array([x == self._fill_value for x in self.data])
++        return np.array([x == self._na_value for x in self.data])
 +
 +    def take(self, indexer, allow_fill=True, fill_value=None):
-+        output = [self.data[loc] if loc != -1 else self._fill_value
++        output = [self.data[loc] if loc != -1 else self._na_value
 +                  for loc in indexer]
 +        return type(self)(output)
 +
@@ -2075,7 +1679,7 @@ index 000000000..6d2d227a7
 +        return type(self)(self.data[:])
 +
 +    @property
-+    def _fill_value(self):
++    def _na_value(self):
 +        return {}
 +
 +    @classmethod
@@ -2091,28 +1695,58 @@ index 000000000..6d2d227a7
 +        for _ in range(random.randint(0, 10))]) for _ in range(100)]
 +
 +
-+class TestJSONDtype(BaseDtypeTests):
-+    @pytest.fixture
-+    def dtype(self):
-+        return JSONDtype()
++@pytest.fixture
++def dtype():
++    return JSONDtype()
 +
 +
-+class TestJSON(BaseArrayTests):
++@pytest.fixture
++def data():
++    """Length-100 PeriodArray for semantics test."""
++    return JSONArray(make_data())
 +
-+    @pytest.fixture
-+    def data(self):
-+        """Length-100 PeriodArray for semantics test."""
-+        return JSONArray(make_data())
 +
-+    @pytest.fixture
-+    def data_missing(self):
-+        """Length 2 array with [NA, Valid]"""
-+        return JSONArray([{}, {'a': 10}])
++@pytest.fixture
++def data_missing():
++    """Length 2 array with [NA, Valid]"""
++    return JSONArray([{}, {'a': 10}])
 +
-+    @pytest.fixture
-+    def na_cmp(self):
-+        return operator.eq
 +
++@pytest.fixture
++def na_value():
++    return {}
++
++
++@pytest.fixture
++def na_cmp():
++    return operator.eq
++
++
++class TestDtype(base.BaseDtypeTests):
++    pass
++
++
++class TestInterface(base.BaseInterfaceTests):
++    pass
++
++
++class TestConstructors(base.BaseConstructorsTests):
++    pass
++
++
++class TestReshaping(base.BaseReshapingTests):
++    pass
++
++
++class TestGetitem(base.BaseGetitemTests):
++    pass
++
++
++class TestMissing(base.BaseMissingTests):
++    pass
++
++
++class TestMethods(base.BaseMethodsTests):
 +    @pytest.mark.skip(reason="Unhashable")
 +    def test_value_counts(self, all_data, dropna):
 +        pass
@@ -2135,77 +1769,3 @@ index 2487363df..991da4116 100644
  
      _holder = np.ndarray
  
-diff --git a/pandas/tests/io/test_parquet.py b/pandas/tests/io/test_parquet.py
-index 11cbea8ce..69b651839 100644
---- a/pandas/tests/io/test_parquet.py
-+++ b/pandas/tests/io/test_parquet.py
-@@ -154,10 +154,46 @@ def check_round_trip(df, engine=None, path=None,
-         write_kwargs['engine'] = engine
-         read_kwargs['engine'] = engine
- 
-+    fastparquet_make_block_dtype = (
-+        # Use of deprecated `dtype` in `make_block` that's hit only for
-+        # bool dtypes with no Nones.
-+        engine == 'fastparquet' and
-+        LooseVersion(fastparquet.__version__) == LooseVersion("0.1.4") and
-+        any(pd.api.types.is_bool_dtype(df[col]) for col in df.columns)
-+    )
-+
-+    if (engine == 'pyarrow' and
-+            LooseVersion(pyarrow.__version__) <= LooseVersion("0.8.0") and
-+            any(pd.api.types.is_datetime64tz_dtype(dtype)
-+                for dtype in df.dtypes)):
-+        # Use of deprecated fastpath in make_block
-+        # Deprecated in pandas 0.23 and removed in pyarrow 0.9
-+        # Remove this when all pyarrow builds >= 0.9
-+        warning_type = DeprecationWarning
-+    # elif (engine == 'fastparquet' and
-+    #         LooseVersion(fastparquet.__version__) == LooseVersion('0.1.3')):
-+    #     warning_type = DeprecationWarning
-+    elif (engine == 'fastparquet' and
-+          LooseVersion(fastparquet.__version__) <= LooseVersion("0.1.4") and
-+          LooseVersion(np.__version__) >= LooseVersion("1.14.0") and
-+          df.select_dtypes(['bool', 'object'])
-+            .isin([True, False]).any().any()):
-+        # use of deprecated np.fromstring for boolean columns
-+        # Deprecated in numpy 1.14
-+        # Used in fastparquet <= 0.1.4
-+        # Remove when all fastparquet builds >= 0.1.5
-+        # https://github.com/dask/fastparquet/issues/302
-+        warning_type = DeprecationWarning
-+    elif fastparquet_make_block_dtype:
-+        warning_type = DeprecationWarning
-+    else:
-+        warning_type = None
-+
-     def compare(repeat):
-         for _ in range(repeat):
-             df.to_parquet(path, **write_kwargs)
--            with catch_warnings(record=True):
-+            with tm.assert_produces_warning(warning_type,
-+                                            check_stacklevel=False):
-                 actual = read_parquet(path, **read_kwargs)
-             tm.assert_frame_equal(expected, actual,
-                                   check_names=check_names)
-@@ -224,7 +260,17 @@ def test_cross_engine_pa_fp(df_cross_compat, pa, fp):
-     with tm.ensure_clean() as path:
-         df.to_parquet(path, engine=pa, compression=None)
- 
--        result = read_parquet(path, engine=fp)
-+        if (LooseVersion(fastparquet.__version__) <= LooseVersion('0.1.4') and
-+                LooseVersion(np.__version__) >= LooseVersion('1.14.0')):
-+            # fastparquet used np.fromstring, deprecated in numpy 1.14.0
-+            expected_warning = DeprecationWarning
-+        else:
-+            expected_warning = None
-+
-+        with tm.assert_produces_warning(expected_warning,
-+                                        check_stacklevel=False):
-+            result = read_parquet(path, engine=fp)
-+
-         tm.assert_frame_equal(result, df)
- 
-         result = read_parquet(path, engine=fp, columns=['a', 'd'])
--- 
-2.16.1
-

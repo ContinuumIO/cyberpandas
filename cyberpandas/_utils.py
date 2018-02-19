@@ -2,9 +2,16 @@
 import struct
 
 
+def to_bytes(n, length, byteorder='big'):
+    # https://stackoverflow.com/a/20793663/1889400
+    h = '%x' % n
+    s = ('0' * (len(h) % 2) + h).zfill(length*2).decode('hex')
+    return s if byteorder == 'big' else s[::-1]
+
+
 def pack(ip):
     # type: (int) -> bytes
-    return ip.to_bytes(16, 'big')
+    return to_bytes(ip, length=16, byteorder='big')
 
 
 def unpack(ip):
