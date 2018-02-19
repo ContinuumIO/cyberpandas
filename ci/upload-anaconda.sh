@@ -16,7 +16,7 @@ if [ -z "$UPLOAD_KEY" ]; then
     return 0
 fi
 
-export UPLOADFILE=`conda build conda-recipes/pandas --python=${PYTHON} --output | tail -n 1`
+export UPLOADFILE=`conda build conda-recipes/pandas --python=${PYTHON} --numpy=${NUMPY} --output | tail -n 1`
 echo "UPLOADFILE = ${UPLOADFILE}"
 
 echo "[Upload pandas]"
