@@ -61,7 +61,7 @@ python -c 'import os,sys,fcntl; flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL); 
 
 echo
 echo "[building pandas]"
-conda build -q conda-recipes/pandas --python=${PYTHON}
+conda build -q conda-recipes/pandas --python=${PYTHON} --numpy=${NUMPY}
 
 echo "[installing pandas]"
 conda install -q $(conda build conda-recipes/pandas --python=${PYTHON} --output | tail -n 1)
