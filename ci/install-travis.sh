@@ -39,6 +39,10 @@ conda install -q \
       pytz \
       six
 
+if [ "${PYTHON}" == "2.7" ]; then
+    conda install -q ipaddress
+fi
+
 conda list test-environment
 
 

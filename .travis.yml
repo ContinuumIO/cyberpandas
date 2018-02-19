@@ -12,6 +12,7 @@ env:
     - PANDAS_ROOT="${TRAVIS_BUILD_DIR}/pandas"
   matrix:
     - PYTHON=3.6
+    - PYTHON=2.7
 before_install:
   - export PATH="$HOME/miniconda3/bin:$PATH"
 install:

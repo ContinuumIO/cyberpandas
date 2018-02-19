@@ -2,8 +2,8 @@ import abc
 import collections
 import ipaddress
 import operator
-import typing as T
 
+import six
 import numpy as np
 import pandas as pd
 # TODO: public API
@@ -21,7 +21,8 @@ from .parser import _to_ipaddress_pyint
 # -----------------------------------------------------------------------------
 
 
-class IPv4v6Base(metaclass=abc.ABCMeta):
+@six.add_metaclass(abc.ABCMeta)
+class IPv4v6Base(object):
     """Metaclass providing a common base class for the two scalar IP types."""
     pass
 
@@ -168,7 +169,8 @@ class IPArray(ExtensionArray):
         return self.data.tolist()
 
     @classmethod
-    def from_pyints(cls, values: T.Sequence[int]) -> 'IPArray':
+    def from_pyints(cls, values):
+        # type: T.Sequence[int]) -> 'IPArray'
         return cls(_to_ipaddress_pyint(values))
 
     def __eq__(self, other):

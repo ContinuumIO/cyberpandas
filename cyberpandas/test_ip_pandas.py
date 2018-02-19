@@ -2,6 +2,7 @@
 """
 import ipaddress
 
+import six
 import pytest
 import numpy as np
 from hypothesis.strategies import integers, lists
@@ -69,7 +70,12 @@ def test_index_constructor():
     result = ip.IPAddressIndex([0, 1, 2])
     assert isinstance(result, ip.IPAddressIndex)
     assert result._data.equals(ip.IPArray([0, 1, 2]))
-    assert repr(result) == "IPAddressIndex(['0.0.0.0', '0.0.0.1', '0.0.0.2'])"
+    if six.PY2:
+        assert repr(result) == ("IPAddressIndex([u'0.0.0.0', u'0.0.0.1', "
+                                "u'0.0.0.2'])")
+    else:
+        assert repr(result) == ("IPAddressIndex(['0.0.0.0', '0.0.0.1', "
+                                "'0.0.0.2'])")
 
 
 @pytest.mark.xfail(reason="ExtensionIndex not implemented")

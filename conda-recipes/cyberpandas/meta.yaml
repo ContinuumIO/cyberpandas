@@ -5,8 +5,6 @@ package:
 build:
     number: {{ environ.get('GIT_DESCRIBE_NUMBER', 0) }}
     script: python setup.py install --single-version-externally-managed --record=record.txt
-    noarch:
-      python
 
 source:
     path: {{ environ.get("TRAVIS_BUILD_DIR", "../../") }}
@@ -21,10 +19,11 @@ requirements:
     - python
     - setuptools >=3.3
     - pandas
+    - ipaddress # [py27]
 
-# test:
-#   imports:
-#     - cyberpandas
+test:
+  imports:
+    - cyberpandas
 
 about:
   home: https://github.com/continuumio/cyberpandas
