@@ -14,7 +14,7 @@ requirements:
   build:
     - python
     - cython
-    - {{ pin_compatible('numpy') }}
+    - numpy
     - setuptools >=3.3
     - python-dateutil >=2.5.0
     - pytz
