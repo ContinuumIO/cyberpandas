@@ -324,8 +324,7 @@ class IPArray(ExtensionArray):
     def unique(self):
         # type: () -> ExtensionArray
         pass
-
-    def factorize(self):
+    def _factorize(self, sort=False):
         # XXX: Verify this, check for better algo
         # astype to avoid endianness issues in pd.factorize
         a, _ = pd.factorize(self.data['lo'].astype('u8'))
