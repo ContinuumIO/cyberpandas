@@ -64,7 +64,7 @@ echo "[building pandas]"
 conda build -q conda-recipes/pandas --python=${PYTHON} --numpy=${NUMPY}
 
 echo "[installing pandas]"
-conda install -q $(conda build conda-recipes/pandas --python=${PYTHON} --output | tail -n 1)
+conda install -q ${MINICONDA_DIR}/conda-bld/*/pandas*.tar.bz2
 
 echo
 echo "[install cyberpandas]"
