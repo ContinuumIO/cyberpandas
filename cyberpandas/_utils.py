@@ -1,6 +1,8 @@
 """Utilities for working with IP address data."""
 import struct
 
+import six
+
 
 def to_bytes(n, length, byteorder='big'):
     # https://stackoverflow.com/a/20793663/1889400
@@ -11,7 +13,10 @@ def to_bytes(n, length, byteorder='big'):
 
 def pack(ip):
     # type: (int) -> bytes
-    return to_bytes(ip, length=16, byteorder='big')
+    if six.PY2:
+        return to_bytes(ip, length=16, byteorder='big')
+    else:
+        return ip.to_bytes(16, byteorder='big')
 
 
 def unpack(ip):
