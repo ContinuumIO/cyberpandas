@@ -222,6 +222,9 @@ class IPArray(ExtensionArray):
         ips = self.data
         return (ips['lo'] == 0) & (ips['lo'] - ips['hi'] == 0)
 
+    def argsort(self, axis=-1, kind='quicksort', order=None):
+        return self.data.argsort()
+
     @property
     def is_ipv4(self):
         # TODO: NA should be NA

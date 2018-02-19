@@ -29,6 +29,16 @@ def all_data(request, data, data_missing):
 
 
 @pytest.fixture
+def data_for_sorting():
+    return ip.IPArray([10, 2 ** 64 + 1, 1])
+
+
+@pytest.fixture
+def data_missing_for_sorting():
+    return ip.IPArray([2 ** 64 + 1, 0, 1])
+
+
+@pytest.fixture
 def na_cmp():
     """Binary operator for comparing NA values.
 
