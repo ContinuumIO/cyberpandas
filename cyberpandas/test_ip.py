@@ -149,6 +149,7 @@ def test_ops(tup):
     tm.assert_numpy_array_equal(r1, r2)
 
 
+@pytest.mark.xfail(reason='upstream')
 def test_value_counts():
     x = ip.IPArray([0, 0, 1])
     result = x.value_counts()

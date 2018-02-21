@@ -80,4 +80,7 @@ class TestMissing(base.BaseMissingTests):
 
 
 class TestMethods(base.BaseMethodsTests):
-    pass
+    @pytest.mark.parametrize('dropna', [True, False])
+    @pytest.mark.xfail(reason='upstream')
+    def test_value_counts(data, dropna):
+        pass
