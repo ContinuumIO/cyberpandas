@@ -16,6 +16,8 @@ environment:
     # See: http://stackoverflow.com/a/13751649/163740
     CMD_IN_ENV: "cmd /E:ON /V:ON /C .\\ci\\run_with_env.cmd"
     clone_folder: C:\projects\pandas
+    UPLOAD_TOKEN:
+      secure: 7/x6y6mkoFdHwnnE3bYmPj5gkF1KMi69JyfXlOC/Yys1twKZs5UbxmxEAdmJYdDQ
 
   matrix:
 
@@ -75,14 +77,21 @@ install:
   - cmd: conda info -a
 
   # create our env
+  - cmd: conda install -q -y conda-build anaconda-client
   - cmd: conda create -q -n test-environment python=%PYTHON_VERSION% coverage cython flake8 hypothesis numpy pytest pytest-cov python-dateutil pytz six %IPADDRESS%
   - cmd: activate test-environment
   - cmd: conda list -n test-environment
 
   - cmd: conda build -q conda-recipes/pandas --python=%PYTHON_VERSION% --numpy=%NUMPY%
   - cmd: pip install -e .
-  - cmd: conda install -q %MINICONDA_DIR%/conda-bld/*/pandas*.tar.bz2
+  - cmd: conda install -q %MINICONDA_DIR%\\conda-bld\\*\\pandas*.tar.bz2
 
 test_script:
   # tests
   - cmd: pytest
+  - cmd: conda build conda-recipes/cyberpandas --python=${PYTHON}
+
+on_success:
+  - cmd: anaconda -t %UPLOAD_KEY% upload -u intake --force %MINICONDA_DIR%\\conda-bld-*\\*.tar.bz2
+    on:
+      branch: master
