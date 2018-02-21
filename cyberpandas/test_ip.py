@@ -194,10 +194,34 @@ def test_attributes(prop):
     tm.assert_numpy_array_equal(result, expected)
 
 
-def test_isin():
+def test_isin_all4():
     s = ip.IPArray([u'192.168.1.1', u'255.255.255.255'])
     result = s.isin([u'192.168.1.0/24'])
     expected = np.array([True, False])
+    tm.assert_numpy_array_equal(result, expected)
+
+
+def test_isin_all6():
+    s = ip.IPArray([u'2001:db8::1', u'2001:db9::1'])
+    result = s.isin([u'2001:db8::0/96'])
+    expected = np.array([True, False])
+    tm.assert_numpy_array_equal(result, expected)
+
+
+def test_isin_mix():
+    s = ip.IPArray([u'192.168.1.1', u'255.255.255.255',
+                    u'2001:db8::1', u'2001:db9::1'])
+
+    result = s.isin([u'192.168.1.0/24'])
+    expected = np.array([True, False, False, False])
+    tm.assert_numpy_array_equal(result, expected)
+
+    result = s.isin([u'2001:db8::0/96'])
+    expected = np.array([False, False, True, False])
+    tm.assert_numpy_array_equal(result, expected)
+
+    result = s.isin([u'192.168.1.0/24', u'2001:db8::0/96'])
+    expected = np.array([True, False, True, False])
     tm.assert_numpy_array_equal(result, expected)
 
 
