@@ -83,6 +83,6 @@ install:
   - cmd: pip install -e .
   - cmd: conda install -q %MINICONDA_DIR%/conda-bld/*/pandas*.tar.bz2
 
-test_scrip:
+test_script:
   # tests
   - cmd: pytest
