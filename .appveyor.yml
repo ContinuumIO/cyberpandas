@@ -16,7 +16,7 @@ environment:
     # See: http://stackoverflow.com/a/13751649/163740
     CMD_IN_ENV: "cmd /E:ON /V:ON /C .\\ci\\run_with_env.cmd"
     clone_folder: C:\projects\pandas
-    UPLOAD_TOKEN:
+    UPLOAD_KEY:
       secure: 7/x6y6mkoFdHwnnE3bYmPj5gkF1KMi69JyfXlOC/Yys1twKZs5UbxmxEAdmJYdDQ
 
   matrix:
