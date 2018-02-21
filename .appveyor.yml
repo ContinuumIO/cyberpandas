@@ -21,14 +21,14 @@ environment:
 
   matrix:
 
-    - MINICONDA_DIR: "C:\\Miniconda3_64"
+    - CONDA_ROOT: "C:\\Miniconda3_64"
       PYTHON_VERSION: "3.6"
       PYTHON_ARCH: "64"
       CONDA_PY: "36"
       NUMPY: "1.11"
       IPADDRESS: ""
 
-    - MINICONDA_DIR: "C:\\Miniconda3_64"
+    - CONDA_ROOT: "C:\\Miniconda3_64"
       PYTHON_VERSION: "2.7"
       PYTHON_ARCH: "64"
       CONDA_PY: "27"
@@ -53,7 +53,7 @@ install:
   # this installs the appropriate Miniconda (Py2/Py3, 32/64 bit)
   # updates conda & installs: conda-build jinja2 anaconda-client
   - powershell .\ci\install.ps1
-  - SET PATH=%MINICONDA_DIR%;%MINICONDA_DIR%\Scripts;%PATH%
+  - SET PATH=%CONDA_ROOT%;%CONDA_ROOT%\Scripts;%PATH%
   - echo "install"
   - cd
   - ls -ltr
@@ -84,7 +84,7 @@ install:
 
   - cmd: conda build -q conda-recipes/pandas --python=%PYTHON_VERSION% --numpy=%NUMPY%
   - cmd: pip install -e .
-  - cmd: conda install -q %MINICONDA_DIR%\\conda-bld\\*\\pandas*.tar.bz2
+  - cmd: conda install -q %CONDA_ROOT%\\conda-bld\\*\\pandas*.tar.bz2
 
 test_script:
   # tests
@@ -92,6 +92,6 @@ test_script:
   - cmd: conda build conda-recipes/cyberpandas --python=${PYTHON}
 
 on_success:
-  - cmd: anaconda -t %UPLOAD_KEY% upload -u intake --force %MINICONDA_DIR%\\conda-bld-*\\*.tar.bz2
+  - cmd: anaconda -t %UPLOAD_KEY% upload -u intake --force %CONDA_ROOT%\\conda-bld-*\\*.tar.bz2
     on:
       branch: master
