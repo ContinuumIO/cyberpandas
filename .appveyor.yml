@@ -21,14 +21,14 @@ environment:
 
   matrix:
 
-    - CONDA_ROOT: "C:\\Miniconda3_64"
+    - MINICONDA_DIR: "C:\\Miniconda3_64"
       PYTHON_VERSION: "3.6"
       PYTHON_ARCH: "64"
       CONDA_PY: "36"
       NUMPY: "1.11"
       IPADDRESS: ""
 
-    - CONDA_ROOT: "C:\\Miniconda3_64"
+    - MINICONDA_DIR: "C:\\Miniconda3_64"
       PYTHON_VERSION: "2.7"
       PYTHON_ARCH: "64"
       CONDA_PY: "27"
@@ -53,7 +53,7 @@ install:
   # this installs the appropriate Miniconda (Py2/Py3, 32/64 bit)
   # updates conda & installs: conda-build jinja2 anaconda-client
   - powershell .\ci\install.ps1
-  - SET PATH=%CONDA_ROOT%;%CONDA_ROOT%\Scripts;%PATH%
+  - SET PATH=%MINICONDA_DIR%;%MINICONDA_DIR%\Scripts;%PATH%
   - echo "install"
   - cd
   - ls -ltr
