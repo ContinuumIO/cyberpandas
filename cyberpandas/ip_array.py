@@ -312,31 +312,15 @@ class IPArray(ExtensionArray):
 
     def _isin_network(self, other):
         # type: (Union[ipaddress.IPv4Network,ipaddress.IPv6Network]) -> ndarray
-        # https://stackoverflow.com/a/1004527/1889400
-        net_lo = int(other.network_address)
-        net_hi = int(other.broadcast_address)
+        """Check whether an array of addresses is contained in a network."""
+        # A network is bounded below by 'network_address' and
+        # above by 'broadcast_address'.
+        # IPArray handles comparisons between arrays of addresses, and NumPy
+        # handles broadcasting.
+        net_lo = type(self)([other.network_address])
+        net_hi = type(self)([other.broadcast_address])
 
-        if isinstance(other, ipaddress.IPv4Network):
-            # We know we only need the lower 64 bits
-            return (self.data['hi'] == 0) & ((net_lo <= self.data['lo']) &
-                                             (self.data['lo'] <= net_hi))
-        else:
-            # Okkkkkkkkkkkkkk, let's carefully watch overflow here.
-            if net_lo <= _U8_MAX and net_hi <= _U8_MAX:
-                # basically same as above?
-                return (self.data['hi'] == 0) & ((net_lo <= self.data['lo']) &
-                                                 (self.data['lo'] <= net_hi))
-            elif net_lo <= _U8_MAX:
-                # but net_hi is larger... Is this possible?
-                raise NotImplementedError("TODO")
-            else:
-                # The upper 64 bits match when hi_mask...
-                hi_mask_lo = self.data['hi'] == net_lo >> 64
-                hi_mask_hi = self.data['hi'] == net_hi >> 64
-                hi_mask = (self.data['hi'] > 0) & hi_mask_lo & hi_mask_hi
-                # This seems incorrect...
-                lo_mask = self.data['lo'] < (net_hi - net_lo)
-                return hi_mask & lo_mask
+        return (net_lo <= self) & (self <= net_hi)
 
     def setitem(self, indexer, value):
         """Set the 'value' inplace.
