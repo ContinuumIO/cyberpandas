@@ -1,14 +1,8 @@
 diff --git a/pandas/core/algorithms.py b/pandas/core/algorithms.py
-index 624045a3d..944f9430b 100644
+index 624045a3d..d616e3f92 100644
 --- a/pandas/core/algorithms.py
 +++ b/pandas/core/algorithms.py
-@@ -10,16 +10,17 @@ from pandas.core.dtypes.cast import (
-     maybe_promote, construct_1d_object_array_from_listlike)
- from pandas.core.dtypes.generic import (
-     ABCSeries, ABCIndex,
--    ABCIndexClass, ABCCategorical)
-+    ABCIndexClass)
- from pandas.core.dtypes.common import (
+@@ -15,11 +15,12 @@ from pandas.core.dtypes.common import (
      is_unsigned_integer_dtype, is_signed_integer_dtype,
      is_integer_dtype, is_complex_dtype,
      is_object_dtype,
@@ -22,123 +16,7 @@ index 624045a3d..944f9430b 100644
      is_datetime64_any_dtype, is_datetime64tz_dtype,
      is_timedelta64_dtype, is_interval_dtype,
      is_scalar, is_list_like,
-@@ -41,9 +42,10 @@ from pandas.util._decorators import deprecate_kwarg
- def _ensure_data(values, dtype=None):
-     """
-     routine to ensure that our data is of the correct
--    input dtype for lower-level routines
-+    input dtype for lower-level routines.
- 
-     This will coerce:
-+
-     - ints -> int64
-     - uint -> uint64
-     - bool -> uint64 (TODO this should be uint8)
-@@ -146,6 +148,8 @@ def _reconstruct_data(values, dtype, original):
-     Index for extension types, otherwise ndarray casted to dtype
- 
-     """
-+    from pandas.core.dtypes.base import ExtensionDtype
-+
-     from pandas import Index
-     if is_categorical_dtype(dtype):
-         pass
-@@ -157,6 +161,9 @@ def _reconstruct_data(values, dtype, original):
-         # we only support object dtypes bool Index
-         if isinstance(original, Index):
-             values = values.astype(object)
-+    elif isinstance(dtype, ExtensionDtype):
-+        # TODO
-+        pass
-     elif dtype is not None:
-         values = values.astype(dtype)
- 
-@@ -167,8 +174,11 @@ def _ensure_arraylike(values):
-     """
-     ensure that we are arraylike if not already
-     """
--    if not isinstance(values, (np.ndarray, ABCCategorical,
--                               ABCIndexClass, ABCSeries)):
-+    from pandas.core.arrays import ExtensionArray
-+
-+    if not isinstance(values, (np.ndarray,
-+                               ABCIndexClass, ABCSeries,
-+                               ExtensionArray)):
-         inferred = lib.infer_dtype(values)
-         if inferred in ['mixed', 'string', 'unicode']:
-             if isinstance(values, tuple):
-@@ -437,6 +447,33 @@ def isin(comps, values):
-     return f(comps, values)
- 
- 
-+def _factorize_array(values, na_sentinel=-1, size_hint=None, check_nulls=False):
-+    # type: (Union[ndarray, ExtensionArray]) -> ([ndarray, ndarray])
-+    """Factorize an array.
-+
-+    * Attempts no type coercion.
-+    * Dispatches to ExtensionArray.factorize if nescessary.
-+    """
-+    from pandas.core.dtypes.common import is_extension_array_dtype
-+
-+    if is_extension_array_dtype(values) and not is_categorical_dtype(values):
-+        # Not categoricals here, since we've already written the code here
-+        # to handle them. Do we have a preference organization-wise where
-+        # cat specific code lives? I'd prefer to move it to Categorical.
-+        labels, uniques = values.factorize()
-+    else:
-+        # TODO: move _ensure_data out of here, and see if we can remove
-+        # the dtype return
-+        (hash_klass, vec_klass), values = _get_data_algo(values, _hashtables)
-+
-+        table = hash_klass(size_hint or len(values))
-+        uniques = vec_klass()
-+        labels = table.get_labels(values, uniques, 0, na_sentinel, check_nulls)
-+        labels = _ensure_platform_int(labels)
-+        uniques = uniques.to_array()
-+    return labels, uniques
-+
-+
- @deprecate_kwarg(old_arg_name='order', new_arg_name=None)
- def factorize(values, sort=False, order=None, na_sentinel=-1, size_hint=None):
-     """
-@@ -462,19 +499,29 @@ def factorize(values, sort=False, order=None, na_sentinel=-1, size_hint=None):
-     note: an array of Periods will ignore sort as it returns an always sorted
-     PeriodIndex
-     """
-+    # I think algos.factorize needs to be refactored a bit. Currently, it
-+    # 1.) Sanitizes data
-+    # 2.) Infers the hashing algo
-+    # 3.) computes labels and arrays
-+    # 4.) Reconstruct output (maybe sort, maybe box)
-+    #
-+    # We would like to dispatch item 2/3...
- 
-     values = _ensure_arraylike(values)
-     original = values
--    values, dtype, _ = _ensure_data(values)
--    (hash_klass, vec_klass), values = _get_data_algo(values, _hashtables)
- 
--    table = hash_klass(size_hint or len(values))
--    uniques = vec_klass()
-+    if isinstance(values, ABCSeries) and not is_datetime64tz_dtype(values):
-+        # TODO: may be nice if _ensure_arraylike did this...
-+        # XXX: the not is_datetime64tz_dtype obviously has to be removed.
-+        # But Series[datetime64tz].values -> Goes to UTC datetime64ns.
-+        values = values.values
-+
-+    values, dtype, _ = _ensure_data(values)
-     check_nulls = not is_integer_dtype(original)
--    labels = table.get_labels(values, uniques, 0, na_sentinel, check_nulls)
- 
--    labels = _ensure_platform_int(labels)
--    uniques = uniques.to_array()
-+    labels, uniques = _factorize_array(values, na_sentinel=na_sentinel,
-+                                       size_hint=size_hint,
-+                                       check_nulls=check_nulls)
- 
-     if sort and len(uniques) > 0:
-         from pandas.core.sorting import safe_sort
-@@ -547,7 +594,7 @@ def value_counts(values, sort=True, ascending=False, normalize=False,
+@@ -547,7 +548,7 @@ def value_counts(values, sort=True, ascending=False, normalize=False,
          if is_categorical_dtype(values) or is_sparse(values):
  
              # handle Categorical and sparse,
@@ -147,7 +25,7 @@ index 624045a3d..944f9430b 100644
              result.name = name
              counts = result.values
  
-@@ -1292,10 +1339,13 @@ def take_nd(arr, indexer, axis=0, out=None, fill_value=np.nan, mask_info=None,
+@@ -1292,10 +1293,13 @@ def take_nd(arr, indexer, axis=0, out=None, fill_value=np.nan, mask_info=None,
      """
      Specialized Cython take which sets NaN values in one pass
  
@@ -158,19 +36,19 @@ index 624045a3d..944f9430b 100644
      ----------
 -    arr : ndarray
 -        Input array
-+    arr : ndarray, ExtensionArray, DatetimeIndex, IntervalIndex, SparseArray
++    arr : array-like
 +        Input array.
      indexer : ndarray
          1-D array of indices to take, subarrays corresponding to -1 value
          indicies are filed with fill_value
-@@ -1315,12 +1365,17 @@ def take_nd(arr, indexer, axis=0, out=None, fill_value=np.nan, mask_info=None,
+@@ -1315,17 +1319,25 @@ def take_nd(arr, indexer, axis=0, out=None, fill_value=np.nan, mask_info=None,
          If False, indexer is assumed to contain no -1 values so no filling
          will be done.  This short-circuits computation of a mask.  Result is
          undefined if allow_fill == False and -1 is present in indexer.
 +
 +    Returns
 +    -------
-+    subarray : object
++    subarray : array-like
 +        May be the same type as the input, or cast to an ndarray.
      """
  
@@ -184,8 +62,16 @@ index 624045a3d..944f9430b 100644
      elif is_datetimetz(arr):
          return arr.take(indexer, fill_value=fill_value, allow_fill=allow_fill)
      elif is_interval_dtype(arr):
+         return arr.take(indexer, fill_value=fill_value, allow_fill=allow_fill)
+ 
++    if is_sparse(arr):
++        arr = arr.get_values()
++
+     if indexer is None:
+         indexer = np.arange(arr.shape[axis], dtype=np.int64)
+         dtype, fill_value = arr.dtype, arr.dtype.type()
 diff --git a/pandas/core/arrays/base.py b/pandas/core/arrays/base.py
-index e618dc6b6..74ebe1442 100644
+index e618dc6b6..cec881394 100644
 --- a/pandas/core/arrays/base.py
 +++ b/pandas/core/arrays/base.py
 @@ -25,14 +25,13 @@ class ExtensionArray(object):
@@ -363,28 +249,6 @@ index e618dc6b6..74ebe1442 100644
      def _can_hold_na(self):
          # type: () -> bool
          """Whether your array can hold missing values. True by default.
-@@ -278,3 +326,21 @@ class ExtensionArray(object):
-         used for interacting with our indexers.
-         """
-         return np.array(self)
-+
-+    def factorize(self):
-+        # type: () -> (np.ndarray, ExtensionArray)
-+        """
-+        Encode the array as an enumerated type or categorical variable
-+
-+        Returns
-+        -------
-+        labels : the indexer to the original array
-+        uniques : ndarray (1-d) or Index
-+            the unique values. Index is returned when passed values is Index or
-+            Series
-+        """
-+        # TODO: I think ideally uniques would be an ExtensionArray.
-+        import pandas as pd
-+
-+        object_array = np.asarray(self)
-+        return pd.factorize(object_array)
 diff --git a/pandas/core/dtypes/base.py b/pandas/core/dtypes/base.py
 index c7c537880..d54d980d0 100644
 --- a/pandas/core/dtypes/base.py
@@ -545,7 +409,7 @@ index b032cb6f1..cb54c94d2 100644
  
  class _ABCGeneric(type):
 diff --git a/pandas/core/dtypes/missing.py b/pandas/core/dtypes/missing.py
-index ffac70247..36dbb0ee4 100644
+index ffac70247..01c88c269 100644
 --- a/pandas/core/dtypes/missing.py
 +++ b/pandas/core/dtypes/missing.py
 @@ -5,14 +5,16 @@ import numpy as np
@@ -577,7 +441,7 @@ index ffac70247..36dbb0ee4 100644
          return _isna_ndarraylike(obj)
      elif isinstance(obj, ABCGeneric):
          return obj._constructor(obj._data.isna(func=isna))
-@@ -124,30 +127,29 @@ def _use_inf_as_na(key):
+@@ -124,30 +127,31 @@ def _use_inf_as_na(key):
  
  
  def _isna_ndarraylike(obj):
@@ -618,15 +482,17 @@ index ffac70247..36dbb0ee4 100644
 -                vec = libmissing.isnaobj(values.ravel())
 -                result[...] = vec.reshape(shape)
 +        if is_string_like_dtype(dtype):
++            # object array of strings
 +            result = np.zeros(values.shape, dtype=bool)
 +        else:
++            # object array of non-strings
 +            result = np.empty(shape, dtype=bool)
 +            vec = libmissing.isnaobj(values.ravel())
 +            result[...] = vec.reshape(shape)
  
      elif needs_i8_conversion(obj):
          # this is the NaT pattern
-@@ -406,4 +408,7 @@ def remove_na_arraylike(arr):
+@@ -406,4 +410,7 @@ def remove_na_arraylike(arr):
      """
      Return array-like containing only true/non-NaN values, possibly empty.
      """
@@ -636,7 +502,7 @@ index ffac70247..36dbb0ee4 100644
 +    else:
 +        return arr[notna(lib.values_from_object(arr))]
 diff --git a/pandas/core/frame.py b/pandas/core/frame.py
-index d81d22173..ec877ec31 100644
+index 2aae4dffb..1c5cf87d6 100644
 --- a/pandas/core/frame.py
 +++ b/pandas/core/frame.py
 @@ -39,6 +39,7 @@ from pandas.core.dtypes.common import (
@@ -665,7 +531,7 @@ index d81d22173..ec877ec31 100644
              # GH19157
              if columns is None:
                  columns = [0]
-@@ -2820,7 +2821,7 @@ class DataFrame(NDFrame):
+@@ -2837,7 +2838,7 @@ class DataFrame(NDFrame):
              # now align rows
              value = reindexer(value).T
  
@@ -674,16 +540,7 @@ index d81d22173..ec877ec31 100644
              value = value.copy()
  
          elif isinstance(value, Index) or is_sequence(value):
-@@ -2828,7 +2829,7 @@ class DataFrame(NDFrame):
- 
-             # turn me into an ndarray
-             value = _sanitize_index(value, self.index, copy=False)
--            if not isinstance(value, (np.ndarray, Index)):
-+            if not isinstance(value, (np.ndarray, Index, ExtensionArray)):
-                 if isinstance(value, list) and len(value) > 0:
-                     value = maybe_convert_platform(value)
-                 else:
-@@ -2850,7 +2851,7 @@ class DataFrame(NDFrame):
+@@ -2867,7 +2868,7 @@ class DataFrame(NDFrame):
              value = maybe_cast_to_datetime(value, value.dtype)
  
          # return internal types directly
@@ -692,7 +549,7 @@ index d81d22173..ec877ec31 100644
              return value
  
          # broadcast across multiple columns if necessary
-@@ -3387,12 +3388,8 @@ class DataFrame(NDFrame):
+@@ -3404,12 +3405,8 @@ class DataFrame(NDFrame):
              new_obj = self.copy()
  
          def _maybe_casted_values(index, labels=None):
@@ -707,7 +564,7 @@ index d81d22173..ec877ec31 100644
                  if values.dtype == np.object_:
                      values = lib.maybe_convert_objects(values)
  
-@@ -5604,7 +5601,9 @@ class DataFrame(NDFrame):
+@@ -5621,7 +5618,9 @@ class DataFrame(NDFrame):
          if len(frame._get_axis(axis)) == 0:
              result = Series(0, index=frame._get_agg_axis(axis))
          else:
@@ -718,30 +575,8 @@ index d81d22173..ec877ec31 100644
                  result = notna(frame).sum(axis=axis)
              else:
                  counts = notna(frame.values).sum(axis=axis)
-diff --git a/pandas/core/groupby.py b/pandas/core/groupby.py
-index b1615f720..11672785f 100644
---- a/pandas/core/groupby.py
-+++ b/pandas/core/groupby.py
-@@ -44,7 +44,7 @@ from pandas.core.base import (PandasObject, SelectionMixin, GroupByError,
-                               DataError, SpecificationError)
- from pandas.core.index import (Index, MultiIndex,
-                                CategoricalIndex, _ensure_index)
--from pandas.core.arrays import Categorical
-+from pandas.core.arrays import Categorical, ExtensionArray
- from pandas.core.frame import DataFrame
- from pandas.core.generic import NDFrame, _shared_docs
- from pandas.core.internals import BlockManager, make_block
-@@ -2810,7 +2810,7 @@ class Grouping(object):
- 
-             # no level passed
-             elif not isinstance(self.grouper,
--                                (Series, Index, Categorical, np.ndarray)):
-+                                (Series, Index, ExtensionArray, np.ndarray)):
-                 if getattr(self.grouper, 'ndim', 1) != 1:
-                     t = self.name or str(type(self.grouper))
-                     raise ValueError("Grouper for '%s' not 1-dimensional" % t)
 diff --git a/pandas/core/indexes/base.py b/pandas/core/indexes/base.py
-index 7dfa34bd6..ef9facbac 100644
+index 59fe4bba6..ef1841e4f 100644
 --- a/pandas/core/indexes/base.py
 +++ b/pandas/core/indexes/base.py
 @@ -13,6 +13,7 @@ from pandas.compat.numpy import function as nv
@@ -922,7 +757,7 @@ index dd5feefc4..bad062620 100644
              values_flat = values.ravel(order='K')
          total_len = values_flat.shape[0]
 diff --git a/pandas/core/series.py b/pandas/core/series.py
-index 90dc14836..ec4d914f1 100644
+index 6fcd54ecc..b42e02bc9 100644
 --- a/pandas/core/series.py
 +++ b/pandas/core/series.py
 @@ -14,12 +14,14 @@ import numpy as np
@@ -940,15 +775,7 @@ index 90dc14836..ec4d914f1 100644
      is_datetime64tz_dtype,
      is_timedelta64_dtype,
      is_list_like,
-@@ -27,6 +29,7 @@ from pandas.core.dtypes.common import (
-     is_iterator,
-     is_dict_like,
-     is_scalar,
-+    is_sparse,
-     _is_unorderable_exception,
-     _ensure_platform_int,
-     pandas_dtype)
-@@ -173,12 +176,16 @@ class Series(base.IndexOpsMixin, generic.NDFrame):
+@@ -173,12 +175,17 @@ class Series(base.IndexOpsMixin, generic.NDFrame):
                  raise NotImplementedError("initializing a Series from a "
                                            "MultiIndex is not supported")
              elif isinstance(data, Index):
@@ -958,10 +785,11 @@ index 90dc14836..ec4d914f1 100644
  
 -                data = data._to_embed(keep_tz=True, dtype=dtype)
 +                if dtype is not None:
++                    # astype copies
 +                    data = data.astype(dtype)
-+
-+                # need to copy to avoid aliasing issues
-+                data = data._values.copy()
++                else:
++                    # need to copy to avoid aliasing issues
++                    data = data._values.copy()
                  copy = False
 +
              elif isinstance(data, np.ndarray):
@@ -989,22 +817,17 @@ index 90dc14836..ec4d914f1 100644
              elif (isinstance(data, types.GeneratorType) or
                    (compat.PY3 and isinstance(data, map))):
                  data = list(data)
-@@ -2556,8 +2565,12 @@ class Series(base.IndexOpsMixin, generic.NDFrame):
+@@ -2556,8 +2565,7 @@ class Series(base.IndexOpsMixin, generic.NDFrame):
                  return self.copy()
              return self
  
 -        # be subclass-friendly
 -        new_values = algorithms.take_1d(self.get_values(), indexer)
-+        if is_sparse(self):
-+            arr = self.get_values()
-+        else:
-+            arr = self._values
-+
-+        new_values = algorithms.take_1d(arr, indexer)
++        new_values = algorithms.take_1d(self._values, indexer)
          return self._constructor(new_values, index=new_index)
  
      def _needs_reindex_multi(self, axes, method, level):
-@@ -3113,10 +3126,11 @@ def _sanitize_index(data, index, copy=False):
+@@ -3113,10 +3121,11 @@ def _sanitize_index(data, index, copy=False):
  
      if isinstance(data, ABCIndexClass) and not copy:
          pass
@@ -1020,7 +843,7 @@ index 90dc14836..ec4d914f1 100644
      elif isinstance(data, np.ndarray):
  
          # coerce datetimelike types
-@@ -3156,8 +3170,17 @@ def _sanitize_array(data, index, dtype=None, copy=False,
+@@ -3156,8 +3165,17 @@ def _sanitize_array(data, index, dtype=None, copy=False,
                  subarr = np.array(subarr, dtype=dtype, copy=copy)
          except (ValueError, TypeError):
              if is_categorical_dtype(dtype):
@@ -1038,7 +861,7 @@ index 90dc14836..ec4d914f1 100644
              elif dtype is not None and raise_cast_failure:
                  raise
              else:
-@@ -3189,9 +3212,15 @@ def _sanitize_array(data, index, dtype=None, copy=False,
+@@ -3189,9 +3207,15 @@ def _sanitize_array(data, index, dtype=None, copy=False,
              # we will try to copy be-definition here
              subarr = _try_cast(data, True)
  
@@ -1056,13 +879,14 @@ index 90dc14836..ec4d914f1 100644
              subarr = data.copy()
          return subarr
 diff --git a/pandas/tests/categorical/test_missing.py b/pandas/tests/categorical/test_missing.py
-index 79758dee5..c8ac6a6ef 100644
+index fca557354..5133c97d8 100644
 --- a/pandas/tests/categorical/test_missing.py
 +++ b/pandas/tests/categorical/test_missing.py
-@@ -1,9 +1,8 @@
+@@ -1,10 +1,9 @@
  # -*- coding: utf-8 -*-
 -
  import numpy as np
+ import pytest
  
  import pandas.util.testing as tm
 -from pandas import (Categorical, Index, isna)
@@ -1070,12 +894,12 @@ index 79758dee5..c8ac6a6ef 100644
  from pandas.compat import lrange
  from pandas.core.dtypes.dtypes import CategoricalDtype
  
-diff --git a/pandas/tests/extension/base.py b/pandas/tests/extension/base.py
+diff --git a/pandas/tests/extension/base/__init__.py b/pandas/tests/extension/base/__init__.py
 new file mode 100644
-index 000000000..6ec93734a
+index 000000000..2273ef1f3
 --- /dev/null
-+++ b/pandas/tests/extension/base.py
-@@ -0,0 +1,420 @@
++++ b/pandas/tests/extension/base/__init__.py
+@@ -0,0 +1,42 @@
 +"""Base test suite for extension arrays.
 +
 +These tests are intended for third-party libraries to subclass to validate
@@ -1110,15 +934,88 @@ index 000000000..6ec93734a
 +``BaseDtypeTests``. pytest's fixture discover will supply your ``dtype``
 +wherever the test requires it. You're free to implement additional tests.
 +"""
-+import numpy as np
++from .casting import BaseCastingTests  # noqa
++from .constructors import BaseConstructorsTests  # noqa
++from .dtype import BaseDtypeTests  # noqa
++from .getitem import BaseGetitemTests  # noqa
++from .interface import BaseInterfaceTests  # noqa
++from .methods import BaseMethodsTests  # noqa
++from .missing import BaseMissingTests  # noqa
++from .reshaping import BaseReshapingTests  # noqa
+diff --git a/pandas/tests/extension/base/casting.py b/pandas/tests/extension/base/casting.py
+new file mode 100644
+index 000000000..bcfbf0a24
+--- /dev/null
++++ b/pandas/tests/extension/base/casting.py
+@@ -0,0 +1,11 @@
++import pandas as pd
++from pandas.core.internals import ObjectBlock
++
++
++class BaseCastingTests(object):
++    """Casting to and from ExtensionDtypes"""
++
++    def test_astype_object_series(self, all_data):
++        ser = pd.Series({"A": all_data})
++        result = ser.astype(object)
++        assert isinstance(result._data.blocks[0], ObjectBlock)
+diff --git a/pandas/tests/extension/base/constructors.py b/pandas/tests/extension/base/constructors.py
+new file mode 100644
+index 000000000..7ad100e62
+--- /dev/null
++++ b/pandas/tests/extension/base/constructors.py
+@@ -0,0 +1,43 @@
 +import pytest
 +
 +import pandas as pd
 +import pandas.util.testing as tm
-+from pandas.compat import StringIO
-+from pandas.core.internals import ExtensionBlock, ObjectBlock
-+from pandas.core.dtypes.common import is_extension_array_dtype
-+from pandas.core.dtypes.dtypes import ExtensionDtype
++from pandas.core.internals import ExtensionBlock
++
++
++class BaseConstructorsTests(object):
++
++    def test_series_constructor(self, data):
++        result = pd.Series(data)
++        assert result.dtype == data.dtype
++        assert len(result) == len(data)
++        assert isinstance(result._data.blocks[0], ExtensionBlock)
++        assert result._data.blocks[0].values is data
++
++        # Series[EA] is unboxed / boxed correctly
++        result2 = pd.Series(result)
++        assert result2.dtype == data.dtype
++        assert isinstance(result2._data.blocks[0], ExtensionBlock)
++
++    @pytest.mark.parametrize("from_series", [True, False])
++    def test_dataframe_constructor_from_dict(self, data, from_series):
++        if from_series:
++            data = pd.Series(data)
++        result = pd.DataFrame({"A": data})
++        assert result.dtypes['A'] == data.dtype
++        assert result.shape == (len(data), 1)
++        assert isinstance(result._data.blocks[0], ExtensionBlock)
++
++    def test_dataframe_from_series(self, data):
++        result = pd.DataFrame(pd.Series(data))
++        assert result.dtypes[0] == data.dtype
++        assert result.shape == (len(data), 1)
++        assert isinstance(result._data.blocks[0], ExtensionBlock)
++
++    @pytest.mark.xfail(reason="GH-19342")
++    def test_series_given_mismatched_index_raises(self, data):
++        msg = 'Wrong number of items passed 3, placement implies 4'
++        with tm.assert_raises_regex(ValueError, None) as m:
++            pd.Series(data[:3], index=[0, 1, 2, 3, 4])
++
++        assert m.match(msg)
+diff --git a/pandas/tests/extension/base/dtype.py b/pandas/tests/extension/base/dtype.py
+new file mode 100644
+index 000000000..f5015bd46
+--- /dev/null
++++ b/pandas/tests/extension/base/dtype.py
+@@ -0,0 +1,46 @@
++import numpy as np
++import pandas as pd
 +
 +
 +class BaseDtypeTests(object):
@@ -1163,147 +1060,16 @@ index 000000000..6ec93734a
 +
 +    def test_eq_with_numpy_object(self, dtype):
 +        assert dtype != np.dtype('object')
+diff --git a/pandas/tests/extension/base/getitem.py b/pandas/tests/extension/base/getitem.py
+new file mode 100644
+index 000000000..f43971e92
+--- /dev/null
++++ b/pandas/tests/extension/base/getitem.py
+@@ -0,0 +1,119 @@
++import numpy as np
 +
-+
-+class BaseInterfaceTests(object):
-+    """Tests that the basic interface is satisfied."""
-+    # ------------------------------------------------------------------------
-+    # Interface
-+    # ------------------------------------------------------------------------
-+
-+    def test_len(self, data):
-+        assert len(data) == 100
-+
-+    def test_ndim(self, data):
-+        assert data.ndim == 1
-+
-+    def test_can_hold_na_valid(self, data):
-+        assert data._can_hold_na in {True, False}
-+
-+    def test_memory_usage(self, data):
-+        s = pd.Series(data)
-+        result = s.memory_usage(index=False)
-+        assert result == s.nbytes
-+
-+    def test_array_interface(self, data):
-+        result = np.array(data)
-+        assert result[0] == data[0]
-+
-+    def test_as_ndarray_with_dtype_kind(self, data):
-+        np.array(data, dtype=data.dtype.kind)
-+
-+    def test_repr(self, data):
-+        ser = pd.Series(data)
-+        assert data.dtype.name in repr(ser)
-+
-+        df = pd.DataFrame({"A": data})
-+        repr(df)
-+
-+    def test_dtype_name_in_info(self, data):
-+        buf = StringIO()
-+        pd.DataFrame({"A": data}).info(buf=buf)
-+        result = buf.getvalue()
-+        assert data.dtype.name in result
-+
-+    def test_is_extension_array_dtype(self, data):
-+        assert is_extension_array_dtype(data)
-+        assert is_extension_array_dtype(data.dtype)
-+        assert is_extension_array_dtype(pd.Series(data))
-+        assert isinstance(data.dtype, ExtensionDtype)
-+
-+
-+class BaseConstructorsTests(object):
-+
-+    def test_series_constructor(self, data):
-+        result = pd.Series(data)
-+        assert result.dtype == data.dtype
-+        assert len(result) == len(data)
-+        assert isinstance(result._data.blocks[0], ExtensionBlock)
-+        assert result._data.blocks[0].values is data
-+
-+        # Series[EA] is unboxed / boxed correctly
-+        result2 = pd.Series(result)
-+        assert result2.dtype == data.dtype
-+        assert isinstance(result2._data.blocks[0], ExtensionBlock)
-+
-+    @pytest.mark.parametrize("from_series", [True, False])
-+    def test_dataframe_constructor_from_dict(self, data, from_series):
-+        if from_series:
-+            data = pd.Series(data)
-+        result = pd.DataFrame({"A": data})
-+        assert result.dtypes['A'] == data.dtype
-+        assert result.shape == (len(data), 1)
-+        assert isinstance(result._data.blocks[0], ExtensionBlock)
-+
-+    def test_dataframe_from_series(self, data):
-+        result = pd.DataFrame(pd.Series(data))
-+        assert result.dtypes[0] == data.dtype
-+        assert result.shape == (len(data), 1)
-+        assert isinstance(result._data.blocks[0], ExtensionBlock)
-+
-+    @pytest.mark.xfail(reason="GH-19342")
-+    def test_series_given_mismatched_index_raises(self, data):
-+        msg = 'Wrong number of items passed 3, placement implies 4'
-+        with tm.assert_raises_regex(ValueError, None) as m:
-+            pd.Series(data[:3], index=[0, 1, 2, 3, 4])
-+
-+        assert m.match(msg)
-+
-+
-+class BaseReshapingTests(object):
-+    """Tests for reshaping and concatenation."""
-+    @pytest.mark.parametrize('in_frame', [True, False])
-+    def test_concat(self, data, in_frame):
-+        wrapped = pd.Series(data)
-+        if in_frame:
-+            wrapped = pd.DataFrame(wrapped)
-+        result = pd.concat([wrapped, wrapped], ignore_index=True)
-+
-+        assert len(result) == len(data) * 2
-+
-+        if in_frame:
-+            dtype = result.dtypes[0]
-+        else:
-+            dtype = result.dtype
-+
-+        assert dtype == data.dtype
-+        assert isinstance(result._data.blocks[0], ExtensionBlock)
-+
-+    def test_align(self, data, na_value):
-+        a = data[:3]
-+        b = data[2:5]
-+        r1, r2 = pd.Series(a).align(pd.Series(b, index=[1, 2, 3]))
-+
-+        # Assumes that the ctor can take a list of scalars of the type
-+        e1 = pd.Series(type(data)(list(a) + [na_value]))
-+        e2 = pd.Series(type(data)([na_value] + list(b)))
-+        tm.assert_series_equal(r1, e1)
-+        tm.assert_series_equal(r2, e2)
-+
-+    def test_align_frame(self, data, na_value):
-+        a = data[:3]
-+        b = data[2:5]
-+        r1, r2 = pd.DataFrame({'A': a}).align(
-+            pd.DataFrame({'A': b}, index=[1, 2, 3])
-+        )
-+
-+        # Assumes that the ctor can take a list of scalars of the type
-+        e1 = pd.DataFrame({'A': type(data)(list(a) + [na_value])})
-+        e2 = pd.DataFrame({'A': type(data)([na_value] + list(b))})
-+        tm.assert_frame_equal(r1, e1)
-+        tm.assert_frame_equal(r2, e2)
-+
-+    def test_set_frame_expand_regular_with_extension(self, data):
-+        df = pd.DataFrame({"A": [1] * len(data)})
-+        df['B'] = data
-+        expected = pd.DataFrame({"A": [1] * len(data), "B": data})
-+        tm.assert_frame_equal(df, expected)
-+
-+    def test_set_frame_expand_extension_with_regular(self, data):
-+        df = pd.DataFrame({'A': data})
-+        df['B'] = [1] * len(data)
-+        expected = pd.DataFrame({"A": data, "B": [1] * len(data)})
-+        tm.assert_frame_equal(df, expected)
++import pandas as pd
++import pandas.util.testing as tm
 +
 +
 +class BaseGetitemTests(object):
@@ -1419,6 +1185,113 @@ index 000000000..6ec93734a
 +        assert result.iloc[0] == data[0]
 +        assert result.iloc[1] == data[1]
 +        assert result.iloc[2] == data[3]
+diff --git a/pandas/tests/extension/base/interface.py b/pandas/tests/extension/base/interface.py
+new file mode 100644
+index 000000000..8f17131a9
+--- /dev/null
++++ b/pandas/tests/extension/base/interface.py
+@@ -0,0 +1,53 @@
++import numpy as np
++
++import pandas as pd
++from pandas.compat import StringIO
++from pandas.core.dtypes.common import is_extension_array_dtype
++from pandas.core.dtypes.dtypes import ExtensionDtype
++
++
++class BaseInterfaceTests(object):
++    """Tests that the basic interface is satisfied."""
++    # ------------------------------------------------------------------------
++    # Interface
++    # ------------------------------------------------------------------------
++
++    def test_len(self, data):
++        assert len(data) == 100
++
++    def test_ndim(self, data):
++        assert data.ndim == 1
++
++    def test_can_hold_na_valid(self, data):
++        assert data._can_hold_na in {True, False}
++
++    def test_memory_usage(self, data):
++        s = pd.Series(data)
++        result = s.memory_usage(index=False)
++        assert result == s.nbytes
++
++    def test_array_interface(self, data):
++        result = np.array(data)
++        assert result[0] == data[0]
++
++    def test_as_ndarray_with_dtype_kind(self, data):
++        np.array(data, dtype=data.dtype.kind)
++
++    def test_repr(self, data):
++        ser = pd.Series(data)
++        assert data.dtype.name in repr(ser)
++
++        df = pd.DataFrame({"A": data})
++        repr(df)
++
++    def test_dtype_name_in_info(self, data):
++        buf = StringIO()
++        pd.DataFrame({"A": data}).info(buf=buf)
++        result = buf.getvalue()
++        assert data.dtype.name in result
++
++    def test_is_extension_array_dtype(self, data):
++        assert is_extension_array_dtype(data)
++        assert is_extension_array_dtype(data.dtype)
++        assert is_extension_array_dtype(pd.Series(data))
++        assert isinstance(data.dtype, ExtensionDtype)
+diff --git a/pandas/tests/extension/base/methods.py b/pandas/tests/extension/base/methods.py
+new file mode 100644
+index 000000000..c77811ca6
+--- /dev/null
++++ b/pandas/tests/extension/base/methods.py
+@@ -0,0 +1,32 @@
++import pytest
++import numpy as np
++
++import pandas as pd
++import pandas.util.testing as tm
++
++
++class BaseMethodsTests(object):
++    """Various Series and DataFrame methods."""
++
++    @pytest.mark.parametrize('dropna', [True, False])
++    def test_value_counts(self, all_data, dropna):
++        all_data = all_data[:10]
++        if dropna:
++            other = np.array(all_data[~all_data.isna()])
++        else:
++            other = all_data
++
++        result = pd.Series(all_data).value_counts(dropna=dropna).sort_index()
++        expected = pd.Series(other).value_counts(dropna=dropna).sort_index()
++
++        tm.assert_series_equal(result, expected)
++
++    def test_count(self, data_missing):
++        df = pd.DataFrame({"A": data_missing})
++        result = df.count(axis='columns')
++        expected = pd.Series([0, 1])
++        tm.assert_series_equal(result, expected)
++
++    def test_apply_simple_series(self, data):
++        result = pd.Series(data).apply(id)
++        assert isinstance(result, pd.Series)
+diff --git a/pandas/tests/extension/base/missing.py b/pandas/tests/extension/base/missing.py
+new file mode 100644
+index 000000000..1d6f2eea1
+--- /dev/null
++++ b/pandas/tests/extension/base/missing.py
+@@ -0,0 +1,45 @@
++import numpy as np
++
++import pandas as pd
++import pandas.util.testing as tm
 +
 +
 +class BaseMissingTests(object):
@@ -1460,101 +1333,81 @@ index 000000000..6ec93734a
 +        result = df.dropna()
 +        expected = df.iloc[:0]
 +        tm.assert_frame_equal(result, expected)
-+
-+
-+class BaseMethodsTests(object):
-+    """Various Series and DataFrame methods."""
-+
-+    @pytest.mark.parametrize('dropna', [True, False])
-+    def test_value_counts(self, all_data, dropna):
-+        all_data = all_data[:10]
-+        if dropna:
-+            other = np.array(all_data[~all_data.isna()])
-+        else:
-+            other = all_data
-+
-+        result = pd.Series(all_data).value_counts(dropna=dropna).sort_index()
-+        expected = pd.Series(other).value_counts(dropna=dropna).sort_index()
-+
-+        tm.assert_series_equal(result, expected)
-+
-+    def test_count(self, data_missing):
-+        df = pd.DataFrame({"A": data_missing})
-+        result = df.count(axis='columns')
-+        expected = pd.Series([0, 1])
-+        tm.assert_series_equal(result, expected)
-+
-+    def test_apply_simple_series(self, data):
-+        result = pd.Series(data).apply(id)
-+        assert isinstance(result, pd.Series)
-+
-+
-+class BaseCastingTests(object):
-+    """Casting to and from ExtensionDtypes"""
-+
-+    def test_astype_object_series(self, all_data):
-+        ser = pd.Series({"A": all_data})
-+        result = ser.astype(object)
-+        assert isinstance(result._data.blocks[0], ObjectBlock)
-diff --git a/pandas/tests/extension/conftest.py b/pandas/tests/extension/conftest.py
+diff --git a/pandas/tests/extension/base/reshaping.py b/pandas/tests/extension/base/reshaping.py
 new file mode 100644
-index 000000000..f86849b9c
+index 000000000..d8f577c6f
 --- /dev/null
-+++ b/pandas/tests/extension/conftest.py
-@@ -0,0 +1,48 @@
-+import operator
-+
++++ b/pandas/tests/extension/base/reshaping.py
+@@ -0,0 +1,61 @@
 +import pytest
 +
-+
-+@pytest.fixture
-+def dtype():
-+    """A fixture providing the ExtensionDtype to validate."""
-+    raise NotImplementedError
++import pandas as pd
++import pandas.util.testing as tm
++from pandas.core.internals import ExtensionBlock
 +
 +
-+@pytest.fixture
-+def data():
-+    """Length-100 array for this type."""
-+    raise NotImplementedError
++class BaseReshapingTests(object):
++    """Tests for reshaping and concatenation."""
++    @pytest.mark.parametrize('in_frame', [True, False])
++    def test_concat(self, data, in_frame):
++        wrapped = pd.Series(data)
++        if in_frame:
++            wrapped = pd.DataFrame(wrapped)
++        result = pd.concat([wrapped, wrapped], ignore_index=True)
 +
++        assert len(result) == len(data) * 2
 +
-+@pytest.fixture
-+def data_missing():
-+    """Length-2 array with [NA, Valid]"""
-+    raise NotImplementedError
++        if in_frame:
++            dtype = result.dtypes[0]
++        else:
++            dtype = result.dtype
 +
++        assert dtype == data.dtype
++        assert isinstance(result._data.blocks[0], ExtensionBlock)
 +
-+@pytest.fixture(params=['data', 'data_missing'])
-+def all_data(request, data, data_missing):
-+    """Parametrized fixture giving 'data' and 'data_missing'"""
-+    if request.param == 'data':
-+        return data
-+    elif request.param == 'data_missing':
-+        return data_missing
++    def test_align(self, data, na_value):
++        a = data[:3]
++        b = data[2:5]
++        r1, r2 = pd.Series(a).align(pd.Series(b, index=[1, 2, 3]))
 +
++        # Assumes that the ctor can take a list of scalars of the type
++        e1 = pd.Series(type(data)(list(a) + [na_value]))
++        e2 = pd.Series(type(data)([na_value] + list(b)))
++        tm.assert_series_equal(r1, e1)
++        tm.assert_series_equal(r2, e2)
 +
-+@pytest.fixture
-+def na_cmp():
-+    """Binary operator for comparing NA values.
++    def test_align_frame(self, data, na_value):
++        a = data[:3]
++        b = data[2:5]
++        r1, r2 = pd.DataFrame({'A': a}).align(
++            pd.DataFrame({'A': b}, index=[1, 2, 3])
++        )
 +
-+    Should return a function of two arguments that returns
-+    True if both arguments are (scalar) NA for your type.
++        # Assumes that the ctor can take a list of scalars of the type
++        e1 = pd.DataFrame({'A': type(data)(list(a) + [na_value])})
++        e2 = pd.DataFrame({'A': type(data)([na_value] + list(b))})
++        tm.assert_frame_equal(r1, e1)
++        tm.assert_frame_equal(r2, e2)
 +
-+    By defult, uses ``operator.or``
-+    """
-+    return operator.is_
++    def test_set_frame_expand_regular_with_extension(self, data):
++        df = pd.DataFrame({"A": [1] * len(data)})
++        df['B'] = data
++        expected = pd.DataFrame({"A": [1] * len(data), "B": data})
++        tm.assert_frame_equal(df, expected)
 +
-+
-+@pytest.fixture
-+def na_value():
-+    """The scalar missing value for this type. Default 'None'"""
-+    return None
-diff --git a/pandas/tests/extension/test_categorical.py b/pandas/tests/extension/test_categorical.py
++    def test_set_frame_expand_extension_with_regular(self, data):
++        df = pd.DataFrame({'A': data})
++        df['B'] = [1] * len(data)
++        expected = pd.DataFrame({"A": data, "B": [1] * len(data)})
++        tm.assert_frame_equal(df, expected)
+diff --git a/pandas/tests/extension/category/__init__.py b/pandas/tests/extension/category/__init__.py
 new file mode 100644
-index 000000000..fbec835a7
+index 000000000..e69de29bb
+diff --git a/pandas/tests/extension/category/test_categorical.py b/pandas/tests/extension/category/test_categorical.py
+new file mode 100644
+index 000000000..ec548fca6
 --- /dev/null
-+++ b/pandas/tests/extension/test_categorical.py
++++ b/pandas/tests/extension/category/test_categorical.py
 @@ -0,0 +1,84 @@
 +import string
 +
@@ -1563,7 +1416,7 @@ index 000000000..fbec835a7
 +
 +from pandas.api.types import CategoricalDtype
 +from pandas import Categorical
-+from . import base
++from pandas.tests.extension import base
 +
 +
 +def make_data():
@@ -1640,26 +1493,79 @@ index 000000000..fbec835a7
 +
 +class TestCasting(base.BaseCastingTests):
 +    pass
-diff --git a/pandas/tests/extension/test_decimal.py b/pandas/tests/extension/test_decimal.py
+diff --git a/pandas/tests/extension/conftest.py b/pandas/tests/extension/conftest.py
 new file mode 100644
-index 000000000..46ca08f94
+index 000000000..f86849b9c
 --- /dev/null
-+++ b/pandas/tests/extension/test_decimal.py
-@@ -0,0 +1,234 @@
++++ b/pandas/tests/extension/conftest.py
+@@ -0,0 +1,48 @@
++import operator
++
++import pytest
++
++
++@pytest.fixture
++def dtype():
++    """A fixture providing the ExtensionDtype to validate."""
++    raise NotImplementedError
++
++
++@pytest.fixture
++def data():
++    """Length-100 array for this type."""
++    raise NotImplementedError
++
++
++@pytest.fixture
++def data_missing():
++    """Length-2 array with [NA, Valid]"""
++    raise NotImplementedError
++
++
++@pytest.fixture(params=['data', 'data_missing'])
++def all_data(request, data, data_missing):
++    """Parametrized fixture giving 'data' and 'data_missing'"""
++    if request.param == 'data':
++        return data
++    elif request.param == 'data_missing':
++        return data_missing
++
++
++@pytest.fixture
++def na_cmp():
++    """Binary operator for comparing NA values.
++
++    Should return a function of two arguments that returns
++    True if both arguments are (scalar) NA for your type.
++
++    By defult, uses ``operator.or``
++    """
++    return operator.is_
++
++
++@pytest.fixture
++def na_value():
++    """The scalar missing value for this type. Default 'None'"""
++    return None
+diff --git a/pandas/tests/extension/decimal/__init__.py b/pandas/tests/extension/decimal/__init__.py
+new file mode 100644
+index 000000000..e69de29bb
+diff --git a/pandas/tests/extension/decimal/array.py b/pandas/tests/extension/decimal/array.py
+new file mode 100644
+index 000000000..f526ac599
+--- /dev/null
++++ b/pandas/tests/extension/decimal/array.py
+@@ -0,0 +1,86 @@
 +import decimal
 +import numbers
 +import random
 +import sys
 +
 +import numpy as np
-+import pandas as pd
-+import pandas.util.testing as tm
-+import pytest
 +
++import pandas as pd
 +from pandas.core.arrays import ExtensionArray
 +from pandas.core.dtypes.base import ExtensionDtype
-+
-+from . import base
 +
 +
 +class DecimalDtype(ExtensionDtype):
@@ -1736,6 +1642,22 @@ index 000000000..46ca08f94
 +
 +def make_data():
 +    return [decimal.Decimal(random.random()) for _ in range(100)]
+diff --git a/pandas/tests/extension/decimal/test_decimal.py b/pandas/tests/extension/decimal/test_decimal.py
+new file mode 100644
+index 000000000..7b4d079ec
+--- /dev/null
++++ b/pandas/tests/extension/decimal/test_decimal.py
+@@ -0,0 +1,154 @@
++import decimal
++
++import numpy as np
++import pandas as pd
++import pandas.util.testing as tm
++import pytest
++
++from pandas.tests.extension import base
++
++from .array import DecimalDtype, DecimalArray, make_data
 +
 +
 +@pytest.fixture
@@ -1880,31 +1802,26 @@ index 000000000..46ca08f94
 +    xpr = "Cannot coerce extension array to dtype 'int64'. "
 +    with tm.assert_raises_regex(ValueError, xpr):
 +        pd.DataFrame({"A": arr}, dtype='int64')
-diff --git a/pandas/tests/extension/test_json.py b/pandas/tests/extension/test_json.py
+diff --git a/pandas/tests/extension/json/__init__.py b/pandas/tests/extension/json/__init__.py
 new file mode 100644
-index 000000000..ecaa36b6d
+index 000000000..e69de29bb
+diff --git a/pandas/tests/extension/json/array.py b/pandas/tests/extension/json/array.py
+new file mode 100644
+index 000000000..90aac93c6
 --- /dev/null
-+++ b/pandas/tests/extension/test_json.py
-@@ -0,0 +1,168 @@
++++ b/pandas/tests/extension/json/array.py
+@@ -0,0 +1,99 @@
 +import collections
 +import itertools
 +import numbers
-+import operator
 +import random
 +import string
 +import sys
 +
 +import numpy as np
-+import pytest
-+
 +
 +from pandas.core.dtypes.base import ExtensionDtype
 +from pandas.core.arrays import ExtensionArray
-+
-+from . import base
-+
-+pytestmark = pytest.mark.skipif(sys.version_info[0] == 2,
-+                                reason="Py2 doesn't have a UserDict")
 +
 +
 +class JSONDtype(ExtensionDtype):
@@ -1993,6 +1910,24 @@ index 000000000..ecaa36b6d
 +    return [collections.UserDict([
 +        (random.choice(string.ascii_letters), random.randint(0, 100))
 +        for _ in range(random.randint(0, 10))]) for _ in range(100)]
+diff --git a/pandas/tests/extension/json/test_json.py b/pandas/tests/extension/json/test_json.py
+new file mode 100644
+index 000000000..e0721bb1d
+--- /dev/null
++++ b/pandas/tests/extension/json/test_json.py
+@@ -0,0 +1,73 @@
++import operator
++import sys
++
++import pytest
++
++
++from pandas.tests.extension import base
++
++from .array import JSONArray, JSONDtype, make_data
++
++pytestmark = pytest.mark.skipif(sys.version_info[0] == 2,
++                                reason="Py2 doesn't have a UserDict")
 +
 +
 +@pytest.fixture
@@ -2054,10 +1989,13 @@ index 000000000..ecaa36b6d
 +
 +class TestCasting(base.BaseCastingTests):
 +    pass
-diff --git a/pandas/tests/internals/test_external_block.py b/pandas/tests/internals/test_external_block.py
+diff --git a/pandas/tests/internals/test_external_block.py b/pandas/tests/extension/test_external_block.py
+similarity index 94%
+rename from pandas/tests/internals/test_external_block.py
+rename to pandas/tests/extension/test_external_block.py
 index 2487363df..991da4116 100644
 --- a/pandas/tests/internals/test_external_block.py
-+++ b/pandas/tests/internals/test_external_block.py
++++ b/pandas/tests/extension/test_external_block.py
 @@ -5,12 +5,12 @@ import numpy as np
  
  import pandas as pd
