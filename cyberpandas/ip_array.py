@@ -286,12 +286,43 @@ class IPArray(ExtensionArray):
         return self.data.tobytes()
 
     def isin(self, other):
-        """
+        """Check whether elements of 'self' are in 'other'.
+
+        Comparison is done elementwise.
+
+        Parameters
+        ----------
+        other : str or sequences
+            For ``str`` 'other', the argument is attempted to
+            be converted to an :class:`ipaddress.IPv4Network` or
+            a :class:`ipaddress.IPv6Network` or an :class:`IPArray`.
+            If all those conversions fail, a TypeError is raised.
+
+            For a sequence of strings, the same conversion is attempted.
+            You should not mix networks with addresses.
+
+            Finally, other may be an ``IPArray`` of addresses to compare it.
+
+        Returns
+        -------
+        contained : ndarray
+            A 1-D boolean ndarray with the same length as self.
 
         Examples
         --------
+        Comparison to a single network
+
         >>> s = IPArray(['192.168.1.1', '255.255.255.255'])
         >>> s.isin('192.168.1.0/24')
+        array([ True, False])
+
+        Comparison to many networks
+        >>> s.isin(['192.168.1.0/24', '192.168.2.0/24'])
+        array([ True, False])
+
+        Comparison to many IP Addresses
+
+        >>> s.isin(['192.168.1.1', '192.168.1.2', '255.255.255.1']])
         array([ True, False])
         """
         if isinstance(other, str) or not isinstance(other,
@@ -299,11 +330,17 @@ class IPArray(ExtensionArray):
             other = [other]
 
         networks = []
-        for net in other:
-            try:
-                networks.append(ipaddress.IPv4Network(net))
-            except ValueError:
-                networks.append(ipaddress.IPv6Network(net))
+        addresses = []
+
+        classes = [ipaddress.IPv4Network, ipaddress.IPv6Network,
+                   ipaddress.IPv4Address, ipaddress.IPv6Network]
+
+        if not isinstance(other, IPArray):
+            for net in other:
+                try:
+                    networks.append(ipaddress.IPv4Network(net))
+                except ValueError:
+                    networks.append(ipaddress.IPv6Network(net))
 
         mask = np.zeros(len(self), dtype='bool')
         for network in networks:
