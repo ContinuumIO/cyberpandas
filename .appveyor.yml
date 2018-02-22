@@ -87,7 +87,8 @@ install:
 
   - cmd: conda build -q conda-recipes/pandas --python=%PYTHON_VERSION% --numpy=%NUMPY%
   - cmd: pip install -e .
-  - cmd: dir %CONDA_ROOT%\\conda-bld\\*\\
+  - cmd: dir %CONDA_ROOT%\\conda-bld
+  - cmd: dir %CONDA_ROOT%\\conda-bld\\win-64
   - cmd: conda install -q %CONDA_ROOT%\\conda-bld\\*\\pandas*.tar.bz2
 
 test_script:
