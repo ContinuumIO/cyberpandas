@@ -82,7 +82,7 @@ install:
 
   # create our env
   - cmd: conda install -q -y conda-build anaconda-client %VS%
-  - cmd: call setup_x64  # https://github.com/conda-forge/conda-forge-build-setup-feedstock/pull/48/files
+  - cmd: IF %VS%=="vs2008_express_vc_python_patch" (call setup_x64)  # https://github.com/conda-forge/conda-forge-build-setup-feedstock/pull/48/files
   - cmd: conda create -q -n test-environment python=%PYTHON_VERSION% coverage cython flake8 hypothesis numpy pytest pytest-cov python-dateutil pytz six %IPADDRESS%
   - cmd: activate test-environment
   - cmd: conda list -n test-environment
