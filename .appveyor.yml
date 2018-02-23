@@ -70,7 +70,7 @@ install:
 
   # create our env
   - cmd: conda install -q -y conda-build anaconda-client
-  - cmd: conda create -q -n test-environment python=%PYTHON_VERSION% coverage cython flake8 hypothesis numpy pytest pytest-cov python-dateutil pytz six
+  - cmd: conda create -q -n test-environment python=%PYTHON_VERSION% coverage cython flake8 hypothesis numpy pytest pytest-cov python-dateutil pytz six nomkl
   - cmd: activate test-environment
   - cmd: conda list -n test-environment
 
@@ -84,6 +84,6 @@ test_script:
   - cmd: conda build conda-recipes/cyberpandas --python=${PYTHON}
 
 on_success:
-  - cmd: anaconda -t %UPLOAD_KEY% upload -u intake --force %CONDA_ROOT%\\conda-bld-*\\*.tar.bz2
+  - cmd: anaconda -t %UPLOAD_KEY% upload -u intake --force %CONDA_ROOT%\\conda-bld\\*\\*.tar.bz2
     on:
       branch: master
