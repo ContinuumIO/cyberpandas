@@ -47,9 +47,10 @@ def _to_ip_array(values):
 
     if isinstance(values, IPArray):
         return values.data
-    if not (isinstance(values, np.ndarray) and values.dtype == IPType.mybase):
+    if not (isinstance(values, np.ndarray) and
+            values.dtype == IPType._record_type):
         values = _to_int_pairs(values)
-    return np.atleast_1d(np.asarray(values, dtype=IPType.mybase))
+    return np.atleast_1d(np.asarray(values, dtype=IPType._record_type))
 
 
 def _to_int_pairs(values):
@@ -80,7 +81,7 @@ def _to_ipaddress_pyint(values):
     from .ip_array import IPType
 
     values2 = [unpack(pack(x)) for x in values]
-    return np.atleast_1d(np.asarray(values2, dtype=IPType.mybase))
+    return np.atleast_1d(np.asarray(values2, dtype=IPType._record_type))
 
 
 def _as_ip_object(val):

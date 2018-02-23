@@ -11,6 +11,7 @@ import numpy.testing as npt
 import pandas as pd
 import cyberpandas as ip
 import pandas.util.testing as tm
+from cyberpandas.common import _U8_MAX
 
 
 def test_make_container():
@@ -19,7 +20,7 @@ def test_make_container():
         values.data,
         np.array([(0, 1),
                   (0, 2),
-                  (0, 3)], dtype=values.dtype.mybase)
+                  (0, 3)], dtype=values.dtype._record_type)
     )
 
 
@@ -268,3 +269,12 @@ def test_setitem_array():
     ser[[1, 2]] = [10, 20]
     expected = ip.IPArray([0, 10, 20])
     assert ser.equals(expected)
+
+
+def test_bytes_roundtrip():
+    arr = ip.IPArray([1, 2, 3, _U8_MAX + 10])
+    bytestring = arr.to_bytes()
+    assert isinstance(bytestring, bytes)
+
+    result = ip.IPArray.from_bytes(bytestring)
+    assert result.equals(arr)
