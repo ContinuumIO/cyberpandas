@@ -84,4 +84,4 @@ test_script:
   - cmd: conda build conda-recipes/cyberpandas --python=${PYTHON}
 
 on_success:
-  - cmd: if "%APPVEYOR_PULL_REQUEST_NUMBER%"="" anaconda -t %UPLOAD_KEY% upload -u intake --force %CONDA_ROOT%\\conda-bld\\*\\*.tar.bz2
+  - cmd: if "%APPVEYOR_PULL_REQUEST_NUMBER%"=="" anaconda -t %UPLOAD_KEY% upload -u intake --force %CONDA_ROOT%\\conda-bld\\*\\*.tar.bz2
