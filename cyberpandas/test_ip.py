@@ -278,3 +278,30 @@ def test_bytes_roundtrip():
 
     result = ip.IPArray.from_bytes(bytestring)
     assert result.equals(arr)
+
+
+def test_unique():
+    arr = ip.IPArray([3, 3, 1, 2, 3, _U8_MAX + 1])
+    result = arr.unique()
+    assert isinstance(result, ip.IPArray)
+
+    result = result.astype(object)
+    expected = pd.unique(arr.astype(object))
+    tm.assert_numpy_array_equal(result, expected)
+
+
+@pytest.mark.parametrize('sort', [
+    pytest.param(True, marks=pytest.mark.xfail(reason="Upstream sort_values")),
+    False
+])
+def test_factorize(sort):
+    arr = ip.IPArray([3, 3, 1, 2, 3, _U8_MAX + 1])
+    labels, uniques = arr.factorize(sort=sort)
+    expected_labels, expected_uniques = pd.factorize(arr.astype(object),
+                                                     sort=sort)
+
+    assert isinstance(uniques, ip.IPArray)
+
+    uniques = uniques.astype(object)
+    tm.assert_numpy_array_equal(labels, expected_labels)
+    tm.assert_numpy_array_equal(uniques, expected_uniques)

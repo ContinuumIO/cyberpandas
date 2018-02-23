@@ -452,28 +452,20 @@ class IPArray(ExtensionArray):
 
     def unique(self):
         # type: () -> ExtensionArray
-        pass
+        # https://github.com/pandas-dev/pandas/pull/19869
+        _, indices = np.unique(self.data, return_index=True)
+        data = self.data.take(np.sort(indices))
+        return self._from_ndarray(data)
 
-    def _factorize(self, sort=False):
+    def factorize(self, sort=False):
         # XXX: Verify this, check for better algo
-        # astype to avoid endianness issues in pd.factorize
-        a, _ = pd.factorize(self.data['lo'].astype('u8'))
-        b, _ = pd.factorize(self.data['hi'].astype('u8'))
-
-        labels = np.bitwise_xor.reduce(
-            np.concatenate([a.reshape(-1, 1),
-                            b.reshape(-1, 1)], axis=1),
-            axis=1
-        )
-
-        # TODO: refactor into a .unique
-        # TODO: Handle empty, scalar, etc.
-        mask = np.zeros(len(labels), dtype=bool)
-        mask[0] = True
-        inner_mask = (labels[1:] - labels[:-1]) != 0
-        mask[1:] = inner_mask
-
-        uniques = self[mask]
+        uniques, indices, labels = np.unique(self.data,
+                                             return_index=True,
+                                             return_inverse=True)
+        if not sort:
+            # Unsort, since np.unique sorts
+            uniques = self._from_ndarray(self.data.take(np.sort(indices)))
+            labels = np.argsort(uniques.data).take(labels)
         return labels, uniques
 
 
