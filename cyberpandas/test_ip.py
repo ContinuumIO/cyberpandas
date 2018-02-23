@@ -224,6 +224,22 @@ def test_isin_mix():
     expected = np.array([True, False, True, False])
     tm.assert_numpy_array_equal(result, expected)
 
+    s = ip.IPArray([u'192.168.1.1', u'192.168.1.2',
+                    u'255.255.255.255'])
+    result = s.isin([u'192.168.1.0/24'])
+    expected = np.array([True, True, False])
+    tm.assert_numpy_array_equal(result, expected)
+
+
+def test_isin_network_address():
+    pass
+
+def test_isin_iparray():
+    s = ip.IPArray([10, 20, 20, 30])
+    result = s.isin(ip.IPArray([30, 20]))
+    expected = np.array([False, True, True, True])
+    tm.assert_numpy_array_equal(result, expected)
+
 
 def test_getitem_scalar():
     ser = ip.IPArray([0, 1, 2])

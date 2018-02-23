@@ -14,7 +14,7 @@ from ._accessor import (DelegatedMethod, DelegatedProperty,
                         delegated_method)
 from ._utils import combine, pack, unpack
 from .common import _U8_MAX, _IPv4_MAX
-from .parser import _to_ipaddress_pyint
+from .parser import _to_ipaddress_pyint, _as_ip_object
 
 # -----------------------------------------------------------------------------
 # Extension Type
@@ -301,7 +301,7 @@ class IPArray(ExtensionArray):
             For a sequence of strings, the same conversion is attempted.
             You should not mix networks with addresses.
 
-            Finally, other may be an ``IPArray`` of addresses to compare it.
+            Finally, other may be an ``IPArray`` of addresses to compare to.
 
         Returns
         -------
@@ -325,26 +325,35 @@ class IPArray(ExtensionArray):
         >>> s.isin(['192.168.1.1', '192.168.1.2', '255.255.255.1']])
         array([ True, False])
         """
-        if isinstance(other, str) or not isinstance(other,
-                                                    collections.Sequence):
+        box = (isinstance(other, str) or
+               not isinstance(other, (IPArray, collections.Sequence)))
+        if box:
             other = [other]
 
         networks = []
         addresses = []
 
-        classes = [ipaddress.IPv4Network, ipaddress.IPv6Network,
-                   ipaddress.IPv4Address, ipaddress.IPv6Network]
-
         if not isinstance(other, IPArray):
             for net in other:
-                try:
-                    networks.append(ipaddress.IPv4Network(net))
-                except ValueError:
-                    networks.append(ipaddress.IPv6Network(net))
+                net = _as_ip_object(net)
+                if isinstance(net, (ipaddress.IPv4Network,
+                                    ipaddress.IPv6Network)):
+                    networks.append(net)
+                if isinstance(net, (ipaddress.IPv4Address,
+                                    ipaddress.IPv6Address)):
+                    addresses.append(ipaddress.IPv6Network(net))
+        else:
+            addresses = other
+
+        # Flatten all the addresses
+        addresses = IPArray(addresses)  # TODO: think about copy=False
 
         mask = np.zeros(len(self), dtype='bool')
         for network in networks:
             mask |= self._isin_network(network)
+
+        # no... we should flatten this.
+        mask |= self._isin_addresses(addresses)
         return mask
 
     def _isin_network(self, other):
@@ -358,6 +367,12 @@ class IPArray(ExtensionArray):
         net_hi = type(self)([other.broadcast_address])
 
         return (net_lo <= self) & (self <= net_hi)
+
+    def _isin_addresses(self, other):
+        """Check whether elements of self are present in other."""
+        from pandas.core.algorithms import isin
+        # TODO(factorize): replace this
+        return isin(self, other)
 
     def setitem(self, indexer, value):
         """Set the 'value' inplace.
