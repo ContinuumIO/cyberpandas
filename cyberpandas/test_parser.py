@@ -1,3 +1,5 @@
+import ipaddress
+
 import pytest
 
 from cyberpandas import parser, IPArray
@@ -31,3 +33,26 @@ def test_to_ipaddress_scalar():
     expected = parser.to_ipaddress([1])
     assert len(result) == 1
     assert all(result == expected)
+
+
+@pytest.mark.parametrize('val, expected', [
+    (u'192.168.1.1', ipaddress.IPv4Address(u'192.168.1.1')),
+    (100, ipaddress.IPv4Address(100)),
+    (ipaddress.IPv4Address(100), ipaddress.IPv4Address(100)),
+    (2**64, ipaddress.IPv6Address(2**64)),
+    (u'192.168.0.0/28', ipaddress.IPv4Network(u'192.168.0.0/28')),
+    (ipaddress.IPv4Network(u'192.168.0.0/28'),
+     ipaddress.IPv4Network(u'192.168.0.0/28')),
+    (u'2001:db00::0/24', ipaddress.IPv6Network(u'2001:db00::0/24')),
+])
+def test_as_ip_object(val, expected):
+    result = parser._as_ip_object(val)
+    assert result == expected
+
+
+@pytest.mark.parametrize("val", [
+    u"129", -1
+])
+def test_as_ip_object_raises(val):
+    with pytest.raises(ValueError):
+        parser._as_ip_object(val)

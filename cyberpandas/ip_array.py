@@ -14,7 +14,7 @@ from ._accessor import (DelegatedMethod, DelegatedProperty,
                         delegated_method)
 from ._utils import combine, pack, unpack
 from .common import _U8_MAX, _IPv4_MAX
-from .parser import _to_ipaddress_pyint
+from .parser import _to_ipaddress_pyint, _as_ip_object
 
 # -----------------------------------------------------------------------------
 # Extension Type
@@ -286,33 +286,93 @@ class IPArray(ExtensionArray):
         return self.data.tobytes()
 
     def isin(self, other):
-        """
+        """Check whether elements of 'self' are in 'other'.
+
+        Comparison is done elementwise.
+
+        Parameters
+        ----------
+        other : str or sequences
+            For ``str`` 'other', the argument is attempted to
+            be converted to an :class:`ipaddress.IPv4Network` or
+            a :class:`ipaddress.IPv6Network` or an :class:`IPArray`.
+            If all those conversions fail, a TypeError is raised.
+
+            For a sequence of strings, the same conversion is attempted.
+            You should not mix networks with addresses.
+
+            Finally, other may be an ``IPArray`` of addresses to compare to.
+
+        Returns
+        -------
+        contained : ndarray
+            A 1-D boolean ndarray with the same length as self.
 
         Examples
         --------
+        Comparison to a single network
+
         >>> s = IPArray(['192.168.1.1', '255.255.255.255'])
         >>> s.isin('192.168.1.0/24')
         array([ True, False])
+
+        Comparison to many networks
+        >>> s.isin(['192.168.1.0/24', '192.168.2.0/24'])
+        array([ True, False])
+
+        Comparison to many IP Addresses
+
+        >>> s.isin(['192.168.1.1', '192.168.1.2', '255.255.255.1']])
+        array([ True, False])
         """
-        if isinstance(other, str) or not isinstance(other,
-                                                    collections.Sequence):
+        box = (isinstance(other, str) or
+               not isinstance(other, (IPArray, collections.Sequence)))
+        if box:
             other = [other]
 
         networks = []
-        for net in other:
-            try:
-                networks.append(ipaddress.IPv4Network(net))
-            except ValueError:
-                networks.append(ipaddress.IPv6Network(net))
+        addresses = []
 
-        # TODO: perf
-        pyips = self.to_pyipaddress()
+        if not isinstance(other, IPArray):
+            for net in other:
+                net = _as_ip_object(net)
+                if isinstance(net, (ipaddress.IPv4Network,
+                                    ipaddress.IPv6Network)):
+                    networks.append(net)
+                if isinstance(net, (ipaddress.IPv4Address,
+                                    ipaddress.IPv6Address)):
+                    addresses.append(ipaddress.IPv6Network(net))
+        else:
+            addresses = other
+
+        # Flatten all the addresses
+        addresses = IPArray(addresses)  # TODO: think about copy=False
+
         mask = np.zeros(len(self), dtype='bool')
         for network in networks:
-            for i, ip in enumerate(pyips):
-                if ip in network:
-                    mask[i] = True
+            mask |= self._isin_network(network)
+
+        # no... we should flatten this.
+        mask |= self._isin_addresses(addresses)
         return mask
+
+    def _isin_network(self, other):
+        # type: (Union[ipaddress.IPv4Network,ipaddress.IPv6Network]) -> ndarray
+        """Check whether an array of addresses is contained in a network."""
+        # A network is bounded below by 'network_address' and
+        # above by 'broadcast_address'.
+        # IPArray handles comparisons between arrays of addresses, and NumPy
+        # handles broadcasting.
+        net_lo = type(self)([other.network_address])
+        net_hi = type(self)([other.broadcast_address])
+
+        return (net_lo <= self) & (self <= net_hi)
+
+    def _isin_addresses(self, other):
+        """Check whether elements of self are present in other."""
+        from pandas.core.algorithms import isin
+        # TODO(factorize): replace this
+        return isin(self, other)
 
     def setitem(self, indexer, value):
         """Set the 'value' inplace.

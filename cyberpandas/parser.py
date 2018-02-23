@@ -81,3 +81,23 @@ def _to_ipaddress_pyint(values):
 
     values2 = [unpack(pack(x)) for x in values]
     return np.atleast_1d(np.asarray(values2, dtype=IPType.mybase))
+
+
+def _as_ip_object(val):
+    """Attempt to parse 'val' as any IP object.
+
+    Attempts to parse as these in order:
+
+    - IP Address (v4 or v6)
+    - IP Network (v4 or v6)
+    """
+    try:
+        return ipaddress.ip_address(val)
+    except ValueError:
+        pass
+
+    try:
+        return ipaddress.ip_network(val)
+    except ValueError:
+        raise ValueError("Could not parse {} is an address or "
+                         "network".format(val))
