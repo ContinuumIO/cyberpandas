@@ -26,14 +26,6 @@ environment:
       PYTHON_ARCH: "64"
       CONDA_PY: "36"
       NUMPY: "1.11"
-      IPADDRESS: ""
-
-    - CONDA_ROOT: "C:\\Miniconda3_64"
-      PYTHON_VERSION: "2.7"
-      PYTHON_ARCH: "64"
-      CONDA_PY: "27"
-      NUMPY: "1.9"
-      IPADDRESS: "ipaddress"
 
 # We always use a 64-bit machine, but can build x86 distributions
 # with the PYTHON_ARCH variable (which is used by CMD_IN_ENV).
@@ -78,7 +70,7 @@ install:
 
   # create our env
   - cmd: conda install -q -y conda-build anaconda-client
-  - cmd: conda create -q -n test-environment python=%PYTHON_VERSION% coverage cython flake8 hypothesis numpy pytest pytest-cov python-dateutil pytz six %IPADDRESS%
+  - cmd: conda create -q -n test-environment python=%PYTHON_VERSION% coverage cython flake8 hypothesis numpy pytest pytest-cov python-dateutil pytz six
   - cmd: activate test-environment
   - cmd: conda list -n test-environment
 
@@ -92,6 +84,6 @@ test_script:
   - cmd: conda build conda-recipes/cyberpandas --python=${PYTHON}
 
 on_success:
-  - cmd: anaconda -t %UPLOAD_KEY% upload -u intake --force %CONDA_ROOT%\\conda-bld-*\\*.tar.bz2
+  - cmd: anaconda -t %UPLOAD_KEY% upload -u intake --force %CONDA_ROOT%\\conda-bld\\*\\*.tar.bz2
     on:
       branch: master
