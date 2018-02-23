@@ -35,7 +35,7 @@ class IPType(ExtensionDtype):
     name = 'ip'
     type = IPv4v6Base
     kind = 'O'
-    mybase = np.dtype([('hi', '>u8'), ('lo', '>u8')])
+    _record_type = np.dtype([('hi', '>u8'), ('lo', '>u8')])
     na_value = ipaddress.IPv4Address(0)
 
     @classmethod
@@ -142,6 +142,17 @@ class IPArray(ExtensionArray):
     def to_pyints(self):
         return [combine(*map(int, x)) for x in self.data]
 
+    def to_bytes(self):
+        """Serialize the IPArray as a Python bytestring.
+
+        Examples
+        --------
+        >>> arr = IPArray([10, 20])
+        >>> arr.to_bytes()
+        b'\x00\x00\...x00\x02'
+        """
+        return self.data.tobytes()
+
     def __repr__(self):
         formatted = self._format_values()
         return "IPArray({!r})".format(formatted)
@@ -172,6 +183,59 @@ class IPArray(ExtensionArray):
     def from_pyints(cls, values):
         # type: T.Sequence[int]) -> 'IPArray'
         return cls(_to_ipaddress_pyint(values))
+
+    @classmethod
+    def from_bytes(cls, bytestring):
+        """Create an IPArray from a bytestring.
+
+        Parameters
+        ----------
+        bytestring : bytes
+            Note that bytestring is a Python 3-style string of bytes,
+            not a sequences of bytes where each element represents an
+            IPAddress.
+
+        Returns
+        -------
+        IPArray
+
+        Examples
+        --------
+        >>> arr = IPArray([10, 20])
+        >>> buf = arr.to_bytes()
+        >>> buf
+        b'\x00\x00\...x00\x02'
+        >>> IPArray.from_bytes(buf)
+        IPArray(['0.0.0.10', '0.0.0.20'])
+
+        See Also
+        --------
+        to_bytes
+        from_pyints
+        """
+        data = np.frombuffer(bytestring, dtype=IPType._record_type)
+        return cls._from_ndarray(data)
+
+    @classmethod
+    def _from_ndarray(cls, data, copy=False):
+        """Zero-copy construction of an IPArray from an ndarray.
+
+        Parameters
+        ----------
+        data : ndarray
+            This should have IPType._record_type dtype
+        copy : bool, default False
+            Whether to copy the data.
+
+        Returns
+        -------
+        ExtensionArray
+        """
+        if copy:
+            data = data.copy()
+        new = IPArray([])
+        new.data = data
+        return new
 
     def __eq__(self, other):
         # TDOO: scalar ipaddress
