@@ -231,9 +231,6 @@ def test_isin_mix():
     tm.assert_numpy_array_equal(result, expected)
 
 
-def test_isin_network_address():
-    pass
-
 def test_isin_iparray():
     s = ip.IPArray([10, 20, 20, 30])
     result = s.isin(ip.IPArray([30, 20]))
