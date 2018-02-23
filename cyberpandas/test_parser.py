@@ -36,14 +36,14 @@ def test_to_ipaddress_scalar():
 
 
 @pytest.mark.parametrize('val, expected', [
-    ('192.168.1.1', ipaddress.IPv4Address('192.168.1.1')),
+    (u'192.168.1.1', ipaddress.IPv4Address(u'192.168.1.1')),
     (100, ipaddress.IPv4Address(100)),
     (ipaddress.IPv4Address(100), ipaddress.IPv4Address(100)),
     (2**64, ipaddress.IPv6Address(2**64)),
-    ('192.168.0.0/28', ipaddress.IPv4Network('192.168.0.0/28')),
-    (ipaddress.IPv4Network('192.168.0.0/28'),
-     ipaddress.IPv4Network('192.168.0.0/28')),
-    ('2001:db00::0/24', ipaddress.IPv6Network('2001:db00::0/24')),
+    (u'192.168.0.0/28', ipaddress.IPv4Network(u'192.168.0.0/28')),
+    (ipaddress.IPv4Network(u'192.168.0.0/28'),
+     ipaddress.IPv4Network(u'192.168.0.0/28')),
+    (u'2001:db00::0/24', ipaddress.IPv6Network(u'2001:db00::0/24')),
 ])
 def test_as_ip_object(val, expected):
     result = parser._as_ip_object(val)
@@ -51,7 +51,7 @@ def test_as_ip_object(val, expected):
 
 
 @pytest.mark.parametrize("val", [
-    "129", -1
+    u"129", -1
 ])
 def test_as_ip_object_raises(val):
     with pytest.raises(ValueError):
