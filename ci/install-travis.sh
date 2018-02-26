@@ -68,7 +68,7 @@ conda install -q ${MINICONDA_DIR}/conda-bld/*/pandas*.tar.bz2
 
 echo
 echo "[install cyberpandas]"
-pip install -e .
+pip install --no-deps -e .
 
 echo "[finished install]"
 conda list
