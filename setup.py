@@ -21,4 +21,7 @@ setup(
         'Programming Language :: Python :: 3.6',
     ],
     packages=find_packages(),
+    install_requires=[
+        'pandas>=0.23.0',
+    ]
 )

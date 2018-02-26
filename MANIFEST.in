@@ -1,0 +1,6 @@
+exclude .appveyor.yml
+exclude .gitignore
+exclude .travis.yml
+exclude Makefile
+exclude *.ipynb
+recursive-exclude ci/
