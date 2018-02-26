@@ -75,8 +75,8 @@ install:
   - cmd: conda list -n test-environment
 
   - cmd: conda build -q conda-recipes/pandas --python=%PYTHON_VERSION% --numpy=%NUMPY%
-  - cmd: pip install -e .
   - cmd: conda install -q %CONDA_ROOT%\\conda-bld\\*\\pandas*.tar.bz2
+  - cmd: pip install -e .
 
 test_script:
   # tests
