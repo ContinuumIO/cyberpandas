@@ -13,7 +13,7 @@ setup(
     author_email='tom.w.augspurger@gmail.com',
     license="BSD",
     classifiers=[  # Optional
-        'License :: OSI Approved :: BSD License'
+        'License :: OSI Approved :: BSD License',
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
