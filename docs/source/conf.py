@@ -33,9 +33,12 @@
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx.ext.autosummary',
     'sphinx.ext.doctest',
     'sphinx.ext.intersphinx',
     'numpydoc',
+    'IPython.sphinxext.ipython_console_highlighting',
+    'IPython.sphinxext.ipython_directive',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -160,4 +163,14 @@ texinfo_documents = [
 
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'https://docs.python.org/': None}
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/', None),
+    'pandas': ('http://pandas-docs.github.io/pandas-docs-travis/', None),
+}
+
+
+ipython_execlines = [
+    "import ipaddress",
+    "import pandas as pd",
+    "from cyberpandas import IPArray, to_ipaddress",
+]

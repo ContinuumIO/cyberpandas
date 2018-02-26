@@ -143,6 +143,12 @@ def test_accessor_works():
     s.ip.is_ipv4
 
 
+def test_accessor_frame():
+    s = pd.DataFrame({"A": ip.IPArray([0, 1, 2, 3])})
+    s['A'].ip.is_ipv4
+
+
+
 # ---------
 # Factorize
 # ---------
