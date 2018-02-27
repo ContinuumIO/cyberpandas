@@ -148,7 +148,6 @@ def test_accessor_frame():
     s['A'].ip.is_ipv4
 
 
-
 # ---------
 # Factorize
 # ---------
