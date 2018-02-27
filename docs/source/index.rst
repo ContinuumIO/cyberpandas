@@ -9,21 +9,6 @@ cyberpandas
 cyberpandas is a library for working with arrays of IP Addresses. It's
 specifically designed to work well with pandas.
 
-Install
-=======
-
-With conda
-
-.. code-block:: none
-
-   conda install -c conda-forge cyberpandas
-
-Or pip
-
-.. code-block:: none
-
-   pip install cyberpandas
-
 Key Concepts
 ============
 
@@ -43,13 +28,24 @@ This is the container for your IPAddress data.
 Usage
 -----
 
-.. code-block:: python
+.. ipython:: python
 
-   >>> from cyberpandas import IPArray
-   >>> import pandas as pd
+   from cyberpandas import IPArray
+   import pandas as pd
 
-   >>> arr = IPArray([0, 1, 2])0000
-   >>> arr
+   arr = IPArray(['192.168.1.1',
+                  '2001:0db8:85a3:0000:0000:8a2e:0370:7334'])
+   arr
+
+``IPArray`` is a container for both IPv4 and IPv6 addresses. It can in turn be
+stored in pandas' containers:
+
+.. ipython:: python
+
+   pd.Series(arr)
+   pd.DataFrame({"addresses": arr})
+
+See :ref:`usage` for more.
 
 API
 ===
@@ -60,6 +56,11 @@ API
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
+
+   install.rst
+   usage.rst
+   api.rst
+
 
 
 

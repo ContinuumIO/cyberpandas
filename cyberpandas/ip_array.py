@@ -52,7 +52,7 @@ class IPType(ExtensionDtype):
 
 
 class IPArray(ExtensionArray):
-    """Holder for things"""
+    """Holder for IP Addresses."""
     # A note on the internal data layout. IPv6 addresses require 128 bits,
     # which is more than a uint64 can store. So we use a NumPy structured array
     # with two fields, 'hi', 'lo' to store the data. Each field is a uint64.
@@ -74,18 +74,21 @@ class IPArray(ExtensionArray):
     # -------------------------------------------------------------------------
     @property
     def dtype(self):
+        """The dtype for this extension array, IPType"""
         return self._dtype
 
     @property
     def shape(self):
+        """A length-tuple with the length of the array."""
         return (len(self.data),)
 
     @property
     def nbytes(self):
-        return 2 * 64 * len(self)
+        """The number of bytes taken to store this array.
 
-    def view(self, dtype=None):
-        return self.data.view()
+        It takes 16 bytes to store each addresses.
+        """
+        return 16 * len(self)
 
     def take(self, indexer, allow_fill=True, fill_value=None):
         mask = indexer == -1
