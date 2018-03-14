@@ -70,7 +70,7 @@ install:
 
   # create our env
   - cmd: conda install -q -y conda-build anaconda-client
-  - cmd: conda create -q -n test-environment python=%PYTHON_VERSION% coverage cython flake8 hypothesis numpy pytest pytest-cov python-dateutil pytz six
+  - cmd: conda create -q -n test-environment python=%PYTHON_VERSION% coverage cython flake8 hypothesis numba numpy pytest pytest-cov python-dateutil pytz six
   - cmd: activate test-environment
   - cmd: conda list -n test-environment
 
