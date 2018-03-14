@@ -7,6 +7,7 @@ dependencies:
   - flake8
   - ipython
   - matplotlib
+  - numba
   - numpy
   - numpydoc
   - pandas
