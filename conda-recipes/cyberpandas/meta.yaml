@@ -16,10 +16,11 @@ requirements:
     - setuptools >=3.3
 
   run:
+    - ipaddress # [py27]
+    - numba
+    - pandas
     - python
     - setuptools >=3.3
-    - pandas
-    - ipaddress # [py27]
 
 test:
   imports:

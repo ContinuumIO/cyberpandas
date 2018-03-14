@@ -1,6 +1,7 @@
 """Utilities for working with IP address data."""
 import struct
 
+import numba
 import six
 
 
@@ -31,3 +32,34 @@ def combine(hi, lo):
     # type: (int, int) -> int
     """Combine the hi and lo bytes into the final ip address."""
     return (hi << 64) + lo
+
+
+@numba.jit(nopython=True)
+def refactorize(arr, first_na, na_sentinel=-1):
+    """
+    Modify `arr` *inplace* to match pandas' factorization rules.
+
+    This detects the code missing values were assigned, sets
+    those to `na_sentinel`, and shifts codes above that value
+    down by 1 to fill the hole.
+
+    Parameters
+    ----------
+    arr : ndarray
+        First return value from :meth:`pandas.factorize`
+    first_na : int
+        The index location of the first missing value
+    na_sentinel : int, default -1
+        Value to set for missing values.
+    """
+    # A naive benchmark shows that this gets ~285x speedup
+    # with numba on a 10,000 element array.
+    na_code = arr[first_na]
+    for i in range(len(arr)):
+        val = arr[i]
+        if val == na_code:
+            arr[i] = na_sentinel
+        elif val > na_code:
+            arr[i] -= 1
+
+    return arr

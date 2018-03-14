@@ -290,15 +290,10 @@ def test_unique():
     tm.assert_numpy_array_equal(result, expected)
 
 
-@pytest.mark.parametrize('sort', [
-    pytest.param(True, marks=pytest.mark.xfail(reason="Upstream sort_values")),
-    False
-])
-def test_factorize(sort):
+def test_factorize():
     arr = ip.IPArray([3, 3, 1, 2, 3, _U8_MAX + 1])
-    labels, uniques = arr.factorize(sort=sort)
-    expected_labels, expected_uniques = pd.factorize(arr.astype(object),
-                                                     sort=sort)
+    labels, uniques = arr.factorize()
+    expected_labels, expected_uniques = pd.factorize(arr.astype(object))
 
     assert isinstance(uniques, ip.IPArray)
 
