@@ -69,6 +69,10 @@ class IPArray(ExtensionArray):
         values = _to_ip_array(values)  # TODO: avoid potential copy
         self.data = values
 
+    @classmethod
+    def _constructor_from_sequence(cls, scalars):
+        return cls(scalars)
+
     # -------------------------------------------------------------------------
     # Pandas Interface
     # -------------------------------------------------------------------------
@@ -460,15 +464,12 @@ class IPArray(ExtensionArray):
         data = self.data.take(np.sort(indices))
         return self._from_ndarray(data)
 
-    def factorize(self, sort=False):
+    def factorize(self, na_sentinel):
         # XXX: Verify this, check for better algo
+        # XXX: This is broken for NA values...
         uniques, indices, labels = np.unique(self.data,
                                              return_index=True,
                                              return_inverse=True)
-        if not sort:
-            # Unsort, since np.unique sorts
-            uniques = self._from_ndarray(self.data.take(np.sort(indices)))
-            labels = np.argsort(uniques.data).take(labels)
         return labels, uniques
 
 

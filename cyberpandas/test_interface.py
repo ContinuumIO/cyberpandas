@@ -39,6 +39,16 @@ def data_missing_for_sorting():
 
 
 @pytest.fixture
+def data_for_grouping():
+    b = 1
+    a = 2 ** 32 + 1
+    c = 2 ** 32 + 10
+    return ip.IPArray([
+        b, b, 0, 0, a, a, b, c
+    ])
+
+
+@pytest.fixture
 def na_cmp():
     """Binary operator for comparing NA values.
 
