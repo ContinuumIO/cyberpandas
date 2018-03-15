@@ -66,24 +66,6 @@ def test_dataframe_from_series():
     assert isinstance(result.dtypes['A'], ip.IPType)
 
 
-def test_index_constructor():
-    result = ip.IPAddressIndex([0, 1, 2])
-    assert isinstance(result, ip.IPAddressIndex)
-    assert result._data.equals(ip.IPArray([0, 1, 2]))
-    if six.PY2:
-        assert repr(result) == ("IPAddressIndex([u'0.0.0.0', u'0.0.0.1', "
-                                "u'0.0.0.2'])")
-    else:
-        assert repr(result) == ("IPAddressIndex(['0.0.0.0', '0.0.0.1', "
-                                "'0.0.0.2'])")
-
-
-@pytest.mark.xfail(reason="ExtensionIndex not implemented")
-def test_series_with_index():
-    ser = pd.Series([1, 2, 3], index=ip.IPAddressIndex([0, 1, 2]))
-    repr(ser)
-
-
 def test_getitem_scalar():
     ser = pd.Series(ip.IPArray([0, 1, 2]))
     result = ser[1]
@@ -107,14 +89,6 @@ def test_setitem_scalar():
 # --------------
 # Public Methods
 # --------------
-
-
-@pytest.mark.xfail(reason="upstream")
-def test_value_counts():
-    result = pd.Series(ip.IPArray([1, 1, 2, 3, 3, 3])).value_counts()
-    expected = pd.Series([3, 2, 1],
-                         index=ip.IPAddressIndex([3, 1, 2]))
-    tm.assert_series_equal(result, expected)
 
 
 @given(lists(integers(min_value=1, max_value=2**128 - 1)))
