@@ -21,8 +21,8 @@ install:
 script:
   - echo "script start"
   - source activate test-environment
-  - pytest cyberpandas
-  - flake8 cyberpandas
+  - pytest
+  - flake8
   - source ./ci/build.sh
 
 after_success:
