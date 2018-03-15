@@ -1,7 +1,6 @@
 import abc
 import collections
 import ipaddress
-import operator
 
 import six
 import numpy as np
@@ -11,7 +10,7 @@ from pandas.core.dtypes.dtypes import ExtensionDtype
 
 from ._accessor import (DelegatedMethod, DelegatedProperty,
                         delegated_method)
-from ._utils import combine, pack, unpack, refactorize
+from ._utils import combine, pack, unpack
 from .base import NumPyBackedExtensionArrayMixin
 from .common import _U8_MAX, _IPv4_MAX
 from .parser import _to_ipaddress_pyint, _as_ip_object
@@ -413,6 +412,7 @@ class IPArray(NumPyBackedExtensionArrayMixin):
         """
         # TODO: I wonder if that should be post-fixed by 0s.
         return self.data.tobytes()
+
 
 # -----------------------------------------------------------------------------
 # Accessor

@@ -5,7 +5,6 @@ from pandas.tests.extension import base
 from cyberpandas.mac_array import MACArray, MACType
 
 
-
 @pytest.fixture
 def dtype():
     return MACType()

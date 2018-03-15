@@ -2,7 +2,6 @@
 """
 import ipaddress
 
-import six
 import pytest
 import numpy as np
 from hypothesis.strategies import integers, lists
