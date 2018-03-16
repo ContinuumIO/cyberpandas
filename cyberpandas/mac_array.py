@@ -1,4 +1,5 @@
 import numpy as np
+import six
 
 from pandas.core.dtypes.dtypes import ExtensionDtype
 
@@ -8,7 +9,8 @@ from .base import NumPyBackedExtensionArrayMixin
 class MACType(ExtensionDtype):
     """Dtype for MAC Address Data."""
     name = 'mac'
-    type = int
+    # type is long for Py2 and int for py3
+    type = six.integer_types[-1]
     kind = 'u'
     na_value = 0  # TODO: Check this.
 
