@@ -1,18 +1,17 @@
 import abc
 import collections
 import ipaddress
-import operator
 
 import six
 import numpy as np
 import pandas as pd
 # TODO: public API
-from pandas.core.arrays import ExtensionArray
 from pandas.core.dtypes.dtypes import ExtensionDtype
 
 from ._accessor import (DelegatedMethod, DelegatedProperty,
                         delegated_method)
-from ._utils import combine, pack, unpack, refactorize
+from ._utils import combine, pack, unpack
+from .base import NumPyBackedExtensionArrayMixin
 from .common import _U8_MAX, _IPv4_MAX
 from .parser import _to_ipaddress_pyint, _as_ip_object
 
@@ -51,7 +50,7 @@ class IPType(ExtensionDtype):
 # -----------------------------------------------------------------------------
 
 
-class IPArray(ExtensionArray):
+class IPArray(NumPyBackedExtensionArrayMixin):
     """Holder for IP Addresses."""
     # A note on the internal data layout. IPv6 addresses require 128 bits,
     # which is more than a uint64 can store. So we use a NumPy structured array
@@ -60,6 +59,7 @@ class IPArray(ExtensionArray):
     # all IP traffic is big-endian.
     __array_priority__ = 1000
     _dtype = IPType()
+    _itemsize = 16
     ndim = 1
     can_hold_na = True
 
@@ -68,123 +68,6 @@ class IPArray(ExtensionArray):
 
         values = _to_ip_array(values)  # TODO: avoid potential copy
         self.data = values
-
-    @classmethod
-    def _constructor_from_sequence(cls, scalars):
-        return cls(scalars)
-
-    # -------------------------------------------------------------------------
-    # Pandas Interface
-    # -------------------------------------------------------------------------
-    @property
-    def dtype(self):
-        """The dtype for this extension array, IPType"""
-        return self._dtype
-
-    @property
-    def shape(self):
-        """A length-tuple with the length of the array."""
-        return (len(self.data),)
-
-    @property
-    def nbytes(self):
-        """The number of bytes taken to store this array.
-
-        It takes 16 bytes to store each addresses.
-        """
-        return 16 * len(self)
-
-    def take(self, indexer, allow_fill=True, fill_value=None):
-        mask = indexer == -1
-        result = self.data.take(indexer)
-        result[mask] = unpack(pack(int(self.na_value)))
-        return type(self)(result)
-
-    def _formatting_values(self):
-        return np.array(self._format_values(), dtype='object')
-
-    @classmethod
-    def _concat_same_type(cls, to_concat):
-        return cls(np.concatenate([array.data for array in to_concat]))
-
-    def take_nd(self, indexer, allow_fill=True, fill_value=None):
-        return self.take(indexer, allow_fill=allow_fill, fill_value=fill_value)
-
-    def copy(self, deep=False):
-        return type(self)(self.data.copy())
-
-    # -------------------------------------------------------------------------
-    # Iterator / Sequence interface
-    # -------------------------------------------------------------------------
-    def __len__(self):
-        return len(self.data)
-
-    def __getitem__(self, *args):
-        result = operator.getitem(self.data, *args)
-        if isinstance(result, tuple):
-            return ipaddress.ip_address(combine(*result))
-        elif isinstance(result, np.void):
-            result = result.item()
-            return ipaddress.ip_address(combine(*result))
-        else:
-            return type(self)(result)
-
-    def __setitem__(self, key, value):
-        from .parser import to_ipaddress
-
-        value = to_ipaddress(value).data
-        self.data[key] = value
-
-    def __iter__(self):
-        return iter(self.to_pyipaddress())
-
-    @property
-    def na_value(self):
-        return self.dtype.na_value
-
-    def to_pyipaddress(self):
-        import ipaddress
-        return [ipaddress.ip_address(x) for x in self._format_values()]
-
-    def to_pyints(self):
-        return [combine(*map(int, x)) for x in self.data]
-
-    def to_bytes(self):
-        """Serialize the IPArray as a Python bytestring.
-
-        Examples
-        --------
-        >>> arr = IPArray([10, 20])
-        >>> arr.to_bytes()
-        b'\x00\x00\...x00\x02'
-        """
-        return self.data.tobytes()
-
-    def __repr__(self):
-        formatted = self._format_values()
-        return "IPArray({!r})".format(formatted)
-
-    def _format_values(self):
-        formatted = []
-        # TODO: perf
-        for i in range(len(self)):
-            hi, lo = self.data[i]
-            if lo == -1:
-                formatted.append("NA")
-            elif hi == 0 and lo <= _IPv4_MAX:
-                formatted.append(ipaddress.IPv4Address._string_from_ip_int(
-                    int(lo)))
-            elif hi == 0:
-                formatted.append(ipaddress.IPv6Address._string_from_ip_int(
-                    int(lo)))
-            else:
-                # TODO:
-                formatted.append(ipaddress.IPv6Address._string_from_ip_int(
-                    (int(hi) << 64) + int(lo)))
-        return formatted
-
-    def tolist(self):
-        return self.data.tolist()
 
     @classmethod
     def from_pyints(cls, values):
@@ -244,6 +127,90 @@ class IPArray(ExtensionArray):
         new.data = data
         return new
 
+    # -------------------------------------------------------------------------
+    # Properties
+    # -------------------------------------------------------------------------
+    @property
+    def na_value(self):
+        return self.dtype.na_value
+
+    def take(self, indexer, allow_fill=True, fill_value=None):
+        mask = indexer == -1
+        result = self.data.take(indexer)
+        result[mask] = unpack(pack(int(self.na_value)))
+        return type(self)(result)  # TODO: check for copy
+
+    # -------------------------------------------------------------------------
+    # Interfaces
+    # -------------------------------------------------------------------------
+
+    def __repr__(self):
+        formatted = self._format_values()
+        return "IPArray({!r})".format(formatted)
+
+    def _format_values(self):
+        formatted = []
+        # TODO: perf
+        for i in range(len(self)):
+            hi, lo = self.data[i]
+            if lo == -1:
+                formatted.append("NA")
+            elif hi == 0 and lo <= _IPv4_MAX:
+                formatted.append(ipaddress.IPv4Address._string_from_ip_int(
+                    int(lo)))
+            elif hi == 0:
+                formatted.append(ipaddress.IPv6Address._string_from_ip_int(
+                    int(lo)))
+            else:
+                # TODO:
+                formatted.append(ipaddress.IPv6Address._string_from_ip_int(
+                    (int(hi) << 64) + int(lo)))
+        return formatted
+
+    @staticmethod
+    def _box_scalar(scalar):
+        return ipaddress.ip_address(combine(*scalar))
+
+    @property
+    def _parser(self):
+        from .parser import to_ipaddress
+        return to_ipaddress
+
+    def __setitem__(self, key, value):
+        from .parser import to_ipaddress
+
+        value = to_ipaddress(value).data
+        self.data[key] = value
+
+    def __iter__(self):
+        return iter(self.to_pyipaddress())
+
+    # ------------------------------------------------------------------------
+    # Serializaiton / Export
+    # ------------------------------------------------------------------------
+
+    def to_pyipaddress(self):
+        import ipaddress
+        return [ipaddress.ip_address(x) for x in self._format_values()]
+
+    def to_pyints(self):
+        return [combine(*map(int, x)) for x in self.data]
+
+    def to_bytes(self):
+        """Serialize the IPArray as a Python bytestring.
+
+        Examples
+        --------
+        >>> arr = IPArray([10, 20])
+        >>> arr.to_bytes()
+        b'\x00\x00\...x00\x02'
+        """
+        return self.data.tobytes()
+
+    # ------------------------------------------------------------------------
+    # Ops
+    # ------------------------------------------------------------------------
+
     def __eq__(self, other):
         # TDOO: scalar ipaddress
         if not isinstance(other, IPArray):
@@ -292,69 +259,6 @@ class IPArray(ExtensionArray):
     def isna(self):
         ips = self.data
         return (ips['lo'] == 0) & (ips['hi'] == 0)
-
-    def argsort(self, axis=-1, kind='quicksort', order=None):
-        return self.data.argsort()
-
-    @property
-    def is_ipv4(self):
-        # TODO: NA should be NA
-        ips = self.data
-        return (ips['hi'] == 0) & (ips['lo'] < _U8_MAX)
-
-    @property
-    def is_ipv6(self):
-        ips = self.data
-        return (ips['hi'] > 0) | (ips['lo'] > _U8_MAX)
-
-    @property
-    def version(self):
-        return np.where(self.is_ipv4, 4, 6)
-
-    @property
-    def is_multicast(self):
-        pyips = self.to_pyipaddress()
-        return np.array([ip.is_multicast for ip in pyips])
-
-    @property
-    def is_private(self):
-        pyips = self.to_pyipaddress()
-        return np.array([ip.is_private for ip in pyips])
-
-    @property
-    def is_global(self):
-        pyips = self.to_pyipaddress()
-        return np.array([ip.is_global for ip in pyips])
-
-    @property
-    def is_unspecified(self):
-        pyips = self.to_pyipaddress()
-        return np.array([ip.is_unspecified for ip in pyips])
-
-    @property
-    def is_reserved(self):
-        pyips = self.to_pyipaddress()
-        return np.array([ip.is_reserved for ip in pyips])
-
-    @property
-    def is_loopback(self):
-        pyips = self.to_pyipaddress()
-        return np.array([ip.is_loopback for ip in pyips])
-
-    @property
-    def is_link_local(self):
-        pyips = self.to_pyipaddress()
-        return np.array([ip.is_link_local for ip in pyips])
-
-    @property
-    def packed(self):
-        """Bytestring of the IP addresses
-
-        Each address takes 16 bytes. IPv4 addresses are prefixed
-        by zeros.
-        """
-        # TODO: I wonder if that should be post-fixed by 0s.
-        return self.data.tobytes()
 
     def isin(self, other):
         """Check whether elements of 'self' are in 'other'.
@@ -445,126 +349,69 @@ class IPArray(ExtensionArray):
         # TODO(factorize): replace this
         return isin(self, other)
 
-    def setitem(self, indexer, value):
-        """Set the 'value' inplace.
+    # ------------------------------------------------------------------------
+    # IP Specific
+    # ------------------------------------------------------------------------
+
+    @property
+    def is_ipv4(self):
+        # TODO: NA should be NA
+        ips = self.data
+        return (ips['hi'] == 0) & (ips['lo'] < _U8_MAX)
+
+    @property
+    def is_ipv6(self):
+        ips = self.data
+        return (ips['hi'] > 0) | (ips['lo'] > _U8_MAX)
+
+    @property
+    def version(self):
+        return np.where(self.is_ipv4, 4, 6)
+
+    @property
+    def is_multicast(self):
+        pyips = self.to_pyipaddress()
+        return np.array([ip.is_multicast for ip in pyips])
+
+    @property
+    def is_private(self):
+        pyips = self.to_pyipaddress()
+        return np.array([ip.is_private for ip in pyips])
+
+    @property
+    def is_global(self):
+        pyips = self.to_pyipaddress()
+        return np.array([ip.is_global for ip in pyips])
+
+    @property
+    def is_unspecified(self):
+        pyips = self.to_pyipaddress()
+        return np.array([ip.is_unspecified for ip in pyips])
+
+    @property
+    def is_reserved(self):
+        pyips = self.to_pyipaddress()
+        return np.array([ip.is_reserved for ip in pyips])
+
+    @property
+    def is_loopback(self):
+        pyips = self.to_pyipaddress()
+        return np.array([ip.is_loopback for ip in pyips])
+
+    @property
+    def is_link_local(self):
+        pyips = self.to_pyipaddress()
+        return np.array([ip.is_link_local for ip in pyips])
+
+    @property
+    def packed(self):
+        """Bytestring of the IP addresses
+
+        Each address takes 16 bytes. IPv4 addresses are prefixed
+        by zeros.
         """
-        # I think having a separate than __setitem__ is good
-        # since we have to return here, but __setitem__ doesn't.
-        self[indexer] = value
-        return self
-
-    @property
-    def index_type(self):
-        return IPAddressIndex
-
-    def unique(self):
-        # type: () -> ExtensionArray
-        # https://github.com/pandas-dev/pandas/pull/19869
-        _, indices = np.unique(self.data, return_index=True)
-        data = self.data.take(np.sort(indices))
-        return self._from_ndarray(data)
-
-    def factorize(self, na_sentinel=-1):
-        """Factorize an IPArray into integer labels and unique values.
-
-        Calling :meth:`pandas.Series.factorize` or :meth:`pandas.factorize`
-        will dispatch to this method.
-
-        Parameters
-        ----------
-        na_sentinel : int, default -1
-            The value in `labels` to use for indicating missing values in
-            `self`.
-
-        Returns
-        -------
-        labels : ndarray
-            An integer-type ndarray the same length as `self`. Each newly-
-            observed value in `self` will be assigned the next integer.
-            Missing values in self are assigned `na_sentinel`.
-        uniques : IPArray
-            The unique values in `self` in order of appereance, not including
-            the missing value ``IPv4Address('0.0.0.0')``.
-
-        See Also
-        --------
-        pandas.factorize, pandas.Series.factorize
-
-        Examples
-        --------
-        >>> arr = IPArray([2, 2, 0, 1, 2, 2**64 + 1])
-        >>> arr
-        IPArray(['0.0.0.2', '0.0.0.2', '0.0.0.0', '0.0.0.1',
-                 '0.0.0.2', '::1:0:0:0:1'])
-
-        >>> labels, uniques = arr.factorize()
-        >>> labels
-        array([ 0,  0, -1,  1,  0,  2])
-
-        Notice that `uniques` does not include the missing value.
-        >>> uniques
-        IPArray(['0.0.0.2', '0.0.0.1', '::1:0:0:0:1'])
-        """
-        # OK, so here's the plan.
-        # Start with factorizing `self.data`, which has two unfortunate issues
-        # 1. Requires casting to object.
-        # 2. Gets the NA logic wrong, since (0, 0) isn't NA to pandas.
-        # For now, we can't help with 1. Maybe someday.
-        # For 2, we can "fix" things with a little post-factorization cleanup.
-        l, u = pd.factorize(self.data)
-        mask = self.isna()
-        any_na = mask.any()
-
-        if any_na:
-            first_na = mask.argmax()
-            refactorize(l, first_na, na_sentinel=na_sentinel)  # inplace op
-
-        # u is an ndarray of tuples. Go to our record type, then an IPArray
-        u2 = type(self)((u.astype(self.dtype._record_type)))
-        # May have a missing value.
-        if any_na:
-            u2 = u2[~u2.isna()]
-        return l, u2
-
-
-# -----
-# Index
-# -----
-
-class IPAddressIndex(pd.Index):
-    _typ = 'ipaddressindex'
-    _attributes = ['name']
-    _holder = IPArray
-
-    def __new__(cls, data=None, name=None):
-        from .parser import _to_ip_array
-
-        if data is None:
-            data = []
-
-        data = _to_ip_array(data)
-        return cls._simple_new(data, name=name)
-
-    @classmethod
-    def _simple_new(cls, data, name=None):
-        result = object.__new__(cls)
-        values = cls._holder(data)
-        result._data = values
-        result._name = name
-        result._reset_identity()
-        return result
-
-    def __repr__(self):
-        tpl = 'IPAddressIndex({})'
-        return tpl.format(self._data._format_values())
-
-    @property
-    def inferred_type(self):
-        return self._typ
-
-    @property
-    def values(self):
-        return self._data
+        # TODO: I wonder if that should be post-fixed by 0s.
+        return self.data.tobytes()
 
 
 # -----------------------------------------------------------------------------
