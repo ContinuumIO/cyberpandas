@@ -51,7 +51,14 @@ class IPType(ExtensionDtype):
 
 
 class IPArray(NumPyBackedExtensionArrayMixin):
-    """Holder for IP Addresses."""
+    """Holder for IP Addresses.
+
+    IPArray is a container for IPv4 or IPv6 addresses. It satisfies pandas'
+    extension array interface, and so can be stored inside
+    :class:`pandas.Series` and :class:`pandas.DataFrame`.
+
+    See :ref:`usage` for more.
+    """
     # A note on the internal data layout. IPv6 addresses require 128 bits,
     # which is more than a uint64 can store. So we use a NumPy structured array
     # with two fields, 'hi', 'lo' to store the data. Each field is a uint64.
@@ -71,7 +78,22 @@ class IPArray(NumPyBackedExtensionArrayMixin):
 
     @classmethod
     def from_pyints(cls, values):
-        # type: T.Sequence[int]) -> 'IPArray'
+        # type: (T.Sequence[int]) -> 'IPArray'
+        """Construct an IPArray from a sequence of Python integers.
+
+        This can be useful for representing IPv6 addresses, which may
+        be larger than 2**64.
+
+        Parameters
+        ----------
+        values : Sequence
+            Sequence of Python integers.
+
+        Examples
+        --------
+        >>> IPArray.from_pyints([0, 10, 2 ** 64 + 1])
+        IPArray(['0.0.0.1', '0.0.0.2', '0.0.0.3', '0:0:0:1::'])
+        """
         return cls(_to_ipaddress_pyint(values))
 
     @classmethod
@@ -132,6 +154,15 @@ class IPArray(NumPyBackedExtensionArrayMixin):
     # -------------------------------------------------------------------------
     @property
     def na_value(self):
+        """The missing value sentinal for IP Addresses.
+
+        The address ``'0.0.0.0'`` is used.
+
+        Examples
+        --------
+        >>> IPArray([]).na_value
+        IPv4Address('0.0.0.0')
+        """
         return self.dtype.na_value
 
     def take(self, indexer, allow_fill=True, fill_value=None):
@@ -355,51 +386,61 @@ class IPArray(NumPyBackedExtensionArrayMixin):
 
     @property
     def is_ipv4(self):
+        """Indicator for whether each address fits in the IPv4 space."""
         # TODO: NA should be NA
         ips = self.data
         return (ips['hi'] == 0) & (ips['lo'] < _U8_MAX)
 
     @property
     def is_ipv6(self):
+        """Indicator for whether each address requires IPv6."""
         ips = self.data
         return (ips['hi'] > 0) | (ips['lo'] > _U8_MAX)
 
     @property
     def version(self):
+        """IP version (4 or 6)."""
         return np.where(self.is_ipv4, 4, 6)
 
     @property
     def is_multicast(self):
+        """Indiciator for whether each address is multicast."""
         pyips = self.to_pyipaddress()
         return np.array([ip.is_multicast for ip in pyips])
 
     @property
     def is_private(self):
+        """Indiciator for whether each address is private."""
         pyips = self.to_pyipaddress()
         return np.array([ip.is_private for ip in pyips])
 
     @property
     def is_global(self):
+        """Indiciator for whether each address is global."""
         pyips = self.to_pyipaddress()
         return np.array([ip.is_global for ip in pyips])
 
     @property
     def is_unspecified(self):
+        """Indiciator for whether each address is unspecified."""
         pyips = self.to_pyipaddress()
         return np.array([ip.is_unspecified for ip in pyips])
 
     @property
     def is_reserved(self):
+        """Indiciator for whether each address is reserved."""
         pyips = self.to_pyipaddress()
         return np.array([ip.is_reserved for ip in pyips])
 
     @property
     def is_loopback(self):
+        """Indiciator for whether each address is loopback."""
         pyips = self.to_pyipaddress()
         return np.array([ip.is_loopback for ip in pyips])
 
     @property
     def is_link_local(self):
+        """Indiciator for whether each address is link local."""
         pyips = self.to_pyipaddress()
         return np.array([ip.is_link_local for ip in pyips])
 
