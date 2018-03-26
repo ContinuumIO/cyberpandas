@@ -88,6 +88,10 @@ class MACArray(NumPyBackedExtensionArrayMixin):
             raise TypeError
         return (self.data == other.data).all()
 
+    def _values_for_factorize(self):
+        # Should hit pandas' UInt64Hashtable
+        return self, 0
+
     def isna(self):
         return (self.data == 0)
 
