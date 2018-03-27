@@ -2,10 +2,7 @@ import operator
 
 import numpy as np
 
-import pandas as pd
 from pandas.core.arrays import ExtensionArray
-
-from ._utils import refactorize
 
 
 class NumPyBackedExtensionArrayMixin(ExtensionArray):
@@ -17,6 +14,10 @@ class NumPyBackedExtensionArrayMixin(ExtensionArray):
     @classmethod
     def _constructor_from_sequence(cls, scalars):
         return cls(scalars)
+
+    @classmethod
+    def _from_factorized(cls, values, original):
+        return cls(values)
 
     @property
     def shape(self):
@@ -68,65 +69,3 @@ class NumPyBackedExtensionArrayMixin(ExtensionArray):
         _, indices = np.unique(self.data, return_index=True)
         data = self.data.take(np.sort(indices))
         return self._from_ndarray(data)
-
-    def factorize(self, na_sentinel=-1):
-        """Factorize an IPArray into integer labels and unique values.
-
-        Calling :meth:`pandas.Series.factorize` or :meth:`pandas.factorize`
-        will dispatch to this method.
-
-        Parameters
-        ----------
-        na_sentinel : int, default -1
-            The value in `labels` to use for indicating missing values in
-            `self`.
-
-        Returns
-        -------
-        labels : ndarray
-            An integer-type ndarray the same length as `self`. Each newly-
-            observed value in `self` will be assigned the next integer.
-            Missing values in self are assigned `na_sentinel`.
-        uniques : IPArray
-            The unique values in `self` in order of appereance, not including
-            the missing value ``IPv4Address('0.0.0.0')``.
-
-        See Also
-        --------
-        pandas.factorize, pandas.Series.factorize
-
-        Examples
-        --------
-        >>> arr = IPArray([2, 2, 0, 1, 2, 2**64 + 1])
-        >>> arr
-        IPArray(['0.0.0.2', '0.0.0.2', '0.0.0.0', '0.0.0.1',
-                 '0.0.0.2', '::1:0:0:0:1'])
-
-        >>> labels, uniques = arr.factorize()
-        >>> labels
-        array([ 0,  0, -1,  1,  0,  2])
-
-        Notice that `uniques` does not include the missing value.
-        >>> uniques
-        IPArray(['0.0.0.2', '0.0.0.1', '::1:0:0:0:1'])
-        """
-        # OK, so here's the plan.
-        # Start with factorizing `self.data`, which has two unfortunate issues
-        # 1. Requires casting to object.
-        # 2. Gets the NA logic wrong, since (0, 0) isn't NA to pandas.
-        # For now, we can't help with 1. Maybe someday.
-        # For 2, we can "fix" things with a little post-factorization cleanup.
-        l, u = pd.factorize(self.data)
-        mask = self.isna()
-        any_na = mask.any()
-
-        if any_na:
-            first_na = mask.argmax()
-            refactorize(l, first_na, na_sentinel=na_sentinel)  # inplace op
-
-        # u is an ndarray of tuples. Go to our record type, then an IPArray
-        u2 = type(self)((u.astype(self.dtype._record_type)))
-        # May have a missing value.
-        if any_na:
-            u2 = u2[~u2.isna()]
-        return l, u2

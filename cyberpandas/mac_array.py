@@ -1,3 +1,5 @@
+from collections import Iterable
+
 import numpy as np
 import six
 
@@ -60,9 +62,7 @@ class MACArray(NumPyBackedExtensionArrayMixin):
         return scalar
 
     def __setitem__(self, key, value):
-        from .parser import to_ipaddress
-
-        value = to_ipaddress(value).data
+        value = to_macaddress(value)
         self.data[key] = value
 
     def __iter__(self):
@@ -87,6 +87,10 @@ class MACArray(NumPyBackedExtensionArrayMixin):
         if not isinstance(other, type(self)):
             raise TypeError
         return (self.data == other.data).all()
+
+    def _values_for_factorize(self):
+        # Should hit pandas' UInt64Hashtable
+        return self, 0
 
     def isna(self):
         return (self.data == 0)
@@ -126,3 +130,13 @@ def _parse(mac):
     # https://stackoverflow.com/a/36883363/1889400
     mac_int = int(mac.replace(":", "").replace("-", ""), 16)
     return mac_int
+
+
+def to_macaddress(addresses):
+    if (isinstance(addresses, six.string_types) or
+            not isinstance(addresses, Iterable)):
+        addresses = [addresses]
+
+    addresses = [_parse(mac) if isinstance(mac, six.string_types) else mac
+                 for mac in addresses]
+    return np.array(addresses, dtype='u8')

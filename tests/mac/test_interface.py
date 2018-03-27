@@ -31,12 +31,12 @@ def all_data(request, data, data_missing):
 
 @pytest.fixture
 def data_for_sorting():
-    return MACArray([10, 2 ** 64 + 1, 1])
+    return MACArray([10, 2 ** 64 - 1, 1])
 
 
 @pytest.fixture
 def data_missing_for_sorting():
-    return MACArray([2 ** 64 + 1, 0, 1])
+    return MACArray([2 ** 64 - 1, 0, 1])
 
 
 @pytest.fixture
