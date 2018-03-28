@@ -88,7 +88,8 @@ install:
 
   - cmd: conda build -q conda-recipes/pandas --python=%PYTHON_VERSION% --numpy=%NUMPY%
   - cmd: dir C:\Miniconda3_64\conda-bld\win-64\  # hardcode for now
-  - cmd: conda install -vvv %CONDA_ROOT%\\conda-bld\\*\\pandas*py%CONDA_PY%*.tar.bz2
+  - cmd: conda list
+  - cmd: conda install -n test-environment -vvv %CONDA_ROOT%\\conda-bld\\*\\pandas*py%CONDA_PY%*.tar.bz2
   - cmd: pip install --no-deps -e .
 
 test_script:
