@@ -287,6 +287,9 @@ class IPArray(NumPyBackedExtensionArrayMixin):
         # TODO: missing
         return (self.data == other.data).all()
 
+    def _values_for_factorize(self):
+        return self.astype(object), ipaddress.IPv4Address(0)
+
     def isna(self):
         ips = self.data
         return (ips['lo'] == 0) & (ips['hi'] == 0)

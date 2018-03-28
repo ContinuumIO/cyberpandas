@@ -57,7 +57,7 @@ def _to_int_pairs(values):
     if isinstance(values, (str, bytes, int)):
         values = ipaddress.ip_address(values)._ip
         return unpack(pack(values))
-    elif isinstance(values, np.ndarray):
+    elif isinstance(values, np.ndarray) and values.dtype != object:
         if values.ndim != 2:
             raise ValueError("'values' should be a 2-D when passing a "
                              "NumPy array.")

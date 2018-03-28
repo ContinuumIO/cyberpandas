@@ -1,12 +1,15 @@
 package:
     name: pandas
-    version: {{ environ.get('GIT_DESCRIBE_TAG', 'v0.23.0').replace('v', '', 1) }}
+    version: 0.23.0
 
 build:
-    number: {{ environ.get('GIT_DESCRIBE_TAG', 0) }}
+    number: 1
 
 source:
     git_url: https://github.com/pandas-dev/pandas
+    git_rev: 766a480
+    patches:
+      - 0001-pandas.patch
 
 requirements:
   build:
