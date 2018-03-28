@@ -22,10 +22,11 @@ environment:
   matrix:
 
     - CONDA_ROOT: "C:\\Miniconda3_64"
-      PYTHON_VERSION: "3.6"
+      PYTHON_VERSION: "2.7"
       PYTHON_ARCH: "64"
-      CONDA_PY: "36"
-      NUMPY: "1.11"
+      CONDA_PY: "27"
+      NUMPY: "1.9"
+      IPADDRESS: "ipaddress"
 
 # We always use a 64-bit machine, but can build x86 distributions
 # with the PYTHON_ARCH variable (which is used by CMD_IN_ENV).
@@ -69,13 +70,17 @@ install:
   - cmd: conda info -a
 
   # create our env
+  # Needed for building extensions in python2.7 x64 with cmake.
+  #  Since python version and arch is not known at this point, install it everywhere.
   - cmd: conda install -q -y conda-build anaconda-client
-  - cmd: conda create -q -n test-environment python=%PYTHON_VERSION% coverage cython flake8 hypothesis numba numpy pytest pytest-cov python-dateutil pytz six
+  - cmd: conda install -q -y -c conda-forge vs2008_express_vc_python_patch
+  - cmd: call setup_x64
+  - cmd: conda create -q -n test-environment python=%PYTHON_VERSION% coverage cython flake8 hypothesis numba numpy pytest pytest-cov python-dateutil pytz six %IPADDRESS%
   - cmd: activate test-environment
   - cmd: conda list -n test-environment
 
   - cmd: conda build -q conda-recipes/pandas --python=%PYTHON_VERSION% --numpy=%NUMPY%
-  - cmd: conda install -q %CONDA_ROOT%\\conda-bld\\*\\pandas*.tar.bz2
+  - cmd: conda install -q %CONDA_ROOT%\\conda-bld\\win-64\\pandas-0.23.0-py27h24bf2e0_1.tar.bz2  # really hardcode
   - cmd: pip install --no-deps -e .
 
 test_script:

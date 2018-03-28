@@ -7,6 +7,7 @@ from cyberpandas import dtypes
     "192.168.0.1",
     3232235521,
 ])
+@pytest.mark.xfail
 def test_is_ipv4(value):
     assert dtypes.is_ipv4(value)
 
