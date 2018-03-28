@@ -22,11 +22,11 @@ environment:
   matrix:
 
     - CONDA_ROOT: "C:\\Miniconda3_64"
-      PYTHON_VERSION: "2.7"
+      PYTHON_VERSION: "3.5"
       PYTHON_ARCH: "64"
       CONDA_PY: "27"
       NUMPY: "1.9"
-      IPADDRESS: "ipaddress"
+      IPADDRESS: ""
 
 # We always use a 64-bit machine, but can build x86 distributions
 # with the PYTHON_ARCH variable (which is used by CMD_IN_ENV).
@@ -80,7 +80,7 @@ install:
   - cmd: conda list -n test-environment
 
   - cmd: conda build -q conda-recipes/pandas --python=%PYTHON_VERSION% --numpy=%NUMPY%
-  - cmd: conda install -q %CONDA_ROOT%\\conda-bld\\win-64\\pandas-0.23.0-py27h24bf2e0_1.tar.bz2  # really hardcode
+  - cmd: conda install -q %CONDA_ROOT%\\conda-bld\\win-64\\pandas-0.23.0-py35h24bf2e0_1.tar.bz2  # really hardcode
   - cmd: pip install --no-deps -e .
 
 test_script:
