@@ -221,14 +221,57 @@ class IPArray(NumPyBackedExtensionArrayMixin):
     # ------------------------------------------------------------------------
 
     def to_pyipaddress(self):
+        """Convert the array to a list of scalar IP Adress objects.
+
+        Returns
+        -------
+        addresses : List
+            Each element of the list will be an :class:`ipaddress.IPv4Address`
+            or :class:`ipaddress.IPv6Address`, depending on the size of that
+            element.
+
+        See Also
+        --------
+        IPArray.to_pyints
+
+        Examples
+        ---------
+        >>> IPArray(['192.168.1.1', '2001:db8::1000']).to_pyipaddress()
+        [IPv4Address('192.168.1.1'), IPv6Address('2001:db8::1000')]
+        """
         import ipaddress
         return [ipaddress.ip_address(x) for x in self._format_values()]
 
     def to_pyints(self):
+        """Convert the array to a list of Python integers.
+
+        Returns
+        -------
+        addresses : List[int]
+            These will be Python integers (not NumPy), which are unbounded in
+            size.
+
+        See Also
+        --------
+        IPArray.to_pyipaddresses
+        IPArray.from_pyints
+
+        Examples
+        --------
+        >>> IPArray(['192.168.1.1', '2001:db8::1000']).to_pyints()
+        [3232235777, 42540766411282592856903984951653830656]
+        """
         return [combine(*map(int, x)) for x in self.data]
 
     def to_bytes(self):
         """Serialize the IPArray as a Python bytestring.
+
+        This and :meth:IPArray.from_bytes is the fastest way to roundtrip
+        serialize and de-serialize an IPArray.
+
+        See Also
+        --------
+        IPArray.from_bytes
 
         Examples
         --------
@@ -291,18 +334,27 @@ class IPArray(NumPyBackedExtensionArrayMixin):
         return self.astype(object), ipaddress.IPv4Address(0)
 
     def isna(self):
+        """Indicator for whether each element is missing.
+
+        The IPAddress 0 is used to indecate missing values.
+
+        Examples
+        --------
+        >>> IPArray(['0.0.0.0', '192.168.1.1']).isna()
+        array([ True, False])
+        """
         ips = self.data
         return (ips['lo'] == 0) & (ips['hi'] == 0)
 
     def isin(self, other):
-        """Check whether elements of 'self' are in 'other'.
+        """Check whether elements of `self` are in `other`.
 
         Comparison is done elementwise.
 
         Parameters
         ----------
         other : str or sequences
-            For ``str`` 'other', the argument is attempted to
+            For ``str`` `other`, the argument is attempted to
             be converted to an :class:`ipaddress.IPv4Network` or
             a :class:`ipaddress.IPv6Network` or an :class:`IPArray`.
             If all those conversions fail, a TypeError is raised.
