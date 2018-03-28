@@ -89,7 +89,7 @@ install:
   - cmd: conda build -q conda-recipes/pandas --python=%PYTHON_VERSION% --numpy=%NUMPY%
   - cmd: dir C:\Miniconda3_64\conda-bld\win-64\  # hardcode for now
   - cmd: conda list
-  - cmd: conda install -q %CONDA_ROOT%\\conda-bld\\win-64\\pandas-0.23.0-py27h24bf2e0_1.tar.bz2  # really hardcode
+  - cmd: conda install -vvv -y %CONDA_ROOT%\\conda-bld\\win-64\\pandas-0.23.0-*.tar.bz2  # really hardcode
   - cmd: pip install --no-deps -e .
 
 test_script:
