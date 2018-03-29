@@ -112,6 +112,27 @@ def test_equality():
         v1.equals("a")
 
 
+@pytest.mark.parametrize('other', [
+    1, '192.168.1.1', b'1'
+])
+def test_ops_other(other):
+    arr = ip.IPArray([1, 2, 3])
+
+    with pytest.raises(TypeError):
+        arr == other
+
+
+@pytest.mark.parametrize('other', [
+    ipaddress.IPv4Address(1),
+    ipaddress.IPv6Address(1),
+])
+def test_equality_ipaddress(other):
+    arr = ip.IPArray([0, 1, 2**64 + 1])
+    result = arr == other
+    expected = np.array([False, True, False])
+    tm.assert_numpy_array_equal(result, expected)
+
+
 @pytest.mark.parametrize('op', [
     operator.lt,
     operator.le,
