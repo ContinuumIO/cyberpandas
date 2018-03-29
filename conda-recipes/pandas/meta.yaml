@@ -3,13 +3,10 @@ package:
     version: 0.23.0
 
 build:
-    number: 1
+    number: 2
 
 source:
     git_url: https://github.com/pandas-dev/pandas
-    git_rev: 766a480
-    patches:
-      - 0001-pandas.patch
 
 requirements:
   build:
