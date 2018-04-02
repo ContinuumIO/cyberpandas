@@ -293,11 +293,12 @@ class IPArray(NumPyBackedExtensionArrayMixin):
             mask = self.isna()
         elif isinstance(other, IPArray):
             mask = self.isna() | other.isna()
+            other = other.data
         else:
             msg = ("Invalid type comparison. Can't compare IPArray to "
                    "type '{}'.")
             raise TypeError(msg.format(other))
-        result = self.data == other.data
+        result = self.data == other
         result[mask] = False
         return result
 
