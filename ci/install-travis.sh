@@ -20,14 +20,13 @@ echo
 echo "[conda build]"
 conda install -q conda-build anaconda-client --yes
 
-# echo
-# echo "[add channels]"
-# conda config --add channels conda-forge || exit 1
+echo
+echo "[install dependencies]"
 
 conda create -q -n test-environment python=${PYTHON}
 source activate test-environment
 
-conda install -q \
+conda install \
       -c defaults -c conda-forge/label/rc \
       coverage \
       cython \

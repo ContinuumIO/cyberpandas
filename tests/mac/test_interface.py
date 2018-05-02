@@ -79,7 +79,7 @@ class TestConstructors(base.BaseConstructorsTests):
 
 
 class TestReshaping(base.BaseReshapingTests):
-    @pytest.mark.skip(reason='Upstream')
+    @pytest.mark.skip(reason='Pandas inferrs us as int64.')
     def test_concat_mixed_dtypes(self):
         pass
 
