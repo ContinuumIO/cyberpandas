@@ -5,8 +5,7 @@ import ipaddress
 import six
 import numpy as np
 import pandas as pd
-# TODO: public API
-from pandas.core.dtypes.dtypes import ExtensionDtype
+from pandas.api.extensions import ExtensionDtype
 
 from ._accessor import (DelegatedMethod, DelegatedProperty,
                         delegated_method)
@@ -165,11 +164,38 @@ class IPArray(NumPyBackedExtensionArrayMixin):
         """
         return self.dtype.na_value
 
-    def take(self, indexer, allow_fill=True, fill_value=None):
-        mask = indexer == -1
-        result = self.data.take(indexer)
-        result[mask] = unpack(pack(int(self.na_value)))
-        return type(self)(result)  # TODO: check for copy
+    def take(self, indices, allow_fill=False, fill_value=None):
+        # Can't use pandas' take yet
+        # 1. axis
+        # 2. I don't know how to do the reshaping correctly.
+        indices = np.asarray(indices, dtype='int')
+
+        if allow_fill and fill_value is None:
+            fill_value = unpack(pack(int(self.na_value)))
+        elif allow_fill and not isinstance(fill_value, tuple):
+            fill_value = unpack(pack(int(fill_value)))
+
+        if allow_fill:
+            mask = (indices == -1)
+            if not len(self):
+                if not (indices == -1).all():
+                    msg = "Invalid take for empty array. Must be all -1."
+                    raise IndexError(msg)
+                else:
+                    # all NA take from and empty array
+                    took = (np.full((len(indices), 2), fill_value, dtype='>u8')
+                              .reshape(-1).astype(self.dtype._record_type))
+                    return self._from_ndarray(took)
+            if (indices < -1).any():
+                msg = ("Invalid value in 'indicies'. Must be all >= -1 "
+                       "for 'allow_fill=True'")
+                raise ValueError(msg)
+
+        took = self.data.take(indices)
+        if allow_fill:
+            took[mask] = fill_value
+
+        return self._from_ndarray(took)
 
     # -------------------------------------------------------------------------
     # Interfaces

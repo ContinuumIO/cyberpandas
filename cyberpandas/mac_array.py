@@ -3,7 +3,7 @@ from collections import Iterable
 import numpy as np
 import six
 
-from pandas.core.dtypes.dtypes import ExtensionDtype
+from pandas.api.extensions import ExtensionDtype, take
 
 from .base import NumPyBackedExtensionArrayMixin
 
@@ -99,11 +99,12 @@ class MACArray(NumPyBackedExtensionArrayMixin):
     def _parser(self):
         return lambda x: x
 
-    def take(self, indexer, allow_fill=True, fill_value=None):
-        mask = indexer == -1
-        result = self.data.take(indexer)
-        result[mask] = self.dtype.na_value
-        return type(self)(result, copy=False)
+    def take(self, indexer, allow_fill=False, fill_value=None):
+        if fill_value is None:
+            fill_value = 0
+        took = take(self.data, indexer, allow_fill=allow_fill,
+                    fill_value=fill_value)
+        return type(self)(took)
 
     def _formatting_values(self):
         return np.array(self._format_values(), dtype='object')

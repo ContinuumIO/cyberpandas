@@ -12,7 +12,7 @@ class NumPyBackedExtensionArrayMixin(ExtensionArray):
         return self._dtype
 
     @classmethod
-    def _constructor_from_sequence(cls, scalars):
+    def _from_sequence(cls, scalars):
         return cls(scalars)
 
     @classmethod

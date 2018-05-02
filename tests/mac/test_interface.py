@@ -79,7 +79,9 @@ class TestConstructors(base.BaseConstructorsTests):
 
 
 class TestReshaping(base.BaseReshapingTests):
-    pass
+    @pytest.mark.skip(reason='Upstream')
+    def test_concat_mixed_dtypes(self):
+        pass
 
 
 class TestGetitem(base.BaseGetitemTests):
