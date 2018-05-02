@@ -20,25 +20,25 @@ echo
 echo "[conda build]"
 conda install -q conda-build anaconda-client --yes
 
-# echo
-# echo "[add channels]"
-# conda config --add channels conda-forge || exit 1
+echo
+echo "[install dependencies]"
 
 conda create -q -n test-environment python=${PYTHON}
 source activate test-environment
 
-conda install -q \
+conda install \
       coverage \
       cython \
       flake8 \
       hypothesis \
-      numba \
       numpy \
       pytest \
       pytest-cov \
       python-dateutil \
       pytz \
       six
+
+conda install -c conda-forge/label/rc pandas>=0.23.0rc2
 
 if [ "${PYTHON}" == "2.7" ]; then
     conda install -q ipaddress
@@ -59,13 +59,6 @@ conda list test-environment
 # https://github.com/conda/conda/issues/6487
 
 python -c 'import os,sys,fcntl; flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL); fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK);'
-
-echo
-echo "[building pandas]"
-conda build -q conda-recipes/pandas --python=${PYTHON} --numpy=${NUMPY}
-
-echo "[installing pandas]"
-conda install -q ${MINICONDA_DIR}/conda-bld/*/pandas*.tar.bz2
 
 echo
 echo "[install cyberpandas]"

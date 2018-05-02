@@ -1,16 +1,15 @@
 name: cyberpandas-docs
 channels:
-  - intake
   - defaults
+  - conda-forge/label/rc
 dependencies:
   - coverage
   - flake8
   - ipython
   - matplotlib
-  - numba
   - numpy
   - numpydoc
-  - pandas
+  - pandas >=0.23.0rc2
   - pytest
   - pytest-cov
   - python=3.6
