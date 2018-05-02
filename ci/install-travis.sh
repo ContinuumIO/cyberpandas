@@ -32,7 +32,6 @@ conda install -q \
       cython \
       flake8 \
       hypothesis \
-      numba \
       numpy \
       pytest \
       pytest-cov \

@@ -17,7 +17,6 @@ requirements:
 
   run:
     - ipaddress # [py27]
-    - numba
     - pandas
     - python
     - setuptools >=3.3
