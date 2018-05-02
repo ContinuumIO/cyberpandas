@@ -74,7 +74,7 @@ install:
   #  Since python version and arch is not known at this point, install it everywhere.
   # - cmd: conda install -q -y -c conda-forge vs2008_express_vc_python_patch
   # - cmd: call setup_x64
-  - cmd: conda create -q -n test-environment python=%PYTHON_VERSION% coverage cython flake8 hypothesis numba numpy pytest pytest-cov python-dateutil pytz six
+  - cmd: conda create -q -n test-environment python=%PYTHON_VERSION% coverage cython flake8 hypothesis numpy pytest pytest-cov python-dateutil pytz six
   - cmd: activate test-environment
   - cmd: conda list -n test-environment
 
@@ -85,7 +85,7 @@ install:
 test_script:
   # tests
   - cmd: pytest
-  - cmd: conda build conda-recipes/cyberpandas --python=${PYTHON}
+  - cmd: conda build -c defaults -c conda-forge/label/rc conda-recipes/cyberpandas --python=${PYTHON}
 
 on_success:
   - cmd: if "%APPVEYOR_PULL_REQUEST_NUMBER%"=="" anaconda -t %UPLOAD_KEY% upload -u intake --force %CONDA_ROOT%\\conda-bld\\*\\*.tar.bz2

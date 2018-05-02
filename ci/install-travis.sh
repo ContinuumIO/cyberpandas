@@ -28,11 +28,13 @@ conda create -q -n test-environment python=${PYTHON}
 source activate test-environment
 
 conda install -q \
+      -c defaults -c conda-forge/label/rc \
       coverage \
       cython \
       flake8 \
       hypothesis \
       numpy \
+      pandas >=0.23.0rc2 \
       pytest \
       pytest-cov \
       python-dateutil \
@@ -58,13 +60,6 @@ conda list test-environment
 # https://github.com/conda/conda/issues/6487
 
 python -c 'import os,sys,fcntl; flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL); fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK);'
-
-echo
-echo "[building pandas]"
-conda build -q conda-recipes/pandas --python=${PYTHON} --numpy=${NUMPY}
-
-echo "[installing pandas]"
-conda install -q ${MINICONDA_DIR}/conda-bld/*/pandas*.tar.bz2
 
 echo
 echo "[install cyberpandas]"
