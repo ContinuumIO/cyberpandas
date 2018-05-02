@@ -78,9 +78,6 @@ install:
   - cmd: activate test-environment
   - cmd: conda install -c conda-forge/label/rc pandas>=0.23.0rc2
   - cmd: conda list -n test-environment
-
-  - cmd: conda build -q conda-recipes/pandas --python=%PYTHON_VERSION% --numpy=%NUMPY%
-  - cmd: conda install -q %CONDA_ROOT%\\conda-bld\\*\\pandas*.tar.bz2
   - cmd: pip install --no-deps -e .
 
 test_script:
