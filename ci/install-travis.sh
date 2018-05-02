@@ -27,18 +27,18 @@ conda create -q -n test-environment python=${PYTHON}
 source activate test-environment
 
 conda install \
-      -c defaults -c conda-forge/label/rc \
       coverage \
       cython \
       flake8 \
       hypothesis \
       numpy \
-      pandas >=0.23.0rc2 \
       pytest \
       pytest-cov \
       python-dateutil \
       pytz \
       six
+
+conda install -c conda-forge/label/rc pandas>=0.23.0rc2
 
 if [ "${PYTHON}" == "2.7" ]; then
     conda install -q ipaddress
