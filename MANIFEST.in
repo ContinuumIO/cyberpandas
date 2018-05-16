@@ -3,4 +3,4 @@ exclude .gitignore
 exclude .travis.yml
 exclude Makefile
 exclude *.ipynb
-recursive-exclude ci/
+recursive-exclude ci *
