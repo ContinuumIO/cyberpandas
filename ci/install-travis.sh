@@ -38,7 +38,7 @@ conda install \
       pytz \
       six
 
-conda install -c conda-forge/label/rc pandas>=0.23.0rc2
+conda install -c conda-forge/label/rc pandas>=0.23.0
 
 if [ "${PYTHON}" == "2.7" ]; then
     conda install -q ipaddress

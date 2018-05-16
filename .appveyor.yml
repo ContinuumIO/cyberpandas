@@ -61,7 +61,6 @@ install:
 
   # add the pandas channel *before* defaults to have defaults take priority
   - cmd: conda config --add channels conda-forge
-  - cmd: conda config --add channels pandas
   - cmd: conda config --remove channels defaults
   - cmd: conda config --add channels defaults
 
@@ -76,14 +75,14 @@ install:
   # - cmd: call setup_x64
   - cmd: conda create -q -n test-environment python=%PYTHON_VERSION% coverage cython flake8 hypothesis numpy pytest pytest-cov python-dateutil pytz six
   - cmd: activate test-environment
-  - cmd: conda install -c conda-forge/label/rc pandas>=0.23.0rc2
+  - cmd: conda install -c conda-forge pandas>=0.23.0
   - cmd: conda list -n test-environment
   - cmd: pip install --no-deps -e .
 
 test_script:
   # tests
   - cmd: pytest
-  - cmd: conda build -c defaults -c conda-forge/label/rc conda-recipes/cyberpandas --python=${PYTHON}
+  - cmd: conda build -c defaults -c conda-forge conda-recipes/cyberpandas --python=${PYTHON}
 
 on_success:
   - cmd: if "%APPVEYOR_PULL_REQUEST_NUMBER%"=="" anaconda -t %UPLOAD_KEY% upload -u intake --force %CONDA_ROOT%\\conda-bld\\*\\*.tar.bz2
