@@ -1,6 +1,11 @@
 exclude .appveyor.yml
 exclude .gitignore
 exclude .travis.yml
+exclude readthedocs.yml
 exclude Makefile
-exclude *.ipynb
 recursive-exclude ci *
+
+include LICENSE
+recursive-include docs *.bat
+recursive-include docs *.py
+recursive-include docs *.rst
