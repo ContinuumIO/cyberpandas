@@ -140,6 +140,7 @@ def test_comparison_raises(op):
 @example((1, 0))
 @example((1, 2))
 @example((2, 1))
+@pytest.mark.skip(reason="Flaky")
 def test_ops(tup):
     a, b = tup
     v1 = ip.IPArray(a)
