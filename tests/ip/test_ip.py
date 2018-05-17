@@ -314,14 +314,14 @@ def test_from_ndarray(values):
 
 @pytest.mark.parametrize('start, stop, step, expected', [
     (1, 3, None, [1, 2]),
-    ('0.0.0.1', '0.0.0.3', None, [1, 2]),
+    (u'0.0.0.1', u'0.0.0.3', None, [1, 2]),
     (2**64 + 1, 2**64 + 3, None, [2**64 + 1, 2**64 + 2]),
-    ('::1:0:0:0:1', '::1:0:0:0:3', None, [2**64 + 1, 2**64 + 2]),
+    (u'::1:0:0:0:1', u'::1:0:0:0:3', None, [2**64 + 1, 2**64 + 2]),
     (2**64 - 1, 2**64 + 2, None, [2**64 - 1, 2**64, 2**64 + 1]),
-    ('::ffff:ffff:ffff:ffff', '::1:0:0:0:2', None,
+    (u'::ffff:ffff:ffff:ffff', u'::1:0:0:0:2', None,
      [2**64 - 1, 2**64, 2**64 + 1]),
     (1, 6, 2, [1, 3, 5]),
-    ('0.0.0.1', '0.0.0.6', '0.0.0.2', [1, 3, 5]),
+    (u'0.0.0.1', u'0.0.0.6', u'0.0.0.2', [1, 3, 5]),
 ])
 def test_ip_range(start, stop, step, expected):
     result = ip.ip_range(start, stop, step)

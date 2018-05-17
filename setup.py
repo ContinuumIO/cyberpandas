@@ -1,17 +1,17 @@
 from setuptools import setup, find_packages
 from os import path
 from codecs import open
-import sys
 
 here = path.abspath(path.dirname(__file__))
 
 with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
-install_requires = ['pandas>=0.23.0', 'six']
-
-if sys.version_info.major == 2:
-    install_requires.append('ipaddress')
+install_requires = [
+    "pandas>=0.23.0",
+    "six",
+    "ipaddress; python_version < '3'"
+]
 
 setup(
     name='cyberpandas',
