@@ -40,7 +40,8 @@ def ip_range(start=None, stop=None, step=None):
 
     Notes
     -----
-    Performance will worsen if either of `start` or `stop` are larger than 2**64.
+    Performance will worsen if either of `start` or `stop` are larger than
+    2**64.
 
     Examples
     --------
