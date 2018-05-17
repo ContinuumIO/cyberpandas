@@ -5,6 +5,7 @@ from .ip_array import (
     IPArray,
     IPAccessor,
 )
+from .ip_methods import ip_range
 from .parser import to_ipaddress
 from .mac_array import MACType, MACArray
 
@@ -26,5 +27,6 @@ __all__ = [
     'IPType',
     'MACArray',
     'MACType',
+    'ip_range',
     'to_ipaddress',
 ]

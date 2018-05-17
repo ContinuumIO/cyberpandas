@@ -47,8 +47,17 @@ def _to_ip_array(values):
 
     if isinstance(values, IPArray):
         return values.data
-    if not (isinstance(values, np.ndarray) and
-            values.dtype == IPType._record_type):
+
+    if (isinstance(values, np.ndarray) and
+            values.ndim == 1 and
+            np.issubdtype(values.dtype, np.integer)):
+        # We assume we're given the low bits here.
+        values = values.astype("u8")
+        values = np.asarray(values, dtype=IPType._record_type)
+        values['hi'] = 0
+
+    elif not (isinstance(values, np.ndarray) and
+              values.dtype == IPType._record_type):
         values = _to_int_pairs(values)
     return np.atleast_1d(np.asarray(values, dtype=IPType._record_type))
 
@@ -61,9 +70,6 @@ def _to_int_pairs(values):
         if values.ndim != 2:
             raise ValueError("'values' should be a 2-D when passing a "
                              "NumPy array.")
-        if values.dtype != int:
-            raise ValueError("'values' should be integer dtype when "
-                             "passing a NumPy array.")
     elif isinstance(values, tuple) and len(values) == 2:
         # like IPArray((0, 0))
         # which isn't IPArray([0, 0])
