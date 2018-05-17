@@ -301,3 +301,29 @@ def test_factorize():
     uniques = uniques.astype(object)
     tm.assert_numpy_array_equal(labels, expected_labels)
     tm.assert_numpy_array_equal(uniques, expected_uniques)
+
+
+@pytest.mark.parametrize('values', [
+    [0, 1, 2],
+])
+def test_from_ndarray(values):
+    result = ip.IPArray(np.asarray(values))
+    expected = ip.IPArray(values)
+    assert result.equals(expected)
+
+
+@pytest.mark.parametrize('start, stop, step, expected', [
+    (1, 3, None, [1, 2]),
+    ('0.0.0.1', '0.0.0.3', None, [1, 2]),
+    (2**64 + 1, 2**64 + 3, None, [2**64 + 1, 2**64 + 2]),
+    ('::1:0:0:0:1', '::1:0:0:0:3', None, [2**64 + 1, 2**64 + 2]),
+    (2**64 - 1, 2**64 + 2, None, [2**64 - 1, 2**64, 2**64 + 1]),
+    ('::ffff:ffff:ffff:ffff', '::1:0:0:0:2', None,
+     [2**64 - 1, 2**64, 2**64 + 1]),
+    (1, 6, 2, [1, 3, 5]),
+    ('0.0.0.1', '0.0.0.6', '0.0.0.2', [1, 3, 5]),
+])
+def test_ip_range(start, stop, step, expected):
+    result = ip.ip_range(start, stop, step)
+    expected = ip.IPArray(expected)
+    assert result.equals(expected)
