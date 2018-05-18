@@ -571,7 +571,8 @@ class IPArray(NumPyBackedExtensionArrayMixin):
         >>> arr = IPArray(['192.0.0.0', '192.168.0.0', '192.168.1.0',
         ...                '192.168.1.1', 2**64 + 10])
         >>> arr
-        IPArray(['192.0.0.0', '192.168.0.0', '192.168.1.0', '192.168.1.1', '::1:0:0:0:a'])
+        IPArray(['192.0.0.0', '192.168.0.0', '192.168.1.0', '192.168.1.1',
+        ...      '::1:0:0:0:a'])
         """
         return self._apply_mask('netmask', v4_prefixlen, v6_prefixlen)
 
