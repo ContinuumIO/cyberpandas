@@ -535,6 +535,49 @@ class IPArray(NumPyBackedExtensionArrayMixin):
         # TODO: I wonder if that should be post-fixed by 0s.
         return self.data.tobytes()
 
+    def _apply_mask(self, op, v4_prefixlen, v6_prefixlen):
+        """Apply a netmask or hostmask"""
+        self = self.copy()
+        is_v4 = self.is_ipv4
+        v4_net = getattr(
+            ipaddress.ip_network('0.0.0.0/{}'.format(v4_prefixlen)),
+            op)
+        v4_mask = IPArray([v4_net])
+        self.data[is_v4] = v4_mask.data
+
+        v6_net = getattr(
+            ipaddress.ip_network('0::0/{}'.format(v6_prefixlen)),
+            op)
+        v6_mask = IPArray([v6_net])
+        self.data[~is_v4] = v6_mask.data
+        return self
+
+    def netmask(self, v4_prefixlen=32, v6_prefixlen=128):
+        """Compute netmasks for an array of IP addresses.
+
+        Parameters
+        ----------
+        v4_prefixlen : int, default 32
+            Length of the network prefix, in bits, for IPv4 addresses
+        v6_prefixlen : int, default 128
+            Lnegth of the network prefix, in bits, for IPv6 addresses
+
+        Returns
+        -------
+        IPArray
+
+        Examples
+        --------
+        >>> arr = IPArray(['192.0.0.0', '192.168.0.0', '192.168.1.0',
+        ...                '192.168.1.1', 2**64 + 10])
+        >>> arr
+        IPArray(['192.0.0.0', '192.168.0.0', '192.168.1.0', '192.168.1.1', '::1:0:0:0:a'])
+        """
+        return self._apply_mask('netmask', v4_prefixlen, v6_prefixlen)
+
+    def hostmask(self, v4_prefixlen=32, v6_prefixlen=128):
+        return self._apply_mask('hostmask', v4_prefixlen, v6_prefixlen)
+
 
 # -----------------------------------------------------------------------------
 # Accessor
