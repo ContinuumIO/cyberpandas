@@ -540,13 +540,13 @@ class IPArray(NumPyBackedExtensionArrayMixin):
         self = self.copy()
         is_v4 = self.is_ipv4
         v4_net = getattr(
-            ipaddress.ip_network('0.0.0.0/{}'.format(v4_prefixlen)),
+            ipaddress.ip_network(u'0.0.0.0/{}'.format(v4_prefixlen)),
             op)
         v4_mask = IPArray([v4_net])
         self.data[is_v4] = v4_mask.data
 
         v6_net = getattr(
-            ipaddress.ip_network('0::0/{}'.format(v6_prefixlen)),
+            ipaddress.ip_network(u'0::0/{}'.format(v6_prefixlen)),
             op)
         v6_mask = IPArray([v6_net])
         self.data[~is_v4] = v6_mask.data

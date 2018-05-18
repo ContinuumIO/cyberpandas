@@ -330,7 +330,7 @@ def test_ip_range(start, stop, step, expected):
 
 
 @pytest.mark.parametrize('addresses', [
-    ['0.0.0.0', '192.168.1.1', '::1:1:0:0:0:1']
+    [u'0.0.0.0', u'192.168.1.1', u'::1:1:0:0:0:1']
 ])
 @pytest.mark.parametrize('v4_prefixlen, v6_prefixlen', [
     (32, 128),
@@ -343,7 +343,7 @@ def test_mask(op, v4_prefixlen, v6_prefixlen, addresses):
     is_v6 = [':' in x for x in addresses]
     prefixes = [v6_prefixlen if v6 else v4_prefixlen for v6 in is_v6]
     networks = [
-        ipaddress.ip_network("{}/{}".format(addr, prefix), strict=False)
+        ipaddress.ip_network(u"{}/{}".format(addr, prefix), strict=False)
         for addr, prefix in zip(addresses, prefixes)
     ]
     expected = [getattr(net, op) for net in networks]
@@ -360,9 +360,9 @@ def test_mask(op, v4_prefixlen, v6_prefixlen, addresses):
 
 
 def test_netmask_basic():
-    arr = ip.IPArray(['192.0.0.0', '1:1::'])
+    arr = ip.IPArray([u'192.0.0.0', u'1:1::'])
     result = arr.netmask(v4_prefixlen=16, v6_prefixlen=32)
-    expected = ip.IPArray(['255.255.0.0', 'ffff:ffff::'])
+    expected = ip.IPArray([u'255.255.0.0', u'ffff:ffff::'])
     assert result.equals(expected)
 
     result = pd.Series(arr, name='foo').ip.netmask(v4_prefixlen=16,
@@ -372,9 +372,10 @@ def test_netmask_basic():
 
 
 def test_hostmask_basic():
-    arr = ip.IPArray(['192.0.0.0', '1:1::'])
+    arr = ip.IPArray([u'192.0.0.0', u'1:1::'])
     result = arr.hostmask(v4_prefixlen=16, v6_prefixlen=32)
-    expected = ip.IPArray(['0.0.255.255', '::ffff:ffff:ffff:ffff:ffff:ffff'])
+    expected = ip.IPArray([u'0.0.255.255',
+                           u'::ffff:ffff:ffff:ffff:ffff:ffff'])
     assert result.equals(expected)
 
     result = pd.Series(arr, name='foo').ip.hostmask(v4_prefixlen=16,
