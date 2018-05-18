@@ -327,3 +327,58 @@ def test_ip_range(start, stop, step, expected):
     result = ip.ip_range(start, stop, step)
     expected = ip.IPArray(expected)
     assert result.equals(expected)
+
+
+@pytest.mark.parametrize('addresses', [
+    [u'0.0.0.0', u'192.168.1.1', u'::1:1:0:0:0:1']
+])
+@pytest.mark.parametrize('v4_prefixlen, v6_prefixlen', [
+    (32, 128),
+    (24, 96),
+    (16, 64),
+    (8, 8),
+])
+@pytest.mark.parametrize('op', ['netmask', 'hostmask'])
+def test_mask(op, v4_prefixlen, v6_prefixlen, addresses):
+    is_v6 = [':' in x for x in addresses]
+    prefixes = [v6_prefixlen if v6 else v4_prefixlen for v6 in is_v6]
+    networks = [
+        ipaddress.ip_network(u"{}/{}".format(addr, prefix), strict=False)
+        for addr, prefix in zip(addresses, prefixes)
+    ]
+    expected = [getattr(net, op) for net in networks]
+    call = operator.methodcaller(op, v4_prefixlen=v4_prefixlen,
+                                 v6_prefixlen=v6_prefixlen)
+    result = list(call(ip.IPArray(addresses)))
+    if op == 'hostmask':
+        # ipaddress will return an IPv6(0), which doesn't compare equal
+        # to an IPv4(0), our result.
+        expected = [int(x) for x in expected]
+        result = [int(x) for x in result]
+
+    assert result == expected
+
+
+def test_netmask_basic():
+    arr = ip.IPArray([u'192.0.0.0', u'1:1::'])
+    result = arr.netmask(v4_prefixlen=16, v6_prefixlen=32)
+    expected = ip.IPArray([u'255.255.0.0', u'ffff:ffff::'])
+    assert result.equals(expected)
+
+    result = pd.Series(arr, name='foo').ip.netmask(v4_prefixlen=16,
+                                                   v6_prefixlen=32)
+    assert result.name == 'foo'
+    assert result.values.equals(expected)
+
+
+def test_hostmask_basic():
+    arr = ip.IPArray([u'192.0.0.0', u'1:1::'])
+    result = arr.hostmask(v4_prefixlen=16, v6_prefixlen=32)
+    expected = ip.IPArray([u'0.0.255.255',
+                           u'::ffff:ffff:ffff:ffff:ffff:ffff'])
+    assert result.equals(expected)
+
+    result = pd.Series(arr, name='foo').ip.hostmask(v4_prefixlen=16,
+                                                    v6_prefixlen=32)
+    assert result.name == 'foo'
+    assert result.values.equals(expected)
