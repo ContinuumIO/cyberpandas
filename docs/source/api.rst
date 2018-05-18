@@ -39,11 +39,12 @@ an IPArray, calling the Series method will dispatch to these methods.
 .. automethod:: IPArray.unique
 .. automethod:: IPArray.isin
 .. automethod:: IPArray.isna
+.. autoattribute:: IPArray.netmask
 
 IP Address Attributes
 """""""""""""""""""""
 
-IP-addres specific attributes.
+IP addresss-specific attributes.
 
 .. autoattribute:: IPArray.is_ipv4
 .. autoattribute:: IPArray.is_ipv6
@@ -55,6 +56,9 @@ IP-addres specific attributes.
 .. autoattribute:: IPArray.is_reserved
 .. autoattribute:: IPArray.is_loopback
 .. autoattribute:: IPArray.is_link_local
+.. automethod:: IPArray.netmask
+.. automethod:: IPArray.hostmask
+
 
 
 :class:`MACArray`

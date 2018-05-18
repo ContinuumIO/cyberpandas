@@ -365,9 +365,19 @@ def test_netmask_basic():
     expected = ip.IPArray(['255.255.0.0', 'ffff:ffff::'])
     assert result.equals(expected)
 
+    result = pd.Series(arr, name='foo').ip.netmask(v4_prefixlen=16,
+                                                   v6_prefixlen=32)
+    assert result.name == 'foo'
+    assert result.values.equals(expected)
+
 
 def test_hostmask_basic():
     arr = ip.IPArray(['192.0.0.0', '1:1::'])
     result = arr.hostmask(v4_prefixlen=16, v6_prefixlen=32)
     expected = ip.IPArray(['0.0.255.255', '::ffff:ffff:ffff:ffff:ffff:ffff'])
     assert result.equals(expected)
+
+    result = pd.Series(arr, name='foo').ip.hostmask(v4_prefixlen=16,
+                                                    v6_prefixlen=32)
+    assert result.name == 'foo'
+    assert result.values.equals(expected)

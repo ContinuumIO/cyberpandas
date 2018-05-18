@@ -553,7 +553,10 @@ class IPArray(NumPyBackedExtensionArrayMixin):
         return self
 
     def netmask(self, v4_prefixlen=32, v6_prefixlen=128):
-        """Compute netmasks for an array of IP addresses.
+        """Compute an array of netmasks for an array of IP addresses.
+
+        Note that this is a method, rather than a property, to support
+        taking `v4_prefixlen` and `v6_prefixlen` as arguments.
 
         Parameters
         ----------
@@ -566,17 +569,42 @@ class IPArray(NumPyBackedExtensionArrayMixin):
         -------
         IPArray
 
+        See Also
+        --------
+        IPArray.hostmask
+
         Examples
         --------
-        >>> arr = IPArray(['192.0.0.0', '192.168.0.0', '192.168.1.0',
-        ...                '192.168.1.1', 2**64 + 10])
-        >>> arr
-        IPArray(['192.0.0.0', '192.168.0.0', '192.168.1.0', '192.168.1.1',
-        ...      '::1:0:0:0:a'])
+        >>> arr = ip.IPArray(['192.0.0.0', '1:1::'])
+        >>> arr.netmask(v4_prefixlen=16, v6_prefixlen=32)
+        IPArray(['255.255.0.0', 'ffff:ffff::'])
         """
         return self._apply_mask('netmask', v4_prefixlen, v6_prefixlen)
 
     def hostmask(self, v4_prefixlen=32, v6_prefixlen=128):
+        """Compute an array of hostmasks for an array of IP addresses.
+
+        Parameters
+        ----------
+        v4_prefixlen : int, default 32
+            Length of the network prefix, in bits, for IPv4 addresses
+        v6_prefixlen : int, default 128
+            Lnegth of the network prefix, in bits, for IPv6 addresses
+
+        Returns
+        -------
+        IPArray
+
+        See Also
+        --------
+        IPArray.netmask
+
+        Examples
+        --------
+        >>> arr = ip.IPArray(['192.0.0.0', '1:1::'])
+        >>> arr.netmask(v4_prefixlen=16, v6_prefixlen=32)
+        IPArray(['0.0.255.255', '::ffff:ffff:ffff:ffff:ffff:ffff'])
+        """
         return self._apply_mask('hostmask', v4_prefixlen, v6_prefixlen)
 
 
@@ -616,6 +644,14 @@ class IPAccessor:
     def isin(self, other):
         return delegated_method(self._data.isin, self._index,
                                 self._name, other)
+
+    def netmask(self, v4_prefixlen=32, v6_prefixlen=128):
+        return delegated_method(self._data.netmask, self._index,
+                                self._name, v4_prefixlen, v6_prefixlen)
+
+    def hostmask(self, v4_prefixlen=32, v6_prefixlen=128):
+        return delegated_method(self._data.hostmask, self._index,
+                                self._name, v4_prefixlen, v6_prefixlen)
 
 
 def is_ipaddress_type(obj):
