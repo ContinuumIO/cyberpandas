@@ -169,6 +169,9 @@ intersphinx_mapping = {
     'pandas': ('http://pandas-docs.github.io/pandas-docs-travis/', None),
 }
 
+extlinks = {
+    'issue': ('https://github.com/dask/dask-ml/issues/%s', 'GH#'),
+}
 
 ipython_execlines = [
     "import ipaddress",

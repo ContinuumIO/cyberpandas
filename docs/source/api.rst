@@ -19,6 +19,10 @@ Dedicated alternate constructors are also available.
 .. automethod:: IPArray.from_pyints
 .. automethod:: IPArray.from_bytes
 
+Finally, the top-level ``ip_range`` method can be used.
+
+.. automethod:: ip_range
+
 Serialization
 """""""""""""
 
