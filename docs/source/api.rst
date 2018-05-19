@@ -19,6 +19,10 @@ Dedicated alternate constructors are also available.
 .. automethod:: IPArray.from_pyints
 .. automethod:: IPArray.from_bytes
 
+Finally, the top-level ``ip_range`` method can be used.
+
+.. autofunction:: ip_range
+
 Serialization
 """""""""""""
 
@@ -63,5 +67,5 @@ IP addresss-specific attributes.
 
 :class:`MACArray`
 -----------------
-
+utofun
 .. autoclass:: MACArray

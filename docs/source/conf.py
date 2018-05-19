@@ -36,6 +36,7 @@ extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.doctest',
     'sphinx.ext.intersphinx',
+    'sphinx.ext.extlinks',
     'numpydoc',
     'IPython.sphinxext.ipython_console_highlighting',
     'IPython.sphinxext.ipython_directive',
@@ -169,6 +170,9 @@ intersphinx_mapping = {
     'pandas': ('http://pandas-docs.github.io/pandas-docs-travis/', None),
 }
 
+extlinks = {
+    'issue': ('https://github.com/dask/dask-ml/issues/%s', 'GH#'),
+}
 
 ipython_execlines = [
     "import ipaddress",
