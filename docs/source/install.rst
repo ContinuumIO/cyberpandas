@@ -8,6 +8,6 @@ Once pandas is installed, cyberpandas can be installed from conda-forge::
 
     conda install -c conda-forge cyberpandas
 
-Or PyPI:
+Or PyPI::
 
     pip install cyberpandas

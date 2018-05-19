@@ -21,7 +21,7 @@ Dedicated alternate constructors are also available.
 
 Finally, the top-level ``ip_range`` method can be used.
 
-.. automethod:: ip_range
+.. autofunction:: ip_range
 
 Serialization
 """""""""""""
@@ -67,5 +67,5 @@ IP addresss-specific attributes.
 
 :class:`MACArray`
 -----------------
-
+utofun
 .. autoclass:: MACArray

@@ -60,6 +60,7 @@ API
    install.rst
    usage.rst
    api.rst
+   changelog.rst
 
 
 
