@@ -382,3 +382,15 @@ def test_hostmask_basic():
                                                     v6_prefixlen=32)
     assert result.name == 'foo'
     assert result.values.equals(expected)
+
+
+def test_apply_mask():
+    arr = ip.IPArray([u'216.3.128.0', u'192.168.100.0', u'1::1:12'])
+    mask = arr.netmask(v4_prefixlen=24, v6_prefixlen=112)
+    result = arr.mask(mask)
+    expected = ip.IPArray([u'216.3.128.0', u'192.168.100.0', u'1::1:0'])
+    assert result.equals(expected)
+
+    result = pd.Series(arr, name='test').ip.mask(mask)
+    expected = pd.Series(expected, name='test')
+    tm.assert_series_equal(result, expected)

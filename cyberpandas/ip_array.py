@@ -148,6 +148,11 @@ class IPArray(NumPyBackedExtensionArrayMixin):
         new.data = data
         return new
 
+    @property
+    def _as_u8(self):
+        """A 2-D view on our underlying data, for bit-level manipulation."""
+        return self.data.view("<u8").reshape(-1, 1)
+
     # -------------------------------------------------------------------------
     # Properties
     # -------------------------------------------------------------------------
@@ -607,6 +612,38 @@ class IPArray(NumPyBackedExtensionArrayMixin):
         """
         return self._apply_mask('hostmask', v4_prefixlen, v6_prefixlen)
 
+    def mask(self, mask):
+        """Apply a host or subnet mask.
+
+        Parameters
+        ----------
+        mask : IPArray
+            The host or subnet mask to be applied
+
+        Returns
+        -------
+        masked : IPArray
+
+        See Also
+        --------
+        netmask
+        hostmask
+
+        Examples
+        --------
+        >>> arr = IPArray(['216.003.128.12', '192.168.100.1'])
+        >>> mask = arr.netmask(v4_prefixlen=24)
+        >>> mask
+        IPArray(['255.255.255.0', '255.255.255.0'])
+        >>> arr.mask(mask)
+        IPArray(['216.3.128.0', '192.168.100.0'])
+        """
+        mask = type(self)(mask)
+        a = self._as_u8
+        b = mask._as_u8
+        masked = np.bitwise_and(a, b).ravel().view(self.dtype._record_type)
+        return type(self)(masked)
+
 
 # -----------------------------------------------------------------------------
 # Accessor
@@ -652,6 +689,10 @@ class IPAccessor:
     def hostmask(self, v4_prefixlen=32, v6_prefixlen=128):
         return delegated_method(self._data.hostmask, self._index,
                                 self._name, v4_prefixlen, v6_prefixlen)
+
+    def mask(self, other):
+        return delegated_method(self._data.mask, self._index, self._name,
+                                other)
 
 
 def is_ipaddress_type(obj):

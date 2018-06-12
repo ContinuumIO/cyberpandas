@@ -3,6 +3,12 @@ Changelog
 #########
 
 *************
+Version 1.1.1
+*************
+
+- Added :meth:`IPArray.mask` to apply net and host masks to an array of IP addresses (:issue:`36`).
+
+*************
 Version 1.1.0
 *************
 

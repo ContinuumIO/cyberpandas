@@ -43,7 +43,6 @@ an IPArray, calling the Series method will dispatch to these methods.
 .. automethod:: IPArray.unique
 .. automethod:: IPArray.isin
 .. automethod:: IPArray.isna
-.. autoattribute:: IPArray.netmask
 
 IP Address Attributes
 """""""""""""""""""""
@@ -62,6 +61,7 @@ IP addresss-specific attributes.
 .. autoattribute:: IPArray.is_link_local
 .. automethod:: IPArray.netmask
 .. automethod:: IPArray.hostmask
+.. automethod:: IPArray.mask
 
 
 
