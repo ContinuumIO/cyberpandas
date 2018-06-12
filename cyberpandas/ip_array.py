@@ -148,6 +148,11 @@ class IPArray(NumPyBackedExtensionArrayMixin):
         new.data = data
         return new
 
+    @property
+    def _as_u8(self):
+        """A 2-D view on our underlying data, for bit-level manipulation."""
+        return self.data.view("<u8").reshape(-1, 1)
+
     # -------------------------------------------------------------------------
     # Properties
     # -------------------------------------------------------------------------
@@ -633,12 +638,10 @@ class IPArray(NumPyBackedExtensionArrayMixin):
         >>> arr.mask(mask)
         IPArray(['216.3.128.0', '192.168.100.0'])
         """
-        # TODO: object perf
         mask = type(self)(mask)
-        a = np.array(self.to_pyints())
-        b = np.array(mask.to_pyints())
-
-        masked = np.bitwise_and(a, b)
+        a = self._as_u8
+        b = mask._as_u8
+        masked = np.bitwise_and(a, b).ravel().view(self.dtype._record_type)
         return type(self)(masked)
 
 
