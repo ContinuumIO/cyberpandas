@@ -29,6 +29,7 @@ IPv4v6Base.register(ipaddress.IPv4Address)
 IPv4v6Base.register(ipaddress.IPv6Address)
 
 
+@pd.api.extensions.register_extension_dtype
 class IPType(ExtensionDtype):
     name = 'ip'
     type = IPv4v6Base
@@ -43,6 +44,11 @@ class IPType(ExtensionDtype):
         else:
             raise TypeError("Cannot construct a '{}' from "
                             "'{}'".format(cls, string))
+
+    @classmethod
+    def construct_array_type(cls):
+        return IPArray
+
 
 # -----------------------------------------------------------------------------
 # Extension Container
@@ -69,10 +75,13 @@ class IPArray(NumPyBackedExtensionArrayMixin):
     ndim = 1
     can_hold_na = True
 
-    def __init__(self, values):
+    def __init__(self, values, dtype=None, copy=False):
         from .parser import _to_ip_array
 
         values = _to_ip_array(values)  # TODO: avoid potential copy
+        # TODO: dtype?
+        if copy:
+            values = values.copy()
         self.data = values
 
     @classmethod
@@ -311,6 +320,13 @@ class IPArray(NumPyBackedExtensionArrayMixin):
         b'\x00\x00\...x00\x02'
         """
         return self.data.tobytes()
+
+    def astype(self, dtype, copy=True):
+        if isinstance(dtype, IPType):
+            if copy:
+                self = self.copy()
+            return self
+        return super(IPArray, self).astype(dtype)
 
     # ------------------------------------------------------------------------
     # Ops
@@ -648,6 +664,7 @@ class IPArray(NumPyBackedExtensionArrayMixin):
 # -----------------------------------------------------------------------------
 # Accessor
 # -----------------------------------------------------------------------------
+
 
 @pd.api.extensions.register_series_accessor("ip")
 class IPAccessor:

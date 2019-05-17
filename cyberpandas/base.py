@@ -12,8 +12,8 @@ class NumPyBackedExtensionArrayMixin(ExtensionArray):
         return self._dtype
 
     @classmethod
-    def _from_sequence(cls, scalars):
-        return cls(scalars)
+    def _from_sequence(cls, scalars, dtype=None, copy=False):
+        return cls(scalars, dtype=dtype)
 
     @classmethod
     def _from_factorized(cls, values, original):

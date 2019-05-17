@@ -3,11 +3,12 @@ from collections import Iterable
 import numpy as np
 import six
 
-from pandas.api.extensions import ExtensionDtype, take
+from pandas.api.extensions import ExtensionDtype, take, register_extension_dtype
 
 from .base import NumPyBackedExtensionArrayMixin
 
 
+@register_extension_dtype
 class MACType(ExtensionDtype):
     """Dtype for MAC Address Data."""
     name = 'mac'
@@ -24,6 +25,10 @@ class MACType(ExtensionDtype):
             raise TypeError("Cannot construct a '{}' from "
                             "'{}'".format(cls, string))
 
+    @classmethod
+    def construct_array_type(cls):
+        return MACArray
+
 
 class MACArray(NumPyBackedExtensionArrayMixin):
     """Array for MAC Address data.
@@ -38,9 +43,13 @@ class MACArray(NumPyBackedExtensionArrayMixin):
     ndim = 1
     can_hold_na = True
 
-    def __init__(self, values, copy=True):
+    def __init__(self, values, copy=True, dtype=None):
         # TODO: parse hex / strings
         self.data = np.array(values, dtype='uint64', copy=copy)
+        if isinstance(dtype, str):
+            MACType.construct_array_type(dtype)
+        elif dtype:
+            assert isinstance(dtype, MACType)
 
     @classmethod
     def _from_ndarray(cls, data, copy=False):
@@ -118,6 +127,13 @@ class MACArray(NumPyBackedExtensionArrayMixin):
 
     def copy(self, deep=False):
         return type(self)(self.data.copy())
+
+    def astype(self, dtype, copy=True):
+        if isinstance(dtype, type(self.dtype)):
+            if copy:
+                self = self.copy()
+            return self
+        return super().astype(dtype, copy)
 
 
 def _format(mac):
