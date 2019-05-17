@@ -2,7 +2,6 @@ from .common import _IPv4_MAX
 
 
 def is_ipv4(value):
-    # type: (Any) -> bool
     if isinstance(value, str):
         return value.count(".") == 3
     elif isinstance(value, bytes):
@@ -14,6 +13,5 @@ def is_ipv4(value):
 
 
 def is_ipv6(value):
-    # type: (Any) -> bool
     if isinstance(value, str):
         return value.count(":") == 7

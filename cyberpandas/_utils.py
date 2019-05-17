@@ -12,7 +12,6 @@ def to_bytes(n, length, byteorder='big'):
 
 
 def pack(ip):
-    # type: (int) -> bytes
     if six.PY2:
         return to_bytes(ip, length=16, byteorder='big')
     else:
@@ -20,7 +19,6 @@ def pack(ip):
 
 
 def unpack(ip):
-    # type: (T.Tuple[int, int]) -> int, int
     # Recipe 3.5 from Python Cookbook 3rd ed. (p. 90)
     # int.from_bytes(data, 'big') for Py3+
     hi, lo = struct.unpack(">QQ", ip)
@@ -28,6 +26,5 @@ def unpack(ip):
 
 
 def combine(hi, lo):
-    # type: (int, int) -> int
     """Combine the hi and lo bytes into the final ip address."""
     return (hi << 64) + lo

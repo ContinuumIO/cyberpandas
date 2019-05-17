@@ -8,7 +8,6 @@ from .common import _U8_MAX
 
 
 def _as_int(ip):
-    # type: (Union[int, str, IPv4Address, IPv6Address]) -> int
     if isinstance(ip, six.string_types):
         ip = ipaddress.ip_address(ip)
     return int(ip)

@@ -29,6 +29,7 @@ IPv4v6Base.register(ipaddress.IPv4Address)
 IPv4v6Base.register(ipaddress.IPv6Address)
 
 
+@pd.api.extensions.register_extension_dtype
 class IPType(ExtensionDtype):
     name = 'ip'
     type = IPv4v6Base
@@ -43,6 +44,11 @@ class IPType(ExtensionDtype):
         else:
             raise TypeError("Cannot construct a '{}' from "
                             "'{}'".format(cls, string))
+
+    @classmethod
+    def construct_array_type(cls):
+        return IPArray
+
 
 # -----------------------------------------------------------------------------
 # Extension Container
@@ -69,15 +75,17 @@ class IPArray(NumPyBackedExtensionArrayMixin):
     ndim = 1
     can_hold_na = True
 
-    def __init__(self, values):
+    def __init__(self, values, dtype=None, copy=False):
         from .parser import _to_ip_array
 
         values = _to_ip_array(values)  # TODO: avoid potential copy
+        # TODO: dtype?
+        if copy:
+            values = values.copy()
         self.data = values
 
     @classmethod
     def from_pyints(cls, values):
-        # type: (T.Sequence[int]) -> 'IPArray'
         """Construct an IPArray from a sequence of Python integers.
 
         This can be useful for representing IPv6 addresses, which may
@@ -97,7 +105,7 @@ class IPArray(NumPyBackedExtensionArrayMixin):
 
     @classmethod
     def from_bytes(cls, bytestring):
-        """Create an IPArray from a bytestring.
+        r"""Create an IPArray from a bytestring.
 
         Parameters
         ----------
@@ -295,7 +303,7 @@ class IPArray(NumPyBackedExtensionArrayMixin):
         return [combine(*map(int, x)) for x in self.data]
 
     def to_bytes(self):
-        """Serialize the IPArray as a Python bytestring.
+        r"""Serialize the IPArray as a Python bytestring.
 
         This and :meth:IPArray.from_bytes is the fastest way to roundtrip
         serialize and de-serialize an IPArray.
@@ -311,6 +319,13 @@ class IPArray(NumPyBackedExtensionArrayMixin):
         b'\x00\x00\...x00\x02'
         """
         return self.data.tobytes()
+
+    def astype(self, dtype, copy=True):
+        if isinstance(dtype, IPType):
+            if copy:
+                self = self.copy()
+            return self
+        return super(IPArray, self).astype(dtype)
 
     # ------------------------------------------------------------------------
     # Ops
@@ -449,7 +464,6 @@ class IPArray(NumPyBackedExtensionArrayMixin):
         return mask
 
     def _isin_network(self, other):
-        # type: (Union[ipaddress.IPv4Network,ipaddress.IPv6Network]) -> ndarray
         """Check whether an array of addresses is contained in a network."""
         # A network is bounded below by 'network_address' and
         # above by 'broadcast_address'.
@@ -648,6 +662,7 @@ class IPArray(NumPyBackedExtensionArrayMixin):
 # -----------------------------------------------------------------------------
 # Accessor
 # -----------------------------------------------------------------------------
+
 
 @pd.api.extensions.register_series_accessor("ip")
 class IPAccessor:

@@ -49,6 +49,14 @@ def data_for_grouping():
 
 
 @pytest.fixture
+def data_repeated(data):
+    def gen(count):
+        for _ in range(count):
+            yield data
+    return gen
+
+
+@pytest.fixture
 def na_cmp():
     """Binary operator for comparing NA values.
 
@@ -78,7 +86,13 @@ class TestConstructors(base.BaseConstructorsTests):
 
 
 class TestReshaping(base.BaseReshapingTests):
-    pass
+    @pytest.mark.skip("We consider 0 to be NA.")
+    def test_stack(self):
+        pass
+
+    @pytest.mark.skip("We consider 0 to be NA.")
+    def test_unstack(self):
+        pass
 
 
 class TestGetitem(base.BaseGetitemTests):
@@ -94,3 +108,15 @@ class TestMethods(base.BaseMethodsTests):
     @pytest.mark.xfail(reason='upstream')
     def test_value_counts(data, dropna):
         pass
+
+    @pytest.mark.skip(reason='0 for NA')
+    def test_combine_le(self, data_repeated):
+        super().test_combine_le(data_repeated)
+
+    @pytest.mark.skip(reason='No __add__')
+    def test_combine_add(self, data_repeated):
+        super().test_combine_add(data_repeated)
+
+    @pytest.mark.xfail(reason="buggy comparison of v4 and v6")
+    def test_searchsorted(self, data_for_sorting, as_series):
+        return super().test_searchsorted(data_for_sorting, as_series)
