@@ -3,7 +3,8 @@ from collections import Iterable
 import numpy as np
 import six
 
-from pandas.api.extensions import ExtensionDtype, take, register_extension_dtype
+from pandas.api.extensions import (
+    ExtensionDtype, take, register_extension_dtype)
 
 from .base import NumPyBackedExtensionArrayMixin
 

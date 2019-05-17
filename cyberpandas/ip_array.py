@@ -86,7 +86,6 @@ class IPArray(NumPyBackedExtensionArrayMixin):
 
     @classmethod
     def from_pyints(cls, values):
-        # type: (T.Sequence[int]) -> 'IPArray'
         """Construct an IPArray from a sequence of Python integers.
 
         This can be useful for representing IPv6 addresses, which may
@@ -465,7 +464,6 @@ class IPArray(NumPyBackedExtensionArrayMixin):
         return mask
 
     def _isin_network(self, other):
-        # type: (Union[ipaddress.IPv4Network,ipaddress.IPv6Network]) -> ndarray
         """Check whether an array of addresses is contained in a network."""
         # A network is bounded below by 'network_address' and
         # above by 'broadcast_address'.

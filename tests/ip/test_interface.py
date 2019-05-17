@@ -120,5 +120,3 @@ class TestMethods(base.BaseMethodsTests):
     @pytest.mark.xfail(reason="buggy comparison of v4 and v6")
     def test_searchsorted(self, data_for_sorting, as_series):
         return super().test_searchsorted(data_for_sorting, as_series)
-
-
