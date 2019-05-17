@@ -8,6 +8,7 @@ from .ip_array import (
 from .ip_methods import ip_range
 from .parser import to_ipaddress
 from .mac_array import MACType, MACArray
+from ._compat import HAS_DASK
 
 from pkg_resources import get_distribution, DistributionNotFound
 try:
@@ -30,3 +31,6 @@ __all__ = [
     'ip_range',
     'to_ipaddress',
 ]
+
+if HAS_DASK:
+    from . import dask_ip_array

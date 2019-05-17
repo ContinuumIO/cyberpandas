@@ -13,6 +13,7 @@ from ._utils import combine, pack, unpack
 from .base import NumPyBackedExtensionArrayMixin
 from .common import _U8_MAX, _IPv4_MAX
 from .parser import _to_ipaddress_pyint, _as_ip_object
+from . import _compat
 
 # -----------------------------------------------------------------------------
 # Extension Type
@@ -221,21 +222,23 @@ class IPArray(NumPyBackedExtensionArrayMixin):
     def _format_values(self):
         formatted = []
         # TODO: perf
-        for i in range(len(self)):
-            hi, lo = self.data[i]
-            if lo == -1:
-                formatted.append("NA")
-            elif hi == 0 and lo <= _IPv4_MAX:
-                formatted.append(ipaddress.IPv4Address._string_from_ip_int(
-                    int(lo)))
-            elif hi == 0:
-                formatted.append(ipaddress.IPv6Address._string_from_ip_int(
-                    int(lo)))
-            else:
-                # TODO:
-                formatted.append(ipaddress.IPv6Address._string_from_ip_int(
-                    (int(hi) << 64) + int(lo)))
-        return formatted
+        if isinstance(self.data, np.ndarray):
+            for i in range(len(self)):
+                hi, lo = self.data[i]
+                if lo == -1:
+                    formatted.append("NA")
+                elif hi == 0 and lo <= _IPv4_MAX:
+                    formatted.append(ipaddress.IPv4Address._string_from_ip_int(
+                        int(lo)))
+                elif hi == 0:
+                    formatted.append(ipaddress.IPv6Address._string_from_ip_int(
+                        int(lo)))
+                else:
+                    # TODO:
+                    formatted.append(ipaddress.IPv6Address._string_from_ip_int(
+                        (int(hi) << 64) + int(lo)))
+            return formatted
+        return self.data
 
     @staticmethod
     def _box_scalar(scalar):
@@ -562,6 +565,7 @@ class IPArray(NumPyBackedExtensionArrayMixin):
             ipaddress.ip_network(u'0.0.0.0/{}'.format(v4_prefixlen)),
             op)
         v4_mask = IPArray([v4_net])
+        import pdb; pdb.set_trace()
         self.data[is_v4] = v4_mask.data
 
         v6_net = getattr(
@@ -658,6 +662,44 @@ class IPArray(NumPyBackedExtensionArrayMixin):
         masked = np.bitwise_and(a, b).ravel().view(self.dtype._record_type)
         return type(self)(masked)
 
+    if _compat.HAS_DASK:
+        import dask.threaded
+        import dask.context
+
+        def __dask_graph__(self):
+            return self.data.__dask_graph__()
+
+        def __dask_keys__(self):
+            return self.data.__dask_keys__()
+
+        def __dask_layers__(self):
+            return self.data.__dask_layers__()
+
+        @property
+        def __dask_optimize__(self):
+            return self.data.__dask_optimize__
+
+        @property
+        def __dask_scheduler__(self):
+            return self.data.__dask_scheduler__
+
+        def __dask_postcompute__(self):
+            func, args = self.data.__dask_postcompute__()
+            return self._dask_finalize, (func, args, self.data.name)
+
+        def __dask_postpersist__(self):
+            func, args = self.data.__dask_postpersist__()
+            return self._dask_finalize, (func, args, self.data.name)
+
+        @staticmethod
+        def _dask_finalize(results, func, args, name):
+            results = [x.array.data for x in results]
+            ds = func(results, *args)
+            return IPArray(ds)
+
+        # __dask_scheduler__ = staticmethod(dask.threaded.get)
+        # __dask_optimize__ = dask.context.globalmethod(dask.optimize, key='delayed_optimize')
+
 
 # -----------------------------------------------------------------------------
 # Accessor
@@ -683,9 +725,17 @@ class IPAccessor:
 
     def __init__(self, obj):
         self._validate(obj)
-        self._data = obj.values
+        self._data = self._extract_array(obj)
         self._index = obj.index
         self._name = obj.name
+
+    @property
+    def _constructor(self):
+        return pd.Series
+
+    @staticmethod
+    def _extract_array(obj):
+        return obj.array
 
     @staticmethod
     def _validate(obj):
