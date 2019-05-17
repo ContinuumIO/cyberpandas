@@ -105,7 +105,7 @@ class IPArray(NumPyBackedExtensionArrayMixin):
 
     @classmethod
     def from_bytes(cls, bytestring):
-        """Create an IPArray from a bytestring.
+        r"""Create an IPArray from a bytestring.
 
         Parameters
         ----------
@@ -303,7 +303,7 @@ class IPArray(NumPyBackedExtensionArrayMixin):
         return [combine(*map(int, x)) for x in self.data]
 
     def to_bytes(self):
-        """Serialize the IPArray as a Python bytestring.
+        r"""Serialize the IPArray as a Python bytestring.
 
         This and :meth:IPArray.from_bytes is the fastest way to roundtrip
         serialize and de-serialize an IPArray.
