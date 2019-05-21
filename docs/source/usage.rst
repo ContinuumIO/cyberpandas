@@ -133,3 +133,37 @@ IP Accessor
 
    ser.ip.isna
    df['addresses'].ip.is_ipv6
+
+
+Dask Integration
+----------------
+
+:class:`IPArray` also works well with `Dask <https://dask.org>`_.
+In this case the ``.data`` attribute backing an :class:`IPArray`
+will be a Dask Array, rather than a NumPy ndarray.
+
+.. ipython:: python
+
+   import dask.array as da
+
+   arr = cyberpandas.ip_range(10)
+   arr.data
+
+   dask_data = da.from_array(arr.data, chunks=2)
+   dask_data
+
+   dask_arr = cyberpandas.IPArray(dask_data)
+   dask_arr
+
+These dask-backed IPArrays may be stored in a dask Series or DataFrame
+
+.. ipython:: python
+
+   ds = dask_arr.to_dask_series()
+   ds
+
+An ``.ip`` accessor is provided for dask Series
+
+.. ipython:: python
+
+   ds.ip.isna.compute()
