@@ -20,6 +20,14 @@ def asarray(values, *args, **kwargs):
 def atleast_1d(values):
     return np.atleast_1d(values)
 
+
+def is_dask_collection(x):
+    if HAS_DASK:
+        import dask
+        return dask.is_dask_collection(x)
+    return False
+
+
 if HAS_DASK:
     @asarray.register(dask.array.Array)
     def _(values, *args, **kwargs):
@@ -37,14 +45,3 @@ def is_array_like(obj):
 
 def is_list_like(obj):
     return isinstance(obj, abc.Sized)
-
-
-ARRAY_TYPES = [
-    np.ndarray
-]
-if HAS_DASK:
-    ARRAY_TYPES.append(dask.array.Array)
-
-__all__ = [
-    'HAS_DASK'
-]

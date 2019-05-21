@@ -33,4 +33,4 @@ __all__ = [
 ]
 
 if HAS_DASK:
-    from . import dask_ip_array
+    from . import dask_ip_array  # noqa

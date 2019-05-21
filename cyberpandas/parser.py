@@ -50,6 +50,7 @@ def _to_ip_array(values):
     array_like = _compat.is_array_like(values)
 
     if (array_like and values.ndim == 1 and
+            isinstance(values.dtype, np.dtype) and
             np.issubdtype(values.dtype, np.integer)):
         # We assume we're given the low bits here.
         values = values.astype("u8")
@@ -58,7 +59,8 @@ def _to_ip_array(values):
 
     elif not (array_like and values.dtype == IPType._record_type):
         values = _to_int_pairs(values)
-    return _compat.atleast_1d(_compat.asarray(values, dtype=IPType._record_type))
+    return _compat.atleast_1d(_compat.asarray(values,
+                                              dtype=IPType._record_type))
 
 
 def _to_int_pairs(values):

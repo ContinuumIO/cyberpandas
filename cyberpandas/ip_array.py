@@ -216,29 +216,30 @@ class IPArray(NumPyBackedExtensionArrayMixin):
     # -------------------------------------------------------------------------
 
     def __repr__(self):
-        formatted = self._format_values()
+        if isinstance(self.data, np.ndarray):
+            formatted = self._format_values()
+        else:
+            formatted = self.data
         return "IPArray({!r})".format(formatted)
 
     def _format_values(self):
         formatted = []
         # TODO: perf
-        if isinstance(self.data, np.ndarray):
-            for i in range(len(self)):
-                hi, lo = self.data[i]
-                if lo == -1:
-                    formatted.append("NA")
-                elif hi == 0 and lo <= _IPv4_MAX:
-                    formatted.append(ipaddress.IPv4Address._string_from_ip_int(
-                        int(lo)))
-                elif hi == 0:
-                    formatted.append(ipaddress.IPv6Address._string_from_ip_int(
-                        int(lo)))
-                else:
-                    # TODO:
-                    formatted.append(ipaddress.IPv6Address._string_from_ip_int(
-                        (int(hi) << 64) + int(lo)))
-            return formatted
-        return self.data
+        for i in range(len(self)):
+            hi, lo = self.data[i]
+            if lo == -1:
+                formatted.append("NA")
+            elif hi == 0 and lo <= _IPv4_MAX:
+                formatted.append(ipaddress.IPv4Address._string_from_ip_int(
+                    int(lo)))
+            elif hi == 0:
+                formatted.append(ipaddress.IPv6Address._string_from_ip_int(
+                    int(lo)))
+            else:
+                # TODO:
+                formatted.append(ipaddress.IPv6Address._string_from_ip_int(
+                    (int(hi) << 64) + int(lo)))
+        return formatted
 
     @staticmethod
     def _box_scalar(scalar):
@@ -322,6 +323,47 @@ class IPArray(NumPyBackedExtensionArrayMixin):
         b'\x00\x00\...x00\x02'
         """
         return self.data.tobytes()
+
+    def to_delayed(self):
+        """
+        Convert an IPArray to a list of Delayed objects.
+
+        This only works for IPArrays backed by a Dask Array.
+        Returns
+        -------
+        List[dask.delayed.Delayed]
+        """
+        from dask import delayed
+        cls = delayed(type(self))
+
+        return [cls(x) for x in self.data.to_delayed()]
+
+    def to_dask_series(self, index=None, name=None):
+        """
+        Convert to a dask Series
+
+        index : dask.dataframe.Index, optional
+        name : str, optional
+            Name to use for the resulting dask Series.
+
+        returns
+        -------
+        dask.dataframe.Series
+        """
+        import dask
+        import dask.dataframe as dd
+
+        blocks = self.to_delayed()
+        if index is not None:
+            args = zip(blocks, index.to_delayed())
+            divisions = index.divisions
+        else:
+            args = zip(blocks)
+            divisions = None
+        blocks = [dask.delayed(pd.Series)(*b) for b in args]
+        result = dd.from_delayed(blocks, meta=(name, self.dtype),
+                                 divisions=divisions)
+        return result
 
     def astype(self, dtype, copy=True):
         if isinstance(dtype, IPType):
@@ -565,7 +607,6 @@ class IPArray(NumPyBackedExtensionArrayMixin):
             ipaddress.ip_network(u'0.0.0.0/{}'.format(v4_prefixlen)),
             op)
         v4_mask = IPArray([v4_net])
-        import pdb; pdb.set_trace()
         self.data[is_v4] = v4_mask.data
 
         v6_net = getattr(
@@ -662,6 +703,14 @@ class IPArray(NumPyBackedExtensionArrayMixin):
         masked = np.bitwise_and(a, b).ravel().view(self.dtype._record_type)
         return type(self)(masked)
 
+    def compute(self, **kwargs):
+        import dask
+        return dask.compute(self, **kwargs)
+
+    def persist(self, *args, **kwargs):
+        import dask
+        return dask.persist(self, *args, **kwargs)
+
     if _compat.HAS_DASK:
         import dask.threaded
         import dask.context
@@ -685,20 +734,16 @@ class IPArray(NumPyBackedExtensionArrayMixin):
 
         def __dask_postcompute__(self):
             func, args = self.data.__dask_postcompute__()
-            return self._dask_finalize, (func, args, self.data.name)
+            return self._dask_finalize, (func, args)
 
         def __dask_postpersist__(self):
             func, args = self.data.__dask_postpersist__()
-            return self._dask_finalize, (func, args, self.data.name)
+            return self._dask_finalize, (func, args)
 
         @staticmethod
-        def _dask_finalize(results, func, args, name):
-            results = [x.array.data for x in results]
+        def _dask_finalize(results, func, args):
             ds = func(results, *args)
             return IPArray(ds)
-
-        # __dask_scheduler__ = staticmethod(dask.threaded.get)
-        # __dask_optimize__ = dask.context.globalmethod(dask.optimize, key='delayed_optimize')
 
 
 # -----------------------------------------------------------------------------

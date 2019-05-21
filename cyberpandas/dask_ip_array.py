@@ -3,7 +3,8 @@ import ipaddress
 import numpy as np
 import dask.array as da
 import dask.dataframe as dd
-from dask.dataframe.extensions import make_scalar, make_array_nonempty, register_series_accessor
+from dask.dataframe.extensions import (
+    make_scalar, make_array_nonempty, register_series_accessor)
 from .ip_array import IPAccessor, IPType, IPArray
 
 
@@ -25,7 +26,8 @@ class DaskIPAccessor(IPAccessor):
         # TODO: remove delayed trip
         objs = obj.to_delayed()
         dtype = obj.dtype._record_type
-        arrays = [da.from_delayed(x, shape=(np.nan,), dtype=dtype) for x in objs]
+        arrays = [da.from_delayed(x.array.data, shape=(np.nan,), dtype=dtype)
+                  for x in objs]
         arr = da.concatenate(arrays)
         return IPArray(arr)
 
