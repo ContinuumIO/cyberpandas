@@ -108,3 +108,46 @@ def _as_ip_object(val):
     except ValueError:
         raise ValueError("Could not parse {} is an address or "
                          "network".format(val))
+
+
+def _to_ipnetwork_array(values):
+    from . import IPNetworkType, IPNetworkArray
+
+    if isinstance(values, IPNetworkArray):
+        return values.data
+
+    if (isinstance(values, np.ndarray) and
+            values.ndim == 1 and
+            np.issubdtype(values.dtype, np.string_)):
+        values = np.asarray(values, dtype=IPNetworkType)
+    else:
+        values = [ipaddress.ip_network(x, strict=False) for x in values]
+
+    return np.atleast_1d(np.asarray(values, dtype=IPNetworkType))
+
+
+def to_ipnetwork(values):
+    """Convert values to IPNetworkArray
+
+    Parameters
+    ----------
+    values : int, str, bytes, or sequence of those
+
+    Returns
+    -------
+    addresses : IPNetworkArray
+
+    Examples
+    --------
+    Parse strings
+    >>> to_ipnetwork(['192.168.1.1/24',
+    ...               '2001:0db8:85a3:0000:0000:8a2e:0370:7334/128'])
+    <IPNetworkArray([IPv4Network('192.168.1.1'), IPv6Network('0:8a2e:370:7334:2001:db8:85a3:0')])>
+    """
+    from . import IPNetworkArray
+
+    if not is_list_like(values):
+        values = [values]
+
+    return IPNetworkArray(_to_ipnetwork_array(values))
+    
