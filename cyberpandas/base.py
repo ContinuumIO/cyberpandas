@@ -20,11 +20,19 @@ class NumPyBackedExtensionArrayMixin(ExtensionArray):
         return cls(values)
 
     @property
+    def size(self):
+        return self.data.size
+
+    @property
     def shape(self):
-        return (len(self.data),)
+        return self.data.shape
+
+    @property
+    def ndim(self):
+        return len(self.shape)
 
     def __len__(self):
-        return len(self.data)
+        return self.shape[0]
 
     def __getitem__(self, *args):
         result = operator.getitem(self.data, *args)
