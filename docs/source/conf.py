@@ -171,7 +171,7 @@ intersphinx_mapping = {
 }
 
 extlinks = {
-    'issue': ('https://github.com/dask/dask-ml/issues/%s', 'GH#'),
+    'issue': ('https://github.com/ContinuumIO/cyberpandas/issues/%s', 'GH#'),
 }
 
 ipython_execlines = [
