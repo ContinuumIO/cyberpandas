@@ -332,11 +332,19 @@ class IPArray(NumPyBackedExtensionArrayMixin):
     # ------------------------------------------------------------------------
 
     def __eq__(self, other):
-        # TDOO: scalar ipaddress
-        if not isinstance(other, IPArray):
-            return NotImplemented
-        mask = self.isna() | other.isna()
-        result = self.data == other.data
+        if isinstance(other, (ipaddress.IPv4Address, ipaddress.IPv6Address)):
+            other = int(other)
+            hi, lo = unpack(pack(other))
+            other = np.array([(hi, lo)], dtype=self.dtype._record_type)
+            mask = self.isna()
+        elif isinstance(other, IPArray):
+            mask = self.isna() | other.isna()
+            other = other.data
+        else:
+            msg = ("Invalid type comparison. Can't compare IPArray to "
+                   "type '{}'.")
+            raise TypeError(msg.format(other))
+        result = self.data == other
         result[mask] = False
         return result
 
