@@ -29,6 +29,7 @@ source activate test-environment
 conda install \
       coverage \
       cython \
+      dask \
       flake8 \
       hypothesis \
       numpy \

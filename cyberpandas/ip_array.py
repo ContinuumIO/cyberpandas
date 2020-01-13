@@ -13,6 +13,7 @@ from ._utils import combine, pack, unpack
 from .base import NumPyBackedExtensionArrayMixin
 from .common import _U8_MAX, _IPv4_MAX
 from .parser import _to_ipaddress_pyint, _as_ip_object
+from . import _compat
 
 # -----------------------------------------------------------------------------
 # Extension Type
@@ -215,7 +216,10 @@ class IPArray(NumPyBackedExtensionArrayMixin):
     # -------------------------------------------------------------------------
 
     def __repr__(self):
-        formatted = self._format_values()
+        if isinstance(self.data, np.ndarray):
+            formatted = self._format_values()
+        else:
+            formatted = self.data
         return "IPArray({!r})".format(formatted)
 
     def _format_values(self):
@@ -319,6 +323,47 @@ class IPArray(NumPyBackedExtensionArrayMixin):
         b'\x00\x00\...x00\x02'
         """
         return self.data.tobytes()
+
+    def to_delayed(self):
+        """
+        Convert an IPArray to a list of Delayed objects.
+
+        This only works for IPArrays backed by a Dask Array.
+        Returns
+        -------
+        List[dask.delayed.Delayed]
+        """
+        from dask import delayed
+        cls = delayed(type(self))
+
+        return [cls(x) for x in self.data.to_delayed()]
+
+    def to_dask_series(self, index=None, name=None):
+        """
+        Convert to a dask Series
+
+        index : dask.dataframe.Index, optional
+        name : str, optional
+            Name to use for the resulting dask Series.
+
+        returns
+        -------
+        dask.dataframe.Series
+        """
+        import dask
+        import dask.dataframe as dd
+
+        blocks = self.to_delayed()
+        if index is not None:
+            args = zip(blocks, index.to_delayed())
+            divisions = index.divisions
+        else:
+            args = zip(blocks)
+            divisions = None
+        blocks = [dask.delayed(pd.Series)(*b) for b in args]
+        result = dd.from_delayed(blocks, meta=(name, self.dtype),
+                                 divisions=divisions)
+        return result
 
     def astype(self, dtype, copy=True):
         if isinstance(dtype, IPType):
@@ -658,6 +703,48 @@ class IPArray(NumPyBackedExtensionArrayMixin):
         masked = np.bitwise_and(a, b).ravel().view(self.dtype._record_type)
         return type(self)(masked)
 
+    def compute(self, **kwargs):
+        import dask
+        return dask.compute(self, **kwargs)
+
+    def persist(self, *args, **kwargs):
+        import dask
+        return dask.persist(self, *args, **kwargs)
+
+    if _compat.HAS_DASK:
+        import dask.threaded
+        import dask.context
+
+        def __dask_graph__(self):
+            return self.data.__dask_graph__()
+
+        def __dask_keys__(self):
+            return self.data.__dask_keys__()
+
+        def __dask_layers__(self):
+            return self.data.__dask_layers__()
+
+        @property
+        def __dask_optimize__(self):
+            return self.data.__dask_optimize__
+
+        @property
+        def __dask_scheduler__(self):
+            return self.data.__dask_scheduler__
+
+        def __dask_postcompute__(self):
+            func, args = self.data.__dask_postcompute__()
+            return self._dask_finalize, (func, args)
+
+        def __dask_postpersist__(self):
+            func, args = self.data.__dask_postpersist__()
+            return self._dask_finalize, (func, args)
+
+        @staticmethod
+        def _dask_finalize(results, func, args):
+            ds = func(results, *args)
+            return IPArray(ds)
+
 
 # -----------------------------------------------------------------------------
 # Accessor
@@ -683,9 +770,17 @@ class IPAccessor:
 
     def __init__(self, obj):
         self._validate(obj)
-        self._data = obj.values
+        self._data = self._extract_array(obj)
         self._index = obj.index
         self._name = obj.name
+
+    @property
+    def _constructor(self):
+        return pd.Series
+
+    @staticmethod
+    def _extract_array(obj):
+        return obj.array
 
     @staticmethod
     def _validate(obj):

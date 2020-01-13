@@ -1,9 +1,9 @@
 import ipaddress
 
 import numpy as np
-from pandas.api.types import is_list_like
 
 from ._utils import pack, unpack
+from . import _compat
 
 
 def to_ipaddress(values):
@@ -36,7 +36,7 @@ def to_ipaddress(values):
     """
     from . import IPArray
 
-    if not is_list_like(values):
+    if not _compat.is_list_like(values):
         values = [values]
 
     return IPArray(_to_ip_array(values))
@@ -47,19 +47,20 @@ def _to_ip_array(values):
 
     if isinstance(values, IPArray):
         return values.data
+    array_like = _compat.is_array_like(values)
 
-    if (isinstance(values, np.ndarray) and
-            values.ndim == 1 and
+    if (array_like and values.ndim == 1 and
+            isinstance(values.dtype, np.dtype) and
             np.issubdtype(values.dtype, np.integer)):
         # We assume we're given the low bits here.
         values = values.astype("u8")
-        values = np.asarray(values, dtype=IPType._record_type)
+        values = _compat.asarray(values).astype(dtype=IPType._record_type)
         values['hi'] = 0
 
-    elif not (isinstance(values, np.ndarray) and
-              values.dtype == IPType._record_type):
+    elif not (array_like and values.dtype == IPType._record_type):
         values = _to_int_pairs(values)
-    return np.atleast_1d(np.asarray(values, dtype=IPType._record_type))
+    return _compat.atleast_1d(_compat.asarray(values,
+                                              dtype=IPType._record_type))
 
 
 def _to_int_pairs(values):

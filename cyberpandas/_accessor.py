@@ -1,8 +1,27 @@
 import pandas as pd
 
+from ._compat import is_dask_collection
+
 
 def delegated_method(method, index, name, *args, **kwargs):
-    return pd.Series(method(*args, **kwargs), index, name=name)
+    values = method(*args, **kwargs)
+    return wrap_result(values, index, name)
+
+
+def wrap_result(values, index, name):
+    from cyberpandas.ip_array import IPType
+
+    if is_dask_collection(values):
+        import dask.array as da
+        import dask.dataframe as dd
+
+        if isinstance(values.dtype, IPType):
+            return values.to_dask_series(index=index, name=name)
+
+        elif isinstance(values, da.Array):
+            return dd.from_dask_array(values, columns=name, index=index)
+
+    return pd.Series(values, index=index, name=name)
 
 
 class Delegated:
@@ -16,7 +35,10 @@ class Delegated:
         index = object.__getattribute__(obj, '_index')
         name = object.__getattribute__(obj, '_name')
         result = self._get_result(obj)
-        return pd.Series(result, index, name=name)
+        return wrap_result(result, index, name)
+
+    def _get_result(self, obj, type=None):
+        raise NotImplementedError
 
 
 class DelegatedProperty(Delegated):
@@ -25,8 +47,7 @@ class DelegatedProperty(Delegated):
 
 
 class DelegatedMethod(Delegated):
-    def __get__(self, obj, type=None):
-        index = object.__getattribute__(obj, '_index')
-        name = object.__getattribute__(obj, '_name')
+    def _get_result(self, obj, type=None):
         method = getattr(object.__getattribute__(obj, '_data'), self.name)
-        return delegated_method(method, index, name)
+        values = method()
+        return values
