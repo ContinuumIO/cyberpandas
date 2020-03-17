@@ -1,7 +1,7 @@
 import abc
 import collections
 from ipaddress import IPv4Network, IPv6Network, ip_network
-from ipaddress import IPv4Address, IPv6Address
+from ipaddress import IPv4Address, IPv6Address, ip_address
 
 import six
 import numpy as np
@@ -24,7 +24,12 @@ class IPv4v6Network(object):
     pass
 
 
-IPv4v6Network.register(IPv4Network)
+class cybIPv4Network(IPv4Network):
+    ndim = 1
+    pass
+
+
+IPv4v6Network.register(cybIPv4Network)
 IPv4v6Network.register(IPv6Network)
 
 
@@ -140,15 +145,15 @@ class IPNetworkArray(NumPyBackedExtensionArrayMixin):
     # -------------------------------------------------------------------------
 
     def __repr__(self):
-        formatted = [x.__repr__() for x in self.data]
+        formatted = [x.__str__() for x in self.data]
         return "IPNetworkArray({!r})".format(formatted)
 
     def _format_values(self):
-        return [x.__repr__() for x in self.data]
+        return [x.__str__() for x in self.data]
 
     @staticmethod
     def _box_scalar(scalar):
-        return NotImplemented
+        return ip_address(combine(*scalar))
 
     @property
     def _parser(self):
