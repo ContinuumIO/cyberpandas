@@ -1,8 +1,7 @@
 import abc
-import collections
 from ipaddress import IPv4Network, IPv6Network, ip_network
-from ipaddress import IPv4Address, IPv6Address, ip_address
 
+import operator
 import six
 import numpy as np
 import pandas as pd
@@ -12,6 +11,7 @@ from pandas.api.types import is_list_like
 from cyberpandas._accessor import (DelegatedMethod, DelegatedProperty,
                                    delegated_method)
 from cyberpandas.base import NumPyBackedExtensionArrayMixin
+from ._utils import combine
 
 # -----------------------------------------------------------------------------
 # Extension Type
@@ -153,11 +153,18 @@ class IPNetworkArray(NumPyBackedExtensionArrayMixin):
 
     @staticmethod
     def _box_scalar(scalar):
-        return ip_address(combine(*scalar))
+        return ip_network(combine(*scalar))
 
     @property
     def _parser(self):
         return to_ipnetwork
+
+    def __getitem__(self, *args):
+        result = operator.getitem(self.data, *args)
+        if isinstance(result, tuple):
+            return self._box_scalar(result)
+        else:
+            return result
 
     def __setitem__(self, key, value):
         value = to_ipnetwork(value).data
