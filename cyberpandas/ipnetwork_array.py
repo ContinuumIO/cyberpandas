@@ -192,7 +192,7 @@ class IPNetworkArray(NumPyBackedExtensionArrayMixin):
         >>> IPNetworkArray(['192.168.1.1/24', '2001:db8::1000/128']).to_pyipaddress()
         [IPv4Network('192.168.1.0/24'), IPv6Network('2001:db8::1000/128')]
         """
-        return [ip_network(x) for x in self.data]
+        return [ip_network(x) for x in self._format_values()]
 
     def astype(self, dtype, copy=True):
         if isinstance(dtype, IPNetworkType):
@@ -201,10 +201,11 @@ class IPNetworkArray(NumPyBackedExtensionArrayMixin):
             return self
 
         if dtype == np.dtype('str'):
+            if copy:
+                self = self.copy()
             self.data = np.asarray([x.__str__() for x in self.data])
             return self.data
-
-        raise TypeError("Cannot convert IPNetworkArray to anything but string")
+        raise TypeError(f'Cannot convert ipnetwork to {dtype}')
 
     # ------------------------------------------------------------------------
     # Ops
