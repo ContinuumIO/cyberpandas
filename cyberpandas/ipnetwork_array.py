@@ -1,17 +1,15 @@
-import abc
-from ipaddress import IPv4Network, IPv6Network, ip_network
-
-import operator
-import six
-import numpy as np
-import pandas as pd
-from pandas.api.extensions import ExtensionDtype, take
-from pandas.api.types import is_list_like
-
+from cyberpandas.base import NumPyBackedExtensionArrayMixin
 from cyberpandas._accessor import (DelegatedMethod, DelegatedProperty,
                                    delegated_method)
-from cyberpandas.base import NumPyBackedExtensionArrayMixin
-from ._utils import combine
+from pandas.api.types import is_list_like
+from pandas.api.extensions import ExtensionDtype, take
+import pandas as pd
+import numpy as np
+import six
+import operator
+from ipaddress import IPv4Network, IPv6Network, ip_network
+import abc
+
 
 # -----------------------------------------------------------------------------
 # Extension Type
@@ -153,20 +151,22 @@ class IPNetworkArray(NumPyBackedExtensionArrayMixin):
 
     @staticmethod
     def _box_scalar(scalar):
-        return ip_network(combine(*scalar))
+        return ip_network(scalar)
 
     @property
     def _parser(self):
+        from .parser import to_ipnetwork
         return to_ipnetwork
 
     def __getitem__(self, *args):
         result = operator.getitem(self.data, *args)
-        if isinstance(result, tuple):
+        if isinstance(result, str):
             return self._box_scalar(result)
         else:
-            return result
+            return type(self)(result)
 
     def __setitem__(self, key, value):
+        from .parser import to_ipnetwork
         value = to_ipnetwork(value).data
         self.data[key] = value
 
@@ -192,14 +192,19 @@ class IPNetworkArray(NumPyBackedExtensionArrayMixin):
         >>> IPNetworkArray(['192.168.1.1/24', '2001:db8::1000/128']).to_pyipaddress()
         [IPv4Network('192.168.1.0/24'), IPv6Network('2001:db8::1000/128')]
         """
-        return [x for x in self.data]
+        return [ip_network(x) for x in self.data]
 
     def astype(self, dtype, copy=True):
         if isinstance(dtype, IPNetworkType):
             if copy:
                 self = self.copy()
             return self
-        return super(IPNetworkArray, self).astype(dtype)
+
+        if dtype == np.dtype('str'):
+            self.data = np.asarray([x.__str__() for x in self.data])
+            return self.data
+
+        raise TypeError("Cannot convert IPNetworkArray to anything but string")
 
     # ------------------------------------------------------------------------
     # Ops

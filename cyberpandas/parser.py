@@ -111,7 +111,7 @@ def _as_ip_object(val):
 
 
 def _to_ipnetwork_array(values):
-    from . import IPNetworkType, IPNetworkArray
+    from .ipnetwork_array import IPNetworkType, IPNetworkArray
 
     if isinstance(values, IPNetworkArray):
         return values.data
@@ -150,4 +150,3 @@ def to_ipnetwork(values):
         values = [values]
 
     return IPNetworkArray(_to_ipnetwork_array(values))
-    
