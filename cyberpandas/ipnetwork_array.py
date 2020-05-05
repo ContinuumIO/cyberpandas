@@ -200,11 +200,13 @@ class IPNetworkArray(NumPyBackedExtensionArrayMixin):
                 self = self.copy()
             return self
 
-        if dtype == np.dtype('str'):
+        if dtype == np.str:
             if copy:
                 self = self.copy()
             self.data = np.asarray([x.__str__() for x in self.data])
             return self.data
+        elif dtype == np.object:
+            return super(IPNetworkArray, self).astype(dtype, copy=copy)
         raise TypeError(f'Cannot convert ipnetwork to {dtype}')
 
     # ------------------------------------------------------------------------
