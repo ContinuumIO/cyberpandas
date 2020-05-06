@@ -134,8 +134,7 @@ class IPNetworkArray(NumPyBackedExtensionArrayMixin):
         # type for the array, to the physical storage type for
         # the data, before passing to take.
 
-        result = take(data, indices, fill_value=fill_value,
-                      allow_fill=allow_fill)
+        result = self.data.take(indices)
         return self._from_sequence(result, dtype=self.dtype)
 
     # -------------------------------------------------------------------------
