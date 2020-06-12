@@ -116,7 +116,8 @@ def _to_ipnetwork_array(values):
     if isinstance(values, IPNetworkArray):
         return values.data
 
-    if isinstance(values, ipaddress.IPv4Network):
+    if (isinstance(values, ipaddress.IPv4Network) or
+            isinstance(values, ipaddress.IPv6Network)):
         values = np.asarray(values, dtype=IPNetworkType)
     else:
         values = [ipaddress.ip_network(x, strict=False) for x in values]

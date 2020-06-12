@@ -27,8 +27,13 @@ class cybIPv4Network(IPv4Network):
     pass
 
 
+class cybIPv6Network(IPv6Network):
+    ndim = 1
+    pass
+
+
 IPv4v6Network.register(cybIPv4Network)
-IPv4v6Network.register(IPv6Network)
+IPv4v6Network.register(cybIPv6Network)
 
 
 @pd.api.extensions.register_extension_dtype
