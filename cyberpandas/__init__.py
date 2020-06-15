@@ -5,8 +5,14 @@ from .ip_array import (
     IPArray,
     IPAccessor,
 )
+
+from .ipnetwork_array import (
+    IPNetworkType,
+    IPNetworkArray,
+    IPNetAccessor
+)
 from .ip_methods import ip_range
-from .parser import to_ipaddress
+from .parser import to_ipaddress, to_ipnetwork
 from .mac_array import MACType, MACArray
 
 from pkg_resources import get_distribution, DistributionNotFound
@@ -25,8 +31,12 @@ __all__ = [
     'IPAccessor',
     'IPArray',
     'IPType',
+    'IPNetAccessor',
+    'IPNetworkArray'
+    'IPNetworkType',
     'MACArray',
     'MACType',
     'ip_range',
     'to_ipaddress',
+    'to_ipnetwork',
 ]
