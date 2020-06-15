@@ -166,6 +166,8 @@ class IPNetworkArray(NumPyBackedExtensionArrayMixin):
         result = operator.getitem(self.data, *args)
         if isinstance(result, str):
             return self._box_scalar(result)
+        elif not hasattr(result, 'ndim') or result.ndim == 0:
+            return self._box_scalar(result)
         else:
             return type(self)(result)
 
@@ -257,6 +259,9 @@ class IPNetworkArray(NumPyBackedExtensionArrayMixin):
                             "to type '{}'".format(type(other)))
         # TODO: missing
         return (self.data == other.data).all()
+
+    def _values_for_factorize(self):
+        return self.astype(object), IPv4Network('0.0.0.0')
 
     def value_counts(self, sort=True, ascending=False, normalize=False,
                      bins=None, dropna=True):
